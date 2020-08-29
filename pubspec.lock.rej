@@ -1,0 +1,18 @@
+diff a/pubspec.lock b/pubspec.lock	(rejected hunks)
+@@ -327,10 +327,12 @@ packages:
+   json_serializable:
+     dependency: "direct dev"
+     description:
+-      name: json_serializable
+-      url: "https://pub.dartlang.org"
+-    source: hosted
+-    version: "3.4.0"
++      path: "json_serializable/"
++      ref: HEAD
++      resolved-ref: "609b2721d46bc0a96bff89d266bd0ce3ce2229da"
++      url: "git@github.com:google/json_serializable.dart.git"
++    source: git
++    version: "3.4.1-dev"
+   logging:
+     dependency: transitive
+     description:
