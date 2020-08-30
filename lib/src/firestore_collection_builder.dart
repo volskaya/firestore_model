@@ -61,6 +61,8 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>> extends StatefulWi
     this.observe = true,
     this.scrollController,
     this.onPendingItemsChanged,
+    this.routeOverride,
+    this.storageOverride,
   }) : super(key: key);
 
   /// Shortcut access to pending items.
@@ -107,6 +109,12 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>> extends StatefulWi
   /// Whether to wrap child builder in an [Observer] to automatically rebuild
   /// on any list change.
   final bool observe;
+
+  /// Storage override passed to the [RefreshStorage] builder.
+  final PageStorageBucket storageOverride;
+
+  /// Route override passed to the [RefreshStorage] builder.
+  final ModalRoute routeOverride;
 
   @override
   FirestoreCollectionBuilderState<T> createState() => FirestoreCollectionBuilderState<T>();
@@ -353,6 +361,8 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
       context: context,
       identifier: identifier,
       builder: () => _FirestoreCollectionStorage<T>(),
+      route: widget.routeOverride,
+      storage: widget.storageOverride,
       dispose: (data) {
         final allItems = [...data.pendingItems, ...data.subscribedItems, ...data.paginatedItems];
         developer.log('Disposing ${allItems.length} items from $identifier', name: 'firestore_model');
