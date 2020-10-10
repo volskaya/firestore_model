@@ -45,6 +45,7 @@ mixin ReferencedModel {
   /// the reference counter.
   static bool isRefCompleted(DocumentReference reference) => _cache[reference]?.isCompleted == true;
 
+  /// Returns true, if [_cache] contains [reference].
   static bool isReferenced(DocumentReference reference) => _cache.containsKey(reference);
 
   /// Reference the object in [ReferencedModel] cache.

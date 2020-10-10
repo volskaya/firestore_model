@@ -25,8 +25,8 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatefulWid
   const FirestoreReferenceBuilder({
     Key key,
     @required this.reference,
-    @required this.bucket,
     @required this.builder,
+    this.bucket,
     this.subscribe = false,
     this.initialValue,
     this.storageContext,
@@ -38,6 +38,8 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatefulWid
   final DocumentReference reference;
 
   /// [RefreshStorage] bucket identifier of this widgets storage.
+  ///
+  /// If null, [RefreshStorage] won't be used.
   final String bucket;
 
   /// Asynchronous widget builder.
@@ -107,12 +109,14 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
     super.didChangeDependencies();
 
     if (_bucket == null) {
-      _bucket = RefreshStorage.write(
-        context: widget.storageContext ?? context,
-        identifier: widget.bucket,
-        builder: () => _FirestoreReferenceBuilderBucket<T>(),
-        dispose: (storage) => storage.item?.dispose(),
-      );
+      _bucket = widget.bucket != null
+          ? RefreshStorage.write(
+              context: widget.storageContext ?? context,
+              identifier: widget.bucket,
+              builder: () => _FirestoreReferenceBuilderBucket<T>(),
+              dispose: (storage) => storage.item?.dispose(),
+            )
+          : _FirestoreReferenceBuilderBucket<T>();
 
       if (widget.reference != null) {
         /// Initial value will be added in [ReferencedModel], to allow
@@ -141,6 +145,7 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
   @override
   void didUpdateWidget(FirestoreReferenceBuilder<T> oldWidget) {
     assert(oldWidget.subscribe == widget.subscribe);
+    assert(oldWidget.bucket == widget.bucket);
 
     if (oldWidget.reference?.path != widget.reference?.path) {
       developer.log('${oldWidget.reference?.path} changed to ${widget.reference?.path}', name: 'firestore_model');
@@ -155,6 +160,7 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
   @override
   void dispose() {
     if (_wasInitialValueAddedAsReference) widget.initialValue?.dispose();
+    if (widget.bucket == null) _bucket?.item?.dispose();
     super.dispose();
   }
 
@@ -162,11 +168,10 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
   Widget build(BuildContext context) => FutureBuilder<T>(
         future: _futureObject?.future,
         initialData: _futureObject?.item,
-        builder: (context, snapshot) => widget.observe && snapshot.hasData
-            // TODO: Check if this doesn't cause relayout
+        builder: (context, snapshot) => widget.observe
             ? Observer(
                 name: '${widget.bucket}_observer',
-                builder: (context) => widget.builder(context, snapshot.data),
+                builder: (context) => widget.builder(context, snapshot.hasData ? snapshot.data : null),
               )
             : widget.builder(context, snapshot.hasData ? snapshot.data : null),
       );
