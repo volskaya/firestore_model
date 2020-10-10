@@ -9,6 +9,8 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobx/mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
+part 'firestore_collection_builder.g.dart';
+
 /// Status of the [FirestoreCollectionBuilderState].
 enum FirestoreCollectionStatus {
   /// Collectino hasn't started the initial pagination yet.
@@ -34,11 +36,16 @@ typedef FirestoreCollectionChildBuilder<T extends FirestoreModel<T>> = Widget Fu
   FirestoreCollectionBuilderState<T> state,
 );
 
-class _FirestoreCollectionStorage<T extends FirestoreModel<T>> {
+class _FirestoreCollectionStorage<T extends FirestoreModel<T>> = _FirestoreCollectionStorageStore<T>
+    with _$_FirestoreCollectionStorage<T>;
+
+abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> with Store {
   final paginatedItems = ObservableList<T>();
   final subscribedItems = ObservableList<T>();
   final pendingItems = ObservableList<T>();
-  final listStatus = ValueNotifier<FirestoreCollectionStatus>(FirestoreCollectionStatus.idle);
+
+  @observable
+  FirestoreCollectionStatus listStatus = FirestoreCollectionStatus.idle;
 }
 
 /// Build subscribable lists of firestore collections.
@@ -130,7 +137,8 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
   ReactionDisposer _pendingItemsReaction;
 
   /// Current status of this collection builder.
-  ValueNotifier<FirestoreCollectionStatus> get status => _pageStorage.listStatus;
+  FirestoreCollectionStatus get status => _pageStorage.listStatus;
+  set status(FirestoreCollectionStatus val) => _pageStorage.listStatus = val;
 
   /// Documents per page as set no [FirestoreCollectionBuilder.itemsPerPage].
   int get itemsPerPage => widget.itemsPerPage;
@@ -164,13 +172,11 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
   /// and the [ScrollController] is scrolled.
   ObservableList<T> get pendingItems => _pageStorage.pendingItems;
 
-  Timestamp _initialTimestamp;
   bool _fetchingPage = false;
   _FirestoreCollectionStorage<T> _pageStorage;
   bool get _isScrolled => widget.scrollController?.hasClients == true ? widget.scrollController.offset > 0 : false;
 
   Query get _pageQuery {
-    assert(_initialTimestamp != null);
     if (widget.pageQuery != null) {
       return widget.pageQuery(this, widget.collection);
     } else {
@@ -180,7 +186,6 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
   }
 
   Query get _subscriptionQuery {
-    assert(_initialTimestamp != null);
     assert(widget.subscribe);
 
     // Check if server timestamp is ready.
@@ -246,9 +251,9 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
 
   void _checkStatus() {
     if (paginatedItems.isEmpty && subscribedItems.isEmpty) {
-      status.value = FirestoreCollectionStatus.empty;
+      status = FirestoreCollectionStatus.empty;
     } else if (paginatedItems.isNotEmpty || subscribedItems.isNotEmpty) {
-      status.value = FirestoreCollectionStatus.ready;
+      status = FirestoreCollectionStatus.ready;
     }
   }
 
@@ -261,8 +266,8 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
       return;
     }
 
-    if (status.value == FirestoreCollectionStatus.idle) {
-      status.value = FirestoreCollectionStatus.loading;
+    if (status == FirestoreCollectionStatus.idle) {
+      status = FirestoreCollectionStatus.loading;
     }
 
     try {
@@ -378,28 +383,10 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
     if (subscribedItems.isNotEmpty) {
       paginatedItems.insertAll(
         0,
-        subscribedItems.reversed.where((item) => item.createTime != null).toList(growable: false)
-          ..sort((a, b) => b.createTime.millisecondsSinceEpoch.compareTo(a.createTime.millisecondsSinceEpoch)),
+        subscribedItems.reversed.where((item) => item.createTime != null).toList(growable: false),
+        // ..sort((a, b) => b.createTime.millisecondsSinceEpoch.compareTo(a.createTime.millisecondsSinceEpoch)),
       );
       subscribedItems.clear();
-    }
-
-    if (paginatedItems.isNotEmpty) {
-      _initialTimestamp = paginatedItems.first.createTime;
-
-      // Assert order is correct, by making sure document timestamps
-      // are ordered newest to oldest
-      assert((() {
-        if (paginatedItems.length <= 1) return true; // Not enough items
-        var timestamp = paginatedItems.first.createTime;
-        for (final message in paginatedItems.skip(1)) {
-          if (message.createTime.millisecondsSinceEpoch > timestamp.millisecondsSinceEpoch) {
-            return false; // Next timestamp is later than current message
-          }
-          timestamp = message.createTime;
-        }
-        return true;
-      })());
     }
   }
 
@@ -411,8 +398,6 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
     }
   }
 
-  /// Subscription and pagination queries will attempt to use their
-  /// latest timestamps or fall back to `_initialTimestamp`
   Future _startListening() async {
     if (paginatedItems.isEmpty) await _fetchPage(1);
     if (widget.subscribe) _startSubscription();
@@ -422,8 +407,7 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initialTimestamp = Timestamp.now();
-    pageTime = _initialTimestamp.toDate();
+    pageTime = DateTime.now();
   }
 
   @override

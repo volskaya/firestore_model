@@ -18,9 +18,7 @@ dependencies:
   json_annotation: ^3.0.1
 
   refresh_storage:
-    git:
-      url: git@github.com:volskaya/flutter_helpers.git
-      path: refresh_storage
+    path: /home/projects/packages/flutter_helpers/refresh_storage
 
 dependency_overrides:
   analyzer: '0.39.14'

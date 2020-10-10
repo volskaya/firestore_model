@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
 typedef WidgetReferenceBuilder<T extends FirestoreModel<T>> = Widget Function(BuildContext context, T data);
@@ -29,6 +30,7 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatefulWid
     this.subscribe = false,
     this.initialValue,
     this.storageContext,
+    this.observe = true,
   })  : assert(initialValue == null || reference != null),
         super(key: key);
 
@@ -48,8 +50,11 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatefulWid
   final T initialValue;
 
   /// Allow overriding context of [MyApp.storage] to support building
-  /// within an overlay
+  /// within an overlay.
   final BuildContext storageContext;
+
+  /// Whether to automatically wrap the builder in an [Observer].
+  final bool observe;
 
   @override
   _FirestoreReferenceBuilderState<T> createState() => _FirestoreReferenceBuilderState<T>();
@@ -157,6 +162,12 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
   Widget build(BuildContext context) => FutureBuilder<T>(
         future: _futureObject?.future,
         initialData: _futureObject?.item,
-        builder: (context, snapshot) => widget.builder(context, snapshot.hasData ? snapshot.data : null),
+        builder: (context, snapshot) => widget.observe && snapshot.hasData
+            // TODO: Check if this doesn't cause relayout
+            ? Observer(
+                name: '${widget.bucket}_observer',
+                builder: (context) => widget.builder(context, snapshot.data),
+              )
+            : widget.builder(context, snapshot.hasData ? snapshot.data : null),
       );
 }

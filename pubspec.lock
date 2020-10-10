@@ -200,11 +200,9 @@ packages:
   fancy_switcher:
     dependency: transitive
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "8acaf5e0f9fbf37d44baceb46fb6ea63b97fa7eb"
-      url: "git@github.com:volskaya/fancy_switcher.git"
-    source: git
+      path: "/home/projects/packages/fancy_switcher"
+      relative: false
+    source: path
     version: "0.0.1"
   firebase:
     dependency: transitive
@@ -462,11 +460,9 @@ packages:
   refresh_storage:
     dependency: "direct main"
     description:
-      path: refresh_storage
-      ref: HEAD
-      resolved-ref: cdf02155a0278f4b8ae7303aede0362937f580c1
-      url: "git@github.com:volskaya/flutter_helpers.git"
-    source: git
+      path: "/home/projects/packages/flutter_helpers/refresh_storage"
+      relative: false
+    source: path
     version: "0.0.1"
   shelf:
     dependency: transitive
