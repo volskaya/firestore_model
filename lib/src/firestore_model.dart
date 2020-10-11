@@ -58,6 +58,12 @@ abstract class FirestoreModel<T> extends _FirestoreModel<T> with _$FirestoreMode
       ..snapshot = snapshot) as D;
   }
 
+  /// Shortcut for calling [ReferencedModel.addRef].
+  ///
+  /// Make sure the models, referenced this way, are disposed properly.
+  static void addReference<D extends FirestoreModel<D>>(DocumentReference reference, D object) =>
+      ReferencedModel.addRef<D>(reference: reference, object: object);
+
   /// Fetches the [DocumentReference] trough a transaction or a regular get and converts it to a model.
   static Future<D> fetch<D extends FirestoreModel<D>>(DocumentReference reference, [Transaction transaction]) async =>
       build<D>(reference, await (transaction?.get(reference) ?? reference.get()));
