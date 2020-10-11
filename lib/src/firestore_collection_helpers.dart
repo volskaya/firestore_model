@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:delayed_progress_indicator/delayed_progress_indicator.dart';
 import 'package:fancy_switcher/fancy_switcher.dart';
 import 'package:firestore_model/src/firestore_collection_builder.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,7 @@ typedef FirestoreCollectionSwitcherBuilder = Widget Function(BuildContext contex
 ///
 /// If status != [FirestoreCollectionStatus.ready], children are built in a [SingleChildScrollView]
 /// to allow interacting with refresh containers, etc.
-class FirestoreCollectionSwitcher extends StatelessWidget {
+class FirestoreCollectionSwitcher extends StatelessObserverWidget {
   /// Creates a vertical [FirestoreCollectionSwitcher].
   const FirestoreCollectionSwitcher.vertical({
     Key key,
@@ -21,7 +22,7 @@ class FirestoreCollectionSwitcher extends StatelessWidget {
     @required this.builder,
     @required this.contentPadding,
   })  : _axis = Axis.vertical,
-        super(key: key);
+        super(key: key, name: 'firestore_collection_switcher');
 
   /// Creates a horizontal [FirestoreCollectionSwitcher].
   const FirestoreCollectionSwitcher.horizontal({
@@ -30,7 +31,7 @@ class FirestoreCollectionSwitcher extends StatelessWidget {
     @required this.builder,
     @required this.contentPadding,
   })  : _axis = Axis.horizontal,
-        super(key: key);
+        super(key: key, name: 'firestore_collection_switcher');
 
   /// The collection this builder will observe.
   final FirestoreCollectionBuilderState collection;
@@ -77,7 +78,7 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
     @required this.collection,
     @required this.childBuilder,
     @required this.childCount,
-    @required this.statusBuilder,
+    this.statusBuilder,
     this.tailBuilder,
   })  : itemExtent = null,
         super(key: key, name: 'firestore_collection_sliver_list');
@@ -88,8 +89,8 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
     @required this.collection,
     @required this.childBuilder,
     @required this.childCount,
-    @required this.statusBuilder,
     @required this.itemExtent,
+    this.statusBuilder,
     this.tailBuilder,
   }) : super(key: key, name: 'firestore_collection_sliver_list');
 
@@ -113,7 +114,7 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
 
   SliverChildBuilderDelegate _getDelegate() => SliverChildBuilderDelegate(
         (context, i) {
-          if (i == 0) {
+          if (statusBuilder != null && i == 0) {
             // Build the first tile.
             switch (collection.status) {
               case FirestoreCollectionStatus.ready:
@@ -144,4 +145,68 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
   Widget build(BuildContext context) => itemExtent != null
       ? SliverFixedExtentList(itemExtent: itemExtent, delegate: _getDelegate())
       : SliverList(delegate: _getDelegate());
+}
+
+/// Default status builder of [FirestoreCollectionnSliverList].
+class FirestoreCollectionStatusIndicator extends StatelessWidget {
+  /// Creates [FirestoreCollectionStatusIndicator].
+  const FirestoreCollectionStatusIndicator({
+    Key key,
+    @required this.status,
+    @required this.emptyLabel,
+  }) : super(key: key);
+
+  /// The collection status this builder will build off of.
+  final FirestoreCollectionStatus status;
+
+  /// Text widget built, when the collection has no items.
+  final String emptyLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    switch (status) {
+      case FirestoreCollectionStatus.idle:
+      case FirestoreCollectionStatus.loading:
+        return const DelayedProgressIndicator();
+      case FirestoreCollectionStatus.empty:
+        return Center(
+          child: Text(
+            emptyLabel,
+            style: theme.textTheme.subtitle2.apply(color: theme.hintColor),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+          ),
+        );
+      default:
+        throw UnimplementedError();
+    }
+  }
+}
+
+/// Default tail builder of [FirestoreCollectionnSliverList].
+class FirestoreCollectionTailBuilder extends StatelessWidget {
+  /// Creates [FirestoreCollectionTailBuilder].
+  const FirestoreCollectionTailBuilder({
+    Key key,
+    @required this.label,
+  }) : super(key: key);
+
+  /// Text to display as the tail.
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Text(
+        label,
+        style: theme.textTheme.subtitle2.apply(color: theme.hintColor),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
 }

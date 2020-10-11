@@ -160,6 +160,7 @@ abstract class _FirestoreModel<T> with ReferencedModel, ChangeNotifier, Store im
     return _subscribers == 0;
   }
 
+  @action
   void _handleSnapshot(T model) {
     final firestoreModel = model as FirestoreModel<T>;
     final deleted = this.deleted || (exists == true && firestoreModel.exists == false);

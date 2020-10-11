@@ -21,6 +21,8 @@ dependencies:
     path: /home/projects/packages/flutter_helpers/refresh_storage
   fancy_switcher:
     path: /home/projects/packages/fancy_switcher
+  delayed_progress_indicator:
+    path: /home/projects/packages/flutter_helpers/delayed_progress_indicator
 
 dependency_overrides:
   analyzer: '0.39.14'
