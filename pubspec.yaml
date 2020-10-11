@@ -19,6 +19,8 @@ dependencies:
 
   refresh_storage:
     path: /home/projects/packages/flutter_helpers/refresh_storage
+  fancy_switcher:
+    path: /home/projects/packages/fancy_switcher
 
 dependency_overrides:
   analyzer: '0.39.14'
