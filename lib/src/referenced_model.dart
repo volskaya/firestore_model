@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:developer' as developer;
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
@@ -12,30 +12,29 @@ import 'package:meta/meta.dart';
 ///
 /// Example in [MyUser], don't forget to [ReferenceModel.releaseRef]
 mixin ReferencedModel {
-  static final _references = HashMap<DocumentReference, int>();
-  static final _cache = HashMap<DocumentReference, _Memoizer<FirestoreModel>>();
+  static final _references = HashMap<String, int>();
+  static final _cache = HashMap<String, _Memoizer<FirebaseModel>>();
 
-  static Future<T> _get<T extends FirestoreModel<T>>(DocumentReference reference) async {
-    final model = FirestoreModel.build<T>(reference);
+  static Future<T> _get<T extends FirebaseModel<T>>(FirebaseModelType type, String path) async {
+    final model = FirebaseModel.build<T>(type, path);
 
     // Until now, the model only has a reference, which it needs to fetch updates.
     // Await a single document update here and return the model.
     await model.update();
 
     assert(model.id != null);
-    assert(model.reference != null);
-    assert(model.id == model.reference.id);
+    assert(model.path != null);
 
     return model;
   }
 
   /// Returns a synchronously cached, referenced model, and increments
   /// its reference counter
-  static T getRef<T extends FirestoreModel<T>>(DocumentReference reference) {
-    if (_cache[reference]?.isCompleted == true) {
-      assert(_references[reference] > 0);
-      _references[reference] += 1;
-      return _cache[reference].item as T;
+  static T getRef<T extends FirebaseModel<T>>(String path) {
+    if (_cache[path]?.isCompleted == true) {
+      assert(_references[path] > 0);
+      _references[path] += 1;
+      return _cache[path].item as T;
     }
 
     return null;
@@ -43,28 +42,28 @@ mixin ReferencedModel {
 
   /// Check if a reference has a completed memoizer, without altering
   /// the reference counter.
-  static bool isRefCompleted(DocumentReference reference) => _cache[reference]?.isCompleted == true;
+  static bool isRefCompleted(String path) => _cache[path]?.isCompleted == true;
 
   /// Returns true, if [_cache] contains [reference].
-  static bool isReferenced(DocumentReference reference) => _cache.containsKey(reference);
+  static bool isReferenced(String path) => _cache.containsKey(path);
 
   /// Reference the object in [ReferencedModel] cache.
   ///
   /// After the object is used, its needs to be disposed.
-  static void addRef<T extends FirestoreModel<T>>({
-    @required DocumentReference reference,
+  static void addRef<T extends FirebaseModel<T>>({
+    @required String path,
     @required T object,
   }) {
-    assert(!_cache.containsKey(reference));
+    assert(!_cache.containsKey(path));
     assert(object != null);
 
-    // Set reference and increment references counter
-    _cache[reference] = _Memoizer<T>.of(object);
-    _references[reference] = (_references[reference] ?? 0) + 1;
+    // Set path and increment references counter
+    _cache[path] = _Memoizer<T>.of(object);
+    _references[path] = (_references[path] ?? 0) + 1;
 
     developer.log(
-      'Referenced ${T.toString()} - ${reference?.id}, '
-      'count - ${_references[reference]}',
+      'Referenced ${T.toString()} - $path, '
+      'count - ${_references[path]}',
       name: 'firestore_model',
     );
   }
@@ -73,22 +72,20 @@ mixin ReferencedModel {
   /// already has a reference, else get the object from `newObject`
   /// and set it as main reference
   @protected
-  static Future<T> referenceWithSnapshot<T extends FirestoreModel<T>>({
-    @required DocumentReference reference,
-    @required T Function() newObject,
-  }) async {
-    assert(reference.id.isNotEmpty);
+  static Future<T> referenceWithSnapshot<T extends FirebaseModel<T>>(
+      FirebaseModelType type, String path, T Function() newObject) async {
+    assert(path.isNotEmpty);
     final hasReference = _cache.containsKey(reference);
 
     // When the object has reference, return that, instead of creating
     // a new one
-    final object = hasReference ? await ReferencedModel.reference<T>(reference: reference) : newObject();
+    final object = hasReference ? await ReferencedModel.reference<T>(type, path) : newObject();
     assert(object != null);
 
     // Object was not referenced, so manually reference the one
     // returned from `serializer`
     if (!hasReference && object != null) {
-      addRef<T>(reference: reference, object: object);
+      addRef<T>(path: path, object: object);
     } else {
       // If it was referenced, push the new data as an update
       object.feedData(newObject());
@@ -101,93 +98,93 @@ mixin ReferencedModel {
   /// This removed the redundant read, when normally the document would
   /// be fetched with .get -> .subscribe.
   @protected
-  static Future<T> reference<T extends FirestoreModel<T>>({
-    @required DocumentReference reference,
+  static Future<T> reference<T extends FirebaseModel<T>>(
+    FirebaseModelType type,
+    String path, {
     bool subscribe = false,
   }) async {
-    assert(reference.path.isNotEmpty);
-    _references[reference] = (_references[reference] ?? 0) + 1;
+    assert(path.isNotEmpty);
+    _references[path] = (_references[path] ?? 0) + 1;
 
-    if (_cache[reference]?.item != null) {
-      final object = _cache[reference].item;
+    if (_cache[path]?.item != null) {
+      final object = _cache[path].item;
       if (subscribe) await object.subscribe();
       return object as T;
-    } else if (_cache[reference]?.future != null) {
-      final object = await _cache[reference]?.future;
+    } else if (_cache[path]?.future != null) {
+      final object = await _cache[path]?.future;
       if (subscribe) await object.subscribe();
       return object as T;
     }
 
     // Object not memoized yet, creating it here
-    assert(!_cache.containsKey(reference));
+    assert(!_cache.containsKey(path));
     developer.log(
-      'No object for ${T.toString()} - ${reference.id} exists, creating a new one…',
+      'No object for ${T.toString()} - $path exists, creating a new one…',
       name: 'firestore_model',
     );
 
-    _cache[reference] = _Memoizer<T>(
+    _cache[path] = _Memoizer<T>(
       future: () async {
         if (subscribe) {
           // No snapshot data means an empty model with a reference.
           // This model is subscribed to below, which will await first
           // snapshot data, unless the model already has them
-          final item = FirestoreModel.build<T>(reference);
+          final item = FirebaseModel.build<T>(type, path);
 
           // Await first snapshot, to ensure model correctly handles `exists`.
           await item.subscribe();
           assert(item.id != null);
-          assert(item.reference != null);
-          assert(item.id == item.reference.id);
+          assert(item.path != null);
 
           return item;
         } else {
-          return _get<T>(reference);
+          return _get<T>(type, path);
         }
       },
     );
 
     developer.log(
-      'Referenced ${T.toString()} - ${reference.id}, '
-      'count - ${_references[reference]}',
+      'Referenced ${T.toString()} - $path ($type), '
+      'count - ${_references[path]}',
       name: 'firestore_model',
     );
 
-    return _cache[reference].future as Future<T>;
+    return _cache[path].future as Future<T>;
   }
 
   /// Intended to be called from [FirestoreModel.dispose]
   @protected
   void releaseRef({
-    @required covariant FirestoreModel model,
+    @required covariant FirebaseModel model,
     @required VoidCallback onInvalidated,
     VoidCallback onDecremented,
   }) {
-    assert(model.reference.path.isNotEmpty);
+    assert(model.path.isNotEmpty);
     assert(onInvalidated != null);
 
-    _references[model.reference] = (_references[model.reference] ?? 0) - 1;
+    _references[model.path] = (_references[model.path] ?? 0) - 1;
     developer.log(
       'Unreferenced ${model.runtimeType.toString()}'
       ' - ${model?.id}, '
-      'remaining - ${_references[model.reference] ?? 0}',
+      'remaining - ${_references[model.path] ?? 0}',
       name: 'firestore_model',
     );
 
     // Make sure to remove any negative counters
-    if (_references[model.reference] <= 0) {
+    if (_references[model.path] <= 0) {
       developer.log(
         'No more referenced remaining for ${model.runtimeType.toString()} - '
         '${model.id}, invalidating…',
         name: 'firestore_model',
       );
 
-      _references.remove(model.reference);
-      if (_cache.containsKey(model.reference)) {
+      _references.remove(model.path);
+      if (_cache.containsKey(model.path)) {
         onInvalidated();
-        _cache.remove(model.reference).invalidate();
+        _cache.remove(model.path).invalidate();
       }
     } else {
-      assert(_cache.containsKey(model.reference));
+      assert(_cache.containsKey(model.path));
       onDecremented?.call();
     }
   }

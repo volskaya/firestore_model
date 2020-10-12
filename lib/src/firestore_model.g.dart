@@ -80,11 +80,11 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
       ActionController(name: '_FirestoreModel');
 
   @override
-  void _handleSnapshot(T model) {
+  void handleSnapshot(T model) {
     final _$actionInfo = _$_FirestoreModelActionController.startAction(
-        name: '_FirestoreModel._handleSnapshot');
+        name: '_FirestoreModel.handleSnapshot');
     try {
-      return super._handleSnapshot(model);
+      return super.handleSnapshot(model);
     } finally {
       _$_FirestoreModelActionController.endAction(_$actionInfo);
     }
