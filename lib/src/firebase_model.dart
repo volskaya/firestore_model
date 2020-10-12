@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firestore_model.dart';
+import 'package:firestore_model/src/models/realtime_variable.dart';
 import 'package:firestore_model/src/models/toggle.dart';
 import 'package:firestore_model/src/realtime_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
@@ -89,11 +90,20 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
       case FirebaseModelType.realtime:
         final reference = FirebaseDatabase.instance.reference().child(path);
         final snapshot = _snapshot as DataSnapshot;
-
         assert(snapshot == null || snapshot.key == reference.key);
-        assert(FirebaseModel.realtimeDatabaseBuilder != null, '[FirebaseModel.realtimeDatabaseBuilder] is not defined');
 
-        final model = FirebaseModel.realtimeDatabaseBuilder?.call<D>(snapshot);
+        D model;
+        switch (D) {
+          case RealtimeVariable:
+            model = RealtimeVariable.fromJson(snapshot?.value) as D;
+            break;
+          default:
+            assert(
+              FirebaseModel.realtimeDatabaseBuilder != null,
+              '[FirebaseModel.realtimeDatabaseBuilder] is not defined',
+            );
+            model = FirebaseModel.realtimeDatabaseBuilder?.call<D>(snapshot);
+        }
 
         if (model == null) throw UnimplementedError();
         return ((model as RealtimeModel<D>)
