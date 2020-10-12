@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/models/toggle.dart';
+import 'package:firestore_model/src/realtime_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firestore_model/src/utils/semaphore.dart';
@@ -95,7 +96,9 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
         final model = FirebaseModel.realtimeDatabaseBuilder?.call<D>(snapshot);
 
         if (model == null) throw UnimplementedError();
-        return model; // FIXME: Cast as FirebaseRealtimeModel.
+        return ((model as RealtimeModel<D>)
+          ..reference = reference
+          ..snapshot = snapshot) as D;
       default:
         throw UnimplementedError();
     }
@@ -175,7 +178,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   }
 
   void _onData(dynamic snapshot, {bool singleUpdate = false}) {
-    assert(snapshot is DocumentSnapshot || snapshot is DataSnapshot);
+    assert(snapshot == null || snapshot is DocumentSnapshot || snapshot is DataSnapshot);
     final model = FirebaseModel.build<T>(modelType, path, snapshot);
 
     developer.log('Reacting to changes of ${T.toString()} - $id', name: 'firestore_model');
@@ -203,7 +206,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
           snapshot = await FirebaseFirestore.instance.doc(path).get();
           break;
         case FirebaseModelType.realtime:
-          snapshot = FirebaseDatabase.instance.reference().child(path).once();
+          snapshot = await FirebaseDatabase.instance.reference().child(path).once();
           break;
       }
 

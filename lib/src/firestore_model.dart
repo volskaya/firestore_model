@@ -124,7 +124,7 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
   void handleSnapshot(T model) {
     final firestoreModel = model as FirestoreModel<T>;
     final deleted = this.deleted || (exists == true && firestoreModel.exists == false);
-    assert(reference == firestoreModel.snapshot.reference);
+    assert(reference?.path == firestoreModel.snapshot.reference.path);
 
     snapshot = firestoreModel.snapshot;
 
