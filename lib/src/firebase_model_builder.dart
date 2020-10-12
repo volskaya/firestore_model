@@ -1,6 +1,8 @@
 import 'dart:developer' as developer;
 
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firebase_model.dart';
+import 'package:firestore_model/src/referenced_model.dart';
 import 'package:firestore_model/src/utils/future_item.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -8,24 +10,25 @@ import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
-typedef FirestoreReferenceBuilderCallback<T extends FirestoreModel<T>> = Widget Function(BuildContext context, T data);
+typedef FirebaseModelBuilderCallback<T extends FirebaseModel<T>> = Widget Function(BuildContext context, T data);
 
-class _FirestoreReferenceBuilderBucket<T extends FirestoreModel<T>> {
+class _FirebaseModelBuilderBucket<T extends FirebaseModel<T>> {
   FutureItem<T> item;
 }
 
-/// Asynchronous widget builder of reference counted [FirestoreModel]s.
+/// Asynchronous widget builder of reference counted [FirebaseModel]s.
 ///
 /// If the firestore reference is already fetched, the widget builds
 /// synchronously.
-@Deprecated('Use FirebaseModelBuilder instead')
-class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatefulWidget {
-  /// Creates [FirstoreReferenceBuilder].
+class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
+  /// Creates Firestore version of [FirebaseModelBuilder].
   ///
   /// A generic type, that extends [FirestoreModel], must be provided!
-  const FirestoreReferenceBuilder({
+  FirebaseModelBuilder.firestore({
     Key key,
-    @required this.reference,
+
+    /// Firestore reference to build.
+    @required DocumentReference reference,
     @required this.builder,
     this.bucket,
     this.subscribe = false,
@@ -33,10 +36,31 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatefulWid
     this.storageContext,
     this.observe = true,
   })  : assert(initialValue == null || reference != null),
+        _type = FirebaseModelType.firestore,
+        _path = reference?.path,
         super(key: key);
 
-  /// Firestore reference to build.
-  final DocumentReference reference;
+  /// Creates Realtime Database version of [FirstoreReferenceBuilder].
+  ///
+  /// A generic type, that extends [RealtimeModel], must be provided!
+  FirebaseModelBuilder.realtime({
+    Key key,
+
+    /// Realtime Database reference to build.
+    @required DatabaseReference reference,
+    @required this.builder,
+    this.bucket,
+    this.subscribe = false,
+    this.initialValue,
+    this.storageContext,
+    this.observe = true,
+  })  : assert(initialValue == null || reference != null),
+        _type = FirebaseModelType.realtime,
+        _path = reference?.path,
+        super(key: key);
+
+  final FirebaseModelType _type;
+  final String _path;
 
   /// [RefreshStorage] bucket identifier of this widgets storage.
   ///
@@ -44,7 +68,7 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatefulWid
   final String bucket;
 
   /// Asynchronous widget builder.
-  final FirestoreReferenceBuilderCallback<T> builder;
+  final FirebaseModelBuilderCallback<T> builder;
 
   /// Subscribe to realtime changes.
   final bool subscribe;
@@ -60,30 +84,30 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatefulWid
   final bool observe;
 
   @override
-  _FirestoreReferenceBuilderState<T> createState() => _FirestoreReferenceBuilderState<T>();
+  _FirebaseModelBuilderState<T> createState() => _FirebaseModelBuilderState<T>();
 }
 
-class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State<FirestoreReferenceBuilder<T>> {
+class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<FirebaseModelBuilder<T>> {
   bool _wasInitialValueAddedAsReference = false;
-  _FirestoreReferenceBuilderBucket<T> _bucket;
+  _FirebaseModelBuilderBucket<T> _bucket;
   FutureItem<T> get _futureObject => _bucket.item;
   set _futureObject(FutureItem<T> value) => _bucket.item = value;
 
   /// If the object is already cached, build synchronously
   void _updateObject() {
-    assert(widget.reference != null);
+    assert(widget._path != null);
 
     // Attempt to get cached object synchronously. If the object is not null,
     // build the widget without [FutureBuilder]
     //
     // NOTE: If `widget.initialValue` != null, its reference will be prepared
     // in `initState` and synchronously gotten here
-    final object = FirestoreModel.getReference<T>(widget.reference);
+    final object = ReferencedModel.getRef<T>(widget._path);
 
     if (object != null) {
-      developer.log('Instantiated with a synchronous ${widget.reference?.path}', name: 'firestore_model');
+      developer.log('Instantiated with a synchronous ${widget._path} (${widget._type})', name: 'firestore_model');
       _futureObject = FutureItem<T>.of(
-        type: FirebaseModelType.firestore,
+        type: widget._type,
         item: object,
         subscribe: widget.subscribe,
         state: this,
@@ -97,10 +121,10 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
         });
       }
     } else {
-      developer.log('Instantiating asynchronously ${widget.reference?.path}', name: 'firestore_model');
+      developer.log('Instantiating asynchronously ${widget._path} (${widget._type})', name: 'firestore_model');
       _futureObject = FutureItem<T>(
-        type: FirebaseModelType.firestore,
-        path: widget.reference?.path,
+        type: widget._type,
+        path: widget._path,
         subscribe: widget.subscribe,
         state: this,
       );
@@ -116,45 +140,53 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
           ? RefreshStorage.write(
               context: widget.storageContext ?? context,
               identifier: widget.bucket,
-              builder: () => _FirestoreReferenceBuilderBucket<T>(),
+              builder: () => _FirebaseModelBuilderBucket<T>(),
               dispose: (storage) => storage.item?.dispose(),
             )
-          : _FirestoreReferenceBuilderBucket<T>();
+          : _FirebaseModelBuilderBucket<T>();
 
-      if (widget.reference != null) {
+      if (widget._path != null) {
         /// Initial value will be added in [ReferencedModel], to allow
         /// `_updateObject` to build a synchronous future item. Consumers
         /// of this ReferencedBuilder can receive empty models, to which
-        /// they need to subscribe or call document manually
-        final referenceExists = FirestoreModel.isReferenced(widget.reference);
+        /// they need to subscribe or call document manually.
+        final referenceExists = ReferencedModel.isReferenced(widget._path);
         if (widget.initialValue != null && !referenceExists) {
           developer.log('Initial value passed, adding it to [ReferencedModel]', name: 'firestore_model');
 
-          // NOTE: Reference count is incremented
+          // NOTE: Reference count is incremented.
           _wasInitialValueAddedAsReference = true;
-          FirestoreModel.addReference<T>(widget.reference, widget.initialValue);
+          FirebaseModel.addReference<T>(widget._path, widget.initialValue);
         }
 
-        if (_bucket.item == null) {
-          developer.log('Bucket storage item null, creating: ${widget.reference?.path}', name: 'firestore_model');
+        if (_bucket.item == null || _bucket.item.path != widget._path) {
+          developer.log('Bucket item null, creating: ${widget._path} (${widget._type})', name: 'firestore_model');
+
+          if (_futureObject != null) {
+            // Path changed, dispose the previous item.
+            _futureObject?.dispose();
+            _futureObject = null;
+          }
+
           _updateObject();
         } else {
-          developer.log('Reusing bucket storage: ${widget.reference?.path}', name: 'firestore_model');
+          developer.log('Reusing bucket storage: ${widget._path} (${widget._type})', name: 'firestore_model');
         }
       }
     }
   }
 
   @override
-  void didUpdateWidget(FirestoreReferenceBuilder<T> oldWidget) {
+  void didUpdateWidget(FirebaseModelBuilder<T> oldWidget) {
     assert(oldWidget.subscribe == widget.subscribe);
     assert(oldWidget.bucket == widget.bucket);
+    assert(oldWidget._type == widget._type);
 
-    if (oldWidget.reference?.path != widget.reference?.path) {
-      developer.log('${oldWidget.reference?.path} changed to ${widget.reference?.path}', name: 'firestore_model');
+    if (oldWidget._path != widget._path) {
+      developer.log('${oldWidget._path} changed to ${widget._path}', name: 'firestore_model');
       _futureObject?.dispose();
       _futureObject = null;
-      if (widget.reference != null) _updateObject();
+      if (widget._path != null) _updateObject();
     }
 
     super.didUpdateWidget(oldWidget);

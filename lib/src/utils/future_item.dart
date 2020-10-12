@@ -1,56 +1,61 @@
+// ignore_for_file:sort_unnamed_constructors_first
+
 import 'dart:async';
 import 'dart:developer' as developer;
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firestore_model/src/firebase_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 
-typedef FromReferenceCallback<T extends FirestoreModel<T>> = Future<T> Function(
-  DocumentReference reference, {
-  bool subscribe,
-});
-
 /// Asynchronous/Synchronous loader of [FirestoreModel]s.
-class FutureItem<D extends FirestoreModel<D>> {
-  /// Creates an asynchronous [FutureItem].
-  factory FutureItem({
-    @required DocumentReference reference,
-    @required State state,
-    bool subscribe = false,
-  }) =>
-      FutureItem._(
-        item: null,
-        future: null,
-        reference: reference,
-        subscribe: subscribe,
-        state: state,
-        synchronous: false,
-      ).._deferLoad();
-
+class FutureItem<D extends FirebaseModel<D>> {
   FutureItem._({
-    @required this.reference,
+    @required this.path,
     @required this.state,
     @required this.subscribe,
     @required this.item,
     @required this.future,
     @required this.synchronous,
+    @required this.type,
   });
+
+  /// Creates an asynchronous [FutureItem].
+  factory FutureItem({
+    @required String path,
+    @required State state,
+    @required FirebaseModelType type,
+    bool subscribe = false,
+  }) =>
+      FutureItem._(
+        item: null,
+        future: null,
+        path: path,
+        subscribe: subscribe,
+        state: state,
+        synchronous: false,
+        type: type,
+      ).._deferLoad();
 
   /// Creates a synchronous [FutureItem] with an already ready [item].
   factory FutureItem.of({
     @required D item,
     @required State state,
+    @required FirebaseModelType type,
     bool subscribe = false,
   }) =>
       FutureItem._(
         item: (() => subscribe ? (item..subscribe()) : item)(),
         future: Future.value(item),
-        reference: null,
+        path: null,
         subscribe: subscribe,
         state: state,
         synchronous: true,
+        type: type,
       );
+
+  /// Firebase model type.
+  final FirebaseModelType type;
 
   /// Whether to subscribe to the fetched model or not.
   final bool subscribe;
@@ -61,8 +66,8 @@ class FutureItem<D extends FirestoreModel<D>> {
   /// True when this [FutureItem] was constructed with an already existing item.
   final bool synchronous;
 
-  /// Firestore reference of this [FutureItem].
-  final DocumentReference reference;
+  /// Firebase path of this [FutureItem].
+  final String path;
 
   bool _disposed = false;
   bool get _shouldContinue => !_disposed && !synchronous;
@@ -79,8 +84,8 @@ class FutureItem<D extends FirestoreModel<D>> {
     assert(_shouldContinue);
     if (!_shouldContinue) return null;
 
-    final fetchedItem = await FirestoreModel.from<D>(reference, subscribe: subscribe);
-    developer.log('Fetched future item: ${fetchedItem.reference.path}', name: 'firestore_model');
+    final fetchedItem = await FirebaseModel.from<D>(type, path, subscribe: subscribe);
+    developer.log('Fetched future item: ${fetchedItem.path} ($type)', name: 'firestore_model');
 
     if (_shouldContinue) {
       item = fetchedItem;
