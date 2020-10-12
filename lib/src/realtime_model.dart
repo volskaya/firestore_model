@@ -105,7 +105,7 @@ abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, 
     assert(reference?.path == realtimeModel.reference.path);
 
     // Linger data, if the snapshot is deleted.
-    if (exists == true && realtimeModel.exists == false) onSnapshot(model);
+    if (!(exists == true && realtimeModel.exists == false)) onSnapshot(model);
     notifyListeners();
   }
 }

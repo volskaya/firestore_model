@@ -178,7 +178,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   }
 
   void _onData(dynamic snapshot, {bool singleUpdate = false}) {
-    assert(snapshot == null || snapshot is DocumentSnapshot || snapshot is DataSnapshot);
+    assert(snapshot is DocumentSnapshot || snapshot is DataSnapshot);
     final model = FirebaseModel.build<T>(modelType, path, snapshot);
 
     developer.log('Reacting to changes of ${T.toString()} - $id', name: 'firestore_model');
@@ -242,7 +242,8 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
             _streamSubscription = FirebaseFirestore.instance.doc(path).snapshots().listen(_onData);
             break;
           case FirebaseModelType.realtime:
-            _streamSubscription = FirebaseDatabase.instance.reference().child(path).onValue.listen(_onData);
+            _streamSubscription =
+                FirebaseDatabase.instance.reference().child(path).onValue.listen((event) => _onData(event.snapshot));
             break;
         }
         developer.log('Subscribed to ${T.toString()} - $id', name: 'firestore_model');

@@ -75,7 +75,7 @@ mixin ReferencedModel {
   static Future<T> referenceWithSnapshot<T extends FirebaseModel<T>>(
       FirebaseModelType type, String path, T Function() newObject) async {
     assert(path.isNotEmpty);
-    final hasReference = _cache.containsKey(reference);
+    final hasReference = _cache.containsKey(path);
 
     // When the object has reference, return that, instead of creating
     // a new one
