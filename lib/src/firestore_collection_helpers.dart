@@ -165,6 +165,12 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    assert(
+      status != FirestoreCollectionStatus.ready,
+      'This widget is intended for other statuses, except ready',
+    );
+
     switch (status) {
       case FirestoreCollectionStatus.idle:
       case FirestoreCollectionStatus.loading:
@@ -186,12 +192,12 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
 }
 
 /// Default tail builder of [FirestoreCollectionnSliverList].
-class FirestoreCollectionTailBuilder extends StatelessWidget {
+class FirestoreCollectionTailBuilder extends StatelessObserverWidget {
   /// Creates [FirestoreCollectionTailBuilder].
   const FirestoreCollectionTailBuilder({
     Key key,
     @required this.label,
-  }) : super(key: key);
+  }) : super(key: key, name: 'firestore_collection_tail_builder');
 
   /// Text to display as the tail.
   final String label;
@@ -199,14 +205,17 @@ class FirestoreCollectionTailBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
-      child: Text(
-        label,
-        style: theme.textTheme.subtitle2.apply(color: theme.hintColor),
-        overflow: TextOverflow.ellipsis,
-        maxLines: 1,
-        textAlign: TextAlign.center,
-      ),
-    );
+    final collection = FirestoreCollectionBuilder.of(context);
+    return !collection.isEndReached
+        ? const DelayedProgressIndicator()
+        : Center(
+            child: Text(
+              label,
+              style: theme.textTheme.subtitle2.apply(color: theme.hintColor),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+            ),
+          );
   }
 }

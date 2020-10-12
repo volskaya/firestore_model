@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobx/mobx.dart';
+import 'package:provider/provider.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
 part 'firestore_collection_builder.g.dart';
@@ -71,6 +72,10 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>> extends StatefulWi
     this.routeOverride,
     this.storageOverride,
   }) : super(key: key);
+
+  /// Get [FirestoreCollectionBuilderState] from [BuildContext].
+  static FirestoreCollectionBuilderState of(BuildContext context) =>
+      Provider.of<FirestoreCollectionBuilderState>(context, listen: false);
 
   /// Shortcut access to pending items.
   final ValueChanged<List<T>> onPendingItemsChanged;
@@ -449,10 +454,13 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
   }
 
   @override
-  Widget build(BuildContext context) => widget.observe
-      ? Observer(
-          name: widget.bucket,
-          builder: (context) => widget.builder(context, this),
-        )
-      : widget.builder(context, this);
+  Widget build(BuildContext context) => Provider<FirestoreCollectionBuilderState>.value(
+        value: this,
+        child: widget.observe
+            ? Observer(
+                name: widget.bucket,
+                builder: (context) => widget.builder(context, this),
+              )
+            : widget.builder(context, this),
+      );
 }
