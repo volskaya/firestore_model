@@ -410,31 +410,30 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
 
   @override
   void initState() {
-    super.initState();
     WidgetsBinding.instance.addObserver(this);
     pageTime = DateTime.now();
+    super.initState();
   }
 
   @override
   void didChangeDependencies() {
-    super.didChangeDependencies();
     if (_pageStorage == null) {
       widget.scrollController?.addListener(_handleScroll);
       _setupPageStorage(); // Sets _pageStorage
       _startListening();
       _pendingItemsReaction = autorun((_) => widget.onPendingItemsChanged?.call(pendingItems));
     }
+    super.didChangeDependencies();
   }
 
   @override
   void dispose() {
-    super.dispose();
     WidgetsBinding.instance.removeObserver(this);
     widget.scrollController?.removeListener(_handleScroll);
     _streamSubscription?.cancel();
     _streamSubscription = null;
     _pendingItemsReaction?.call();
-    // NOTE: Items are disposed by the page storage, when the route is popped
+    super.dispose();
   }
 
   @override

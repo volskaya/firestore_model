@@ -13,7 +13,7 @@ import 'package:refresh_storage/refresh_storage.dart';
 typedef FirebaseModelBuilderCallback<T extends FirebaseModel<T>> = Widget Function(BuildContext context, T data);
 
 class _FirebaseModelBuilderBucket<T extends FirebaseModel<T>> {
-  FutureItem<T> item;
+  FutureItem<T> future;
 }
 
 /// Asynchronous widget builder of reference counted [FirebaseModel]s.
@@ -89,9 +89,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
 
 class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<FirebaseModelBuilder<T>> {
   bool _wasInitialValueAddedAsReference = false;
-  _FirebaseModelBuilderBucket<T> _bucket;
-  FutureItem<T> get _futureObject => _bucket.item;
-  set _futureObject(FutureItem<T> value) => _bucket.item = value;
+  _FirebaseModelBuilderBucket<T> _storage;
 
   /// If the object is already cached, build synchronously
   void _updateObject() {
@@ -106,7 +104,7 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
 
     if (object != null) {
       developer.log('Instantiated with a synchronous ${widget._path} (${widget._type})', name: 'firestore_model');
-      _futureObject = FutureItem<T>.of(
+      _storage.future = FutureItem<T>.of(
         type: widget._type,
         item: object,
         subscribe: widget.subscribe,
@@ -117,12 +115,12 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
       // it may never get data, so always request 1 update
       if (!widget.subscribe) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _futureObject.item != null) _futureObject.item.update();
+          if (mounted && _storage.future.item != null) _storage.future.item.update();
         });
       }
     } else {
       developer.log('Instantiating asynchronously ${widget._path} (${widget._type})', name: 'firestore_model');
-      _futureObject = FutureItem<T>(
+      _storage.future = FutureItem<T>(
         type: widget._type,
         path: widget._path,
         subscribe: widget.subscribe,
@@ -135,13 +133,13 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    if (_bucket == null) {
-      _bucket = widget.bucket != null
+    if (_storage == null) {
+      _storage = widget.bucket != null
           ? RefreshStorage.write(
               context: widget.storageContext ?? context,
               identifier: widget.bucket,
               builder: () => _FirebaseModelBuilderBucket<T>(),
-              dispose: (storage) => storage.item?.dispose(),
+              dispose: (storage) => storage.future?.dispose(),
             )
           : _FirebaseModelBuilderBucket<T>();
 
@@ -159,13 +157,13 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
           FirebaseModel.addReference<T>(widget._path, widget.initialValue);
         }
 
-        if (_bucket.item == null || _bucket.item.path != widget._path) {
+        if (_storage.future == null || _storage.future.path != widget._path) {
           developer.log('Bucket item null, creating: ${widget._path} (${widget._type})', name: 'firestore_model');
 
-          if (_futureObject != null) {
+          if (_storage.future != null) {
             // Path changed, dispose the previous item.
-            _futureObject?.dispose();
-            _futureObject = null;
+            _storage.future?.dispose();
+            _storage.future = null;
           }
 
           _updateObject();
@@ -184,8 +182,8 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
 
     if (oldWidget._path != widget._path) {
       developer.log('${oldWidget._path} changed to ${widget._path}', name: 'firestore_model');
-      _futureObject?.dispose();
-      _futureObject = null;
+      _storage.future?.dispose();
+      _storage.future = null;
       if (widget._path != null) _updateObject();
     }
 
@@ -195,14 +193,14 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
   @override
   void dispose() {
     if (_wasInitialValueAddedAsReference) widget.initialValue?.dispose();
-    if (widget.bucket == null) _bucket?.item?.dispose();
+    if (widget.bucket == null) _storage?.future?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) => FutureBuilder<T>(
-        future: _futureObject?.future,
-        initialData: _futureObject?.item,
+        future: _storage.future?.future,
+        initialData: _storage.future?.item,
         builder: (context, snapshot) => widget.observe
             ? Observer(
                 name: '${widget.bucket}_observer',

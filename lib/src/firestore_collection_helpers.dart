@@ -206,16 +206,18 @@ class FirestoreCollectionTailBuilder extends StatelessObserverWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final collection = FirestoreCollectionBuilder.of(context);
-    return !collection.isEndReached
-        ? const DelayedProgressIndicator()
-        : Center(
-            child: Text(
-              label,
-              style: theme.textTheme.subtitle2.apply(color: theme.hintColor),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              textAlign: TextAlign.center,
+    return FancySwitcher(
+      child: !collection.isEndReached
+          ? const DelayedProgressIndicator()
+          : Center(
+              child: Text(
+                label,
+                style: theme.textTheme.subtitle2.apply(color: theme.hintColor),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+              ),
             ),
-          );
+    );
   }
 }

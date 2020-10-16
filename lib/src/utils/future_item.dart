@@ -113,8 +113,9 @@ class FutureItem<D extends FirebaseModel<D>> {
 
   /// Dispose the [FirestoreModel] and unsubscribe, if [subscribe] is true.
   void dispose() {
-    assert(!_disposed, 'Disposing the same [FutureItem] twice might indicate a mistake in code');
+    final shouldDispose = !_disposed;
     _disposed = true;
-    item?.dispose(unsubscribe: subscribe);
+    if (shouldDispose) item?.dispose(unsubscribe: subscribe);
+    assert(shouldDispose, 'Disposing the same [FutureItem] twice might indicate a mistake in code. Path: $path');
   }
 }
