@@ -69,9 +69,6 @@ class FutureItem<D extends FirebaseModel<D>> {
   /// Firebase path of this [FutureItem].
   final String path;
 
-  bool _disposed = false;
-  bool get _shouldContinue => !_disposed && !synchronous;
-
   /// Future that will complete when the [FutureItem] is ready and a model is fetched.
   Future<D> future;
 
@@ -79,15 +76,18 @@ class FutureItem<D extends FirebaseModel<D>> {
   /// unless the [FutureItem] was constructed synchronously.
   D item;
 
+  bool _disposed = false;
+
   Future<D> _getItem() async {
     assert(item == null);
-    assert(_shouldContinue);
-    if (!_shouldContinue) return null;
+    assert(!synchronous);
+    assert(!_disposed);
+    if (_disposed || synchronous) return null;
 
     final fetchedItem = await FirebaseModel.from<D>(type, path, subscribe: subscribe);
     developer.log('Fetched future item: ${fetchedItem.path} ($type)', name: 'firestore_model');
 
-    if (_shouldContinue) {
+    if (!_disposed) {
       item = fetchedItem;
     } else {
       fetchedItem.dispose(unsubscribe: subscribe);

@@ -62,6 +62,9 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   /// See [FirestoreModelBuilder].
   static RealtimeDatabaseModelBuilder realtimeDatabaseBuilder;
 
+  /// Print the contents of [_cache].
+  static void printReferences({int padding = 120}) => ReferencedModel.printReferences(padding: padding);
+
   /// Build package included models first, then anything else.
   static D build<D>(FirebaseModelType type, String path, [dynamic _snapshot]) {
     assert(path.isNotEmpty);
@@ -165,27 +168,15 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
 
 abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements _FirebaseModelImpl<T> {
   final _firstSnapshotCompleter = Completer<void>();
-  final _semaphore = Semaphore(1);
 
   @override
   bool operator ==(dynamic other) => other.id == id;
   @override
   int get hashCode => id.hashCode;
 
-  StreamSubscription<dynamic> _streamSubscription;
+  StreamSubscription<dynamic> _streamSubscription; // ignore:cancel_subscriptions
   int _subscribers = 0;
   bool get isSubscribed => _subscribers > 0;
-
-  bool _shouldSubscribe() {
-    final shouldSubscribe = _subscribers == 0;
-    _subscribers += 1;
-    return shouldSubscribe;
-  }
-
-  bool _shouldUnsubscribe() {
-    if (_subscribers > 0) _subscribers -= 1;
-    return _subscribers == 0;
-  }
 
   void _onData(dynamic snapshot, {bool singleUpdate = false}) {
     assert(snapshot is DocumentSnapshot || snapshot is DataSnapshot);
@@ -204,26 +195,21 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   /// Gets a single update
   Future update() async {
     assert(path != null);
-    await _semaphore.acquire();
 
-    try {
-      // Don't fetch updated document, if already subscribed
-      if (_streamSubscription != null) return;
+    // Don't fetch updated document, if already subscribed
+    if (_streamSubscription != null) return;
 
-      dynamic snapshot;
-      switch (modelType) {
-        case FirebaseModelType.firestore:
-          snapshot = await FirebaseFirestore.instance.doc(path).get();
-          break;
-        case FirebaseModelType.realtime:
-          snapshot = await FirebaseDatabase.instance.reference().child(path).once();
-          break;
-      }
-
-      _onData(snapshot, singleUpdate: true);
-    } finally {
-      _semaphore.release();
+    dynamic snapshot;
+    switch (modelType) {
+      case FirebaseModelType.firestore:
+        snapshot = await FirebaseFirestore.instance.doc(path).get();
+        break;
+      case FirebaseModelType.realtime:
+        snapshot = await FirebaseDatabase.instance.reference().child(path).once();
+        break;
     }
+
+    _onData(snapshot, singleUpdate: true);
   }
 
   /// Manually feed the model data, when a redundant snapshot was fetched from a list
@@ -238,66 +224,62 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   /// It's your responsibility to call [unsubscribe] because subscriptions
   /// are reference counted and if you never unsubscribe, this model will
   /// to listening, while in the background.
-  Future<void> subscribe() async {
+  Future<void> subscribe() {
     assert(path != null);
-    await _semaphore.acquire();
 
-    try {
-      if (_shouldSubscribe()) {
-        assert(_streamSubscription == null);
+    final shouldSubscribe = _subscribers == 0;
+    _subscribers += 1;
 
-        // Start listening
-        switch (modelType) {
-          case FirebaseModelType.firestore:
-            _streamSubscription = FirebaseFirestore.instance.doc(path).snapshots().listen(_onData);
-            break;
-          case FirebaseModelType.realtime:
-            _streamSubscription =
-                FirebaseDatabase.instance.reference().child(path).onValue.listen((event) => _onData(event.snapshot));
-            break;
-        }
-        developer.log('Subscribed to ${T.toString()} - $id', name: 'firestore_model');
+    if (shouldSubscribe) {
+      assert(_streamSubscription == null);
+
+      // Start listening.
+      switch (modelType) {
+        case FirebaseModelType.firestore:
+          _streamSubscription = FirebaseFirestore.instance.doc(path).snapshots().listen(_onData);
+          break;
+        case FirebaseModelType.realtime:
+          _streamSubscription =
+              FirebaseDatabase.instance.reference().child(path).onValue.listen((event) => _onData(event.snapshot));
+          break;
       }
 
-      // Future completes when the first snapshot arrives.
-      // Only await if the initial future, after constructing
-      // the model for the first time
-      return !_firstSnapshotCompleter.isCompleted ? _firstSnapshotCompleter.future : null;
-    } catch (e) {
-      developer.log('Couldn\'t subscribe to ${T.toString()} - $id', name: 'firestore_model', error: e);
-    } finally {
-      _semaphore.release();
+      developer.log('Subscribed to ${T.toString()} - $id', name: 'firestore_model');
     }
+
+    // Future completes when the first snapshot arrives.
+    // Only await if the initial future, after constructing
+    // the model for the first time.
+    return !_firstSnapshotCompleter.isCompleted ? _firstSnapshotCompleter.future : null;
   }
 
   /// Unsubscribe from the model.
   ///
   /// This is a reference counted dispose step and should not be called, if a
   /// widget or an action didn't call [subscribe] to begin with.
-  Future<void> unsubscribe({bool force = false}) async {
+  void unsubscribe({bool force = false}) {
     assert(path != null);
-    await _semaphore.acquire();
 
-    try {
-      if (!force && !isSubscribed) return;
-      if (!force && !_shouldUnsubscribe()) return;
-
-      developer.log('Unsubscribing from ${T.toString()} - $id', name: 'firestore_model');
-      await _streamSubscription?.cancel();
-      _streamSubscription = null;
-      _subscribers = 0;
-    } finally {
-      _semaphore.release();
+    if (!force && !isSubscribed) return;
+    if (!force && _subscribers > 0) {
+      _subscribers -= 1;
+      if (_subscribers > 0) return;
     }
+
+    developer.log('Unsubscribing from ${T.toString()} - $id', name: 'firestore_model');
+    final subscription = _streamSubscription;
+    _streamSubscription = null;
+    _subscribers = 0;
+    subscription?.cancel();
   }
 
   @override
   void dispose({bool unsubscribe = false}) => releaseRef(
       model: this as FirebaseModel<T>,
       onDecremented: () => unsubscribe ? this.unsubscribe() : null,
-      onInvalidated: () async {
+      onInvalidated: () {
         developer.log('Disposing ${T.toString()} - $id', name: 'firestore_model');
-        if (isSubscribed) await this.unsubscribe();
+        if (isSubscribed) this.unsubscribe(force: true);
         super.dispose();
       });
 }

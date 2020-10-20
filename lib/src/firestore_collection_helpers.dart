@@ -20,7 +20,7 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
     Key key,
     @required this.collection,
     @required this.builder,
-    @required this.contentPadding,
+    this.contentPadding,
   })  : _axis = Axis.vertical,
         super(key: key, name: 'firestore_collection_switcher');
 
@@ -29,7 +29,7 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
     Key key,
     @required this.collection,
     @required this.builder,
-    @required this.contentPadding,
+    this.contentPadding,
   })  : _axis = Axis.horizontal,
         super(key: key, name: 'firestore_collection_switcher');
 
@@ -52,7 +52,7 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
     if (collection.status != FirestoreCollectionStatus.ready) {
       body = SingleChildScrollView(
         key: ValueKey(collection.status),
-        padding: contentPadding,
+        padding: contentPadding ?? MediaQuery.of(context).padding,
         physics: const AlwaysScrollableScrollPhysics(),
         child: body,
         scrollDirection: _axis,
@@ -143,8 +143,8 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
 
   @override
   Widget build(BuildContext context) => itemExtent != null
-      ? SliverFixedExtentList(itemExtent: itemExtent, delegate: _getDelegate())
-      : SliverList(delegate: _getDelegate());
+      ? SliverFixedExtentList(key: key, itemExtent: itemExtent, delegate: _getDelegate())
+      : SliverList(key: key, delegate: _getDelegate());
 }
 
 /// Default status builder of [FirestoreCollectionnSliverList].

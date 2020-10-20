@@ -15,6 +15,15 @@ mixin ReferencedModel {
   static final _references = HashMap<String, int>();
   static final _cache = HashMap<String, _Memoizer<FirebaseModel>>();
 
+  /// Print the [_references] counters.
+  static void printReferences({int padding = 120}) {
+    if (_references.isEmpty) print('No active references');
+    final entries = _references.entries.toList(growable: false)..sort((a, b) => a.key.compareTo(b.key));
+    for (final entry in entries) {
+      print('${entry.key} '.padRight(padding, '-') + ' ${entry.value}');
+    }
+  }
+
   static Future<T> _get<T extends FirebaseModel<T>>(FirebaseModelType type, String path) async {
     final model = FirebaseModel.build<T>(type, path);
 
@@ -29,7 +38,7 @@ mixin ReferencedModel {
   }
 
   /// Returns a synchronously cached, referenced model, and increments
-  /// its reference counter
+  /// its reference counter.
   static T getRef<T extends FirebaseModel<T>>(String path) {
     if (_cache[path]?.isCompleted == true) {
       assert(_references[path] > 0);
@@ -70,7 +79,7 @@ mixin ReferencedModel {
 
   /// Memoized version of `reference`, which will return [T], if it
   /// already has a reference, else get the object from `newObject`
-  /// and set it as main reference
+  /// and set it as main reference.
   @protected
   static Future<T> referenceWithSnapshot<T extends FirebaseModel<T>>(
       FirebaseModelType type, String path, T Function() newObject) async {
@@ -78,16 +87,16 @@ mixin ReferencedModel {
     final hasReference = _cache.containsKey(path);
 
     // When the object has reference, return that, instead of creating
-    // a new one
+    // a new one.
     final object = hasReference ? await ReferencedModel.reference<T>(type, path) : newObject();
     assert(object != null);
 
     // Object was not referenced, so manually reference the one
-    // returned from `serializer`
+    // returned from `serializer`.
     if (!hasReference && object != null) {
       addRef<T>(path: path, object: object);
     } else {
-      // If it was referenced, push the new data as an update
+      // If it was referenced, push the new data as an update.
       object.feedData(newObject());
     }
 
@@ -116,7 +125,7 @@ mixin ReferencedModel {
       return object as T;
     }
 
-    // Object not memoized yet, creating it here
+    // Object not memoized yet, creating it here.
     assert(!_cache.containsKey(path));
     developer.log(
       'No object for ${T.toString()} - $path exists, creating a new one…',
@@ -128,7 +137,7 @@ mixin ReferencedModel {
         if (subscribe) {
           // No snapshot data means an empty model with a reference.
           // This model is subscribed to below, which will await first
-          // snapshot data, unless the model already has them
+          // snapshot data, unless the model already has them.
           final item = FirebaseModel.build<T>(type, path);
 
           // Await first snapshot, to ensure model correctly handles `exists`.
@@ -152,7 +161,7 @@ mixin ReferencedModel {
     return _cache[path].future as Future<T>;
   }
 
-  /// Intended to be called from [FirestoreModel.dispose]
+  /// Intended to be called from [FirestoreModel.dispose].
   @protected
   void releaseRef({
     @required covariant FirebaseModel model,
@@ -161,8 +170,10 @@ mixin ReferencedModel {
   }) {
     assert(model.path.isNotEmpty);
     assert(onInvalidated != null);
+    assert(_references[model.path] != null, '${model.path} reference released without it being referenced');
 
-    _references[model.path] = (_references[model.path] ?? 0) - 1;
+    _references[model.path] = (_references[model.path] ?? 1) - 1;
+
     developer.log(
       'Unreferenced ${model.runtimeType.toString()}'
       ' - ${model?.id}, '

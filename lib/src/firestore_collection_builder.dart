@@ -47,6 +47,9 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> wit
 
   @observable
   FirestoreCollectionStatus listStatus = FirestoreCollectionStatus.idle;
+
+  @observable
+  bool isEndReached = false;
 }
 
 /// Build subscribable lists of firestore collections.
@@ -158,7 +161,7 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
   int page = 0;
 
   /// True when the last pagination request returned less items than [itemsPerPage].
-  bool isEndReached = false;
+  bool get isEndReached => _pageStorage.isEndReached;
 
   /// [ObservableList] of paginated items. Observe this manually, if
   /// [FirestoreCollectionBuilder.observe] is false.
@@ -293,7 +296,7 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
     if (!mounted) return;
 
     if (snapshots.size < widget.itemsPerPage) {
-      isEndReached = true;
+      _pageStorage.isEndReached = true;
       developer.log('$identifier collection end reached', name: 'firestore_model');
     }
 

@@ -13,7 +13,7 @@ import 'package:refresh_storage/refresh_storage.dart';
 typedef FirebaseModelBuilderCallback<T extends FirebaseModel<T>> = Widget Function(BuildContext context, T data);
 
 class _FirebaseModelBuilderBucket<T extends FirebaseModel<T>> {
-  FutureItem<T> future;
+  FutureItem<T> object;
 }
 
 /// Asynchronous widget builder of reference counted [FirebaseModel]s.
@@ -30,13 +30,13 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
     /// Firestore reference to build.
     @required DocumentReference reference,
     @required this.builder,
-    this.bucket,
+    @required this.bucket,
     this.subscribe = false,
     this.initialValue,
     this.storageContext,
     this.observe = true,
-  })  : assert(initialValue == null || reference != null),
-        _type = FirebaseModelType.firestore,
+    this.update = false,
+  })  : _type = FirebaseModelType.firestore,
         _path = reference?.path,
         super(key: key);
 
@@ -49,13 +49,13 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
     /// Realtime Database reference to build.
     @required DatabaseReference reference,
     @required this.builder,
-    this.bucket,
+    @required this.bucket,
     this.subscribe = false,
     this.initialValue,
     this.storageContext,
     this.observe = true,
-  })  : assert(initialValue == null || reference != null),
-        _type = FirebaseModelType.realtime,
+    this.update = false,
+  })  : _type = FirebaseModelType.realtime,
         _path = reference?.path,
         super(key: key);
 
@@ -83,6 +83,9 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
   /// Whether to automatically wrap the builder in an [Observer].
   final bool observe;
 
+  /// Request the model to update, when this widget is built.
+  final bool update;
+
   @override
   _FirebaseModelBuilderState<T> createState() => _FirebaseModelBuilderState<T>();
 }
@@ -98,13 +101,14 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
     // Attempt to get cached object synchronously. If the object is not null,
     // build the widget without [FutureBuilder]
     //
-    // NOTE: If `widget.initialValue` != null, its reference will be prepared
-    // in `initState` and synchronously gotten here
+    // This will increment the reference counter and instantiate the future item
+    // as a "synchronous item". When the future item is disposed, this reference
+    // will dispose as well.
     final object = ReferencedModel.getRef<T>(widget._path);
 
     if (object != null) {
       developer.log('Instantiated with a synchronous ${widget._path} (${widget._type})', name: 'firestore_model');
-      _storage.future = FutureItem<T>.of(
+      _storage.object = FutureItem<T>.of(
         type: widget._type,
         item: object,
         subscribe: widget.subscribe,
@@ -113,14 +117,14 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
 
       // If an empty synchronous item is instantiated with subscription off,
       // it may never get data, so always request 1 update
-      if (!widget.subscribe) {
+      if (widget.update && !widget.subscribe) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _storage.future.item != null) _storage.future.item.update();
+          if (mounted) _storage.object.item?.update();
         });
       }
     } else {
       developer.log('Instantiating asynchronously ${widget._path} (${widget._type})', name: 'firestore_model');
-      _storage.future = FutureItem<T>(
+      _storage.object = FutureItem<T>(
         type: widget._type,
         path: widget._path,
         subscribe: widget.subscribe,
@@ -139,7 +143,7 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
               context: widget.storageContext ?? context,
               identifier: widget.bucket,
               builder: () => _FirebaseModelBuilderBucket<T>(),
-              dispose: (storage) => storage.future?.dispose(),
+              dispose: (storage) => storage.object?.dispose(),
             )
           : _FirebaseModelBuilderBucket<T>();
 
@@ -152,18 +156,18 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
         if (widget.initialValue != null && !referenceExists) {
           developer.log('Initial value passed, adding it to [ReferencedModel]', name: 'firestore_model');
 
-          // NOTE: Reference count is incremented.
+          // NOTE: Reference count is incremented. Decremented in [this.dispose].
           _wasInitialValueAddedAsReference = true;
           FirebaseModel.addReference<T>(widget._path, widget.initialValue);
         }
 
-        if (_storage.future == null || _storage.future.path != widget._path) {
+        if (_storage.object == null || _storage.object.path != widget._path) {
           developer.log('Bucket item null, creating: ${widget._path} (${widget._type})', name: 'firestore_model');
 
-          if (_storage.future != null) {
+          if (_storage.object != null) {
             // Path changed, dispose the previous item.
-            _storage.future?.dispose();
-            _storage.future = null;
+            _storage.object?.dispose();
+            _storage.object = null;
           }
 
           _updateObject();
@@ -172,6 +176,8 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
         }
       }
     }
+
+    assert(_storage != null);
   }
 
   @override
@@ -182,8 +188,8 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
 
     if (oldWidget._path != widget._path) {
       developer.log('${oldWidget._path} changed to ${widget._path}', name: 'firestore_model');
-      _storage.future?.dispose();
-      _storage.future = null;
+      _storage.object?.dispose();
+      _storage.object = null;
       if (widget._path != null) _updateObject();
     }
 
@@ -193,14 +199,14 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
   @override
   void dispose() {
     if (_wasInitialValueAddedAsReference) widget.initialValue?.dispose();
-    if (widget.bucket == null) _storage?.future?.dispose();
+    if (widget.bucket == null) _storage?.object?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) => FutureBuilder<T>(
-        future: _storage.future?.future,
-        initialData: _storage.future?.item,
+        future: _storage.object?.future,
+        initialData: _storage.object?.item,
         builder: (context, snapshot) => widget.observe
             ? Observer(
                 name: '${widget.bucket}_observer',
