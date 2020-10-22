@@ -64,7 +64,9 @@ abstract class FirestoreModel<T> extends _FirestoreModel<T> with _$FirestoreMode
   /// Reference by overriding the `builder`, which builds the object,
   /// when there are previous references available
   static Future<D> referenceWithBuilder<D extends FirebaseModel<D>>(
-          DocumentReference reference, D Function() builder) =>
+    DocumentReference reference,
+    D Function() builder,
+  ) =>
       ReferencedModel.referenceWithSnapshot<D>(FirebaseModelType.firestore, reference.path, builder);
 }
 
@@ -123,19 +125,13 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
   @action
   void handleSnapshot(T model) {
     final firestoreModel = model as FirestoreModel<T>;
-    final deleted = this.deleted || (exists == true && firestoreModel.exists == false);
-    assert(reference?.path == firestoreModel.snapshot.reference.path);
 
     snapshot = firestoreModel.snapshot;
-
-    // Don't update data, if the document was deleted during this models lifecycle.
-    // [exists] will still update by updating [snapshot] above.
-    if (!deleted) {
-      createTime = firestoreModel.createTime;
-      updateTime = firestoreModel.updateTime;
-      onSnapshot(model);
-    }
-
+    createTime = firestoreModel.createTime;
+    updateTime = firestoreModel.updateTime;
+    onSnapshot(model);
     notifyListeners();
+
+    assert(reference?.path == firestoreModel.snapshot.reference.path);
   }
 }

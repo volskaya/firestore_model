@@ -102,10 +102,14 @@ abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, 
   @action
   void handleSnapshot(T model) {
     final realtimeModel = model as RealtimeModel<T>;
-    assert(reference?.path == realtimeModel.reference.path);
 
-    // Linger data, if the snapshot is deleted.
-    if (!(exists == true && realtimeModel.exists == false)) onSnapshot(model);
+    snapshot = realtimeModel.snapshot;
+    onSnapshot(model);
     notifyListeners();
+
+    assert(reference?.path == realtimeModel.reference.path);
+    assert(realtimeModel.snapshot != null);
+    assert(snapshot != null);
+    assert(snapshot == realtimeModel.snapshot);
   }
 }
