@@ -29,10 +29,10 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
 
     /// Firestore reference to build.
     @required DocumentReference reference,
-    @required this.builder,
     @required this.bucket,
+    this.builder,
     this.subscribe = false,
-    this.initialValue,
+    this.placeholder,
     this.storageContext,
     this.observe = true,
     this.update = false,
@@ -48,10 +48,10 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
 
     /// Realtime Database reference to build.
     @required DatabaseReference reference,
-    @required this.builder,
     @required this.bucket,
+    this.builder,
     this.subscribe = false,
-    this.initialValue,
+    this.placeholder,
     this.storageContext,
     this.observe = true,
     this.update = false,
@@ -74,7 +74,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
   final bool subscribe;
 
   /// Optional value to pass to [builder], while the [reference] is not fetched.
-  final T initialValue;
+  final T placeholder;
 
   /// Allow overriding context of [MyApp.storage] to support building
   /// within an overlay.
@@ -91,7 +91,6 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
 }
 
 class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<FirebaseModelBuilder<T>> {
-  bool _wasInitialValueAddedAsReference = false;
   _FirebaseModelBuilderBucket<T> _storage;
 
   /// If the object is already cached, build synchronously
@@ -135,8 +134,6 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
 
   @override
   void didChangeDependencies() {
-    super.didChangeDependencies();
-
     if (_storage == null) {
       _storage = widget.bucket != null
           ? RefreshStorage.write(
@@ -148,19 +145,6 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
           : _FirebaseModelBuilderBucket<T>();
 
       if (widget._path != null) {
-        /// Initial value will be added in [ReferencedModel], to allow
-        /// `_updateObject` to build a synchronous future item. Consumers
-        /// of this ReferencedBuilder can receive empty models, to which
-        /// they need to subscribe or call document manually.
-        final referenceExists = ReferencedModel.isReferenced(widget._path);
-        if (widget.initialValue != null && !referenceExists) {
-          developer.log('Initial value passed, adding it to [ReferencedModel]', name: 'firestore_model');
-
-          // NOTE: Reference count is incremented. Decremented in [this.dispose].
-          _wasInitialValueAddedAsReference = true;
-          FirebaseModel.addReference<T>(widget._path, widget.initialValue);
-        }
-
         if (_storage.object == null || _storage.object.path != widget._path) {
           developer.log('Bucket item null, creating: ${widget._path} (${widget._type})', name: 'firestore_model');
 
@@ -177,7 +161,7 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
       }
     }
 
-    assert(_storage != null);
+    super.didChangeDependencies();
   }
 
   @override
@@ -198,7 +182,6 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
 
   @override
   void dispose() {
-    if (_wasInitialValueAddedAsReference) widget.initialValue?.dispose();
     if (widget.bucket == null) _storage?.object?.dispose();
     super.dispose();
   }
@@ -206,7 +189,7 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
   @override
   Widget build(BuildContext context) => FutureBuilder<T>(
         future: _storage.object?.future,
-        initialData: _storage.object?.item,
+        initialData: _storage.object?.item ?? widget.placeholder,
         builder: (context, snapshot) => widget.observe
             ? Observer(
                 name: '${widget.bucket}_observer',
