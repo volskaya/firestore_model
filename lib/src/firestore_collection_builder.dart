@@ -369,19 +369,26 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
     }
   }
 
+  void _disposeStorage() {
+    final allItems = [..._pageStorage.pendingItems, ..._pageStorage.subscribedItems, ..._pageStorage.paginatedItems];
+    developer.log('Disposing ${allItems.length} items from $identifier', name: 'firestore_model');
+    for (final item in allItems) item.dispose();
+  }
+
   void _setupPageStorage() {
-    _pageStorage = RefreshStorage.write<_FirestoreCollectionStorage<T>>(
-      context: context,
-      identifier: identifier,
-      builder: () => _FirestoreCollectionStorage<T>(),
-      route: widget.routeOverride,
-      storage: widget.storageOverride,
-      dispose: (data) {
-        final allItems = [...data.pendingItems, ...data.subscribedItems, ...data.paginatedItems];
-        developer.log('Disposing ${allItems.length} items from $identifier', name: 'firestore_model');
-        for (final item in allItems) item.dispose();
-      },
-    );
+    _pageStorage = widget.bucket != null
+        ? RefreshStorage.write<_FirestoreCollectionStorage<T>>(
+            context: context,
+            identifier: identifier,
+            builder: () => _FirestoreCollectionStorage<T>(),
+            route: widget.routeOverride,
+            storage: widget.storageOverride,
+            dispose: (storage) {
+              assert(storage == _pageStorage);
+              _disposeStorage();
+            },
+          )
+        : _FirestoreCollectionStorage<T>();
 
     if (pendingItems.isNotEmpty) {
       subscribedItems.addAll(pendingItems);
@@ -419,6 +426,12 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
   }
 
   @override
+  void didUpdateWidget(covariant FirestoreCollectionBuilder<T> oldWidget) {
+    assert(oldWidget.bucket == widget.bucket, 'Bucket must not change');
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   void didChangeDependencies() {
     if (_pageStorage == null) {
       widget.scrollController?.addListener(_handleScroll);
@@ -436,6 +449,7 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
     _streamSubscription?.cancel();
     _streamSubscription = null;
     _pendingItemsReaction?.call();
+    if (widget.bucket == null) _disposeStorage();
     super.dispose();
   }
 
