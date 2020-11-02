@@ -63,7 +63,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   static RealtimeDatabaseModelBuilder realtimeDatabaseBuilder;
 
   /// Print the contents of [_cache].
-  static void printReferences({int padding = 120}) => ReferencedModel.printReferences(padding: padding);
+  static void printReferences() => ReferencedModel.printReferences();
 
   /// Build package included models first, then anything else.
   static D build<D>(FirebaseModelType type, String path, [dynamic _snapshot]) {

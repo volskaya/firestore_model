@@ -49,6 +49,13 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
     final key = ValueKey(collection.status);
     Widget body = KeyedSubtree(key: key, child: builder(context, collection.status));
 
+    if (contentPadding != null) {
+      body = MediaQuery(
+        data: MediaQuery.of(context).copyWith(padding: contentPadding),
+        child: body,
+      );
+    }
+
     if (collection.status != FirestoreCollectionStatus.ready) {
       body = SingleChildScrollView(
         key: ValueKey(collection.status),

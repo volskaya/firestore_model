@@ -16,11 +16,11 @@ mixin ReferencedModel {
   static final _cache = HashMap<String, _Memoizer<FirebaseModel>>();
 
   /// Print the [_references] counters.
-  static void printReferences({int padding = 120}) {
+  static void printReferences() {
     if (_references.isEmpty) print('No active references');
     final entries = _references.entries.toList(growable: false)..sort((a, b) => a.key.compareTo(b.key));
     for (final entry in entries) {
-      print('${entry.key} '.padRight(padding, '-') + ' ${entry.value}');
+      print('${entry.value.toString().padLeft(3, "0")} - ${entry.key}');
     }
   }
 
