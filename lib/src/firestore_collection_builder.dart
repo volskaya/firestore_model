@@ -74,6 +74,7 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>> extends StatefulWi
     this.onPendingItemsChanged,
     this.routeOverride,
     this.storageOverride,
+    this.shouldSkip,
   }) : super(key: key);
 
   /// Get [FirestoreCollectionBuilderState] from [BuildContext].
@@ -130,6 +131,10 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>> extends StatefulWi
 
   /// Route override passed to the [RefreshStorage] builder.
   final ModalRoute routeOverride;
+
+  /// If this callback returns true, the paginated item will be skipped.
+  /// This won't affect subscribed items, as that could caus an infinite loop.
+  final bool Function(DocumentSnapshot value) shouldSkip;
 
   @override
   FirestoreCollectionBuilderState<T> createState() => FirestoreCollectionBuilderState<T>();
@@ -250,8 +255,15 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
       paginatedItemIndex > (paginatedItems.length - itemsPerPage) ? () => _fetchPage(page + 1) : null;
 
   /// Seen items are added to [_seenItems] and never returned twice.
-  Future<List<T>> _deserializeQuerySnapshot(Iterable<DocumentSnapshot> docs) => Future.wait(
-        docs.where((doc) => !_seenItems.contains(doc.id)).map((doc) {
+  Future<List<T>> _deserializeQuerySnapshot(Iterable<DocumentSnapshot> docs, {bool subscribed = false}) => Future.wait(
+        docs.where((doc) {
+          if (_seenItems.contains(doc.id)) return false;
+          if (!subscribed && (widget.shouldSkip?.call(doc) ?? false)) {
+            _seenItems.add(doc.id);
+            return false;
+          }
+          return true;
+        }).map((doc) {
           _seenItems.add(doc.id);
           return FirestoreModel.withReference(doc.reference, doc);
         }),
@@ -284,8 +296,6 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
       pageTime = DateTime.now();
       _checkStatus();
       assert(!mounted || page == this.page);
-    } catch (e) {
-      developer.log('Couldn\'t paginate page $page', name: 'firestore_model', error: e);
     } finally {
       _fetchingPage = false;
     }
@@ -345,7 +355,7 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
     );
 
     try {
-      final items = await _deserializeQuerySnapshot(snapshot.docs);
+      final items = await _deserializeQuerySnapshot(snapshot.docs, subscribed: true);
 
       if (items.isNotEmpty && !snapshot.metadata.hasPendingWrites && !snapshot.metadata.isFromCache) {
         await _streamSubscription?.cancel();
