@@ -47,7 +47,7 @@ class FutureItem<D extends FirebaseModel<D>> {
       FutureItem._(
         item: (() => subscribe ? (item..subscribe()) : item)(),
         future: Future.value(item),
-        path: null,
+        path: item.path,
         subscribe: subscribe,
         state: state,
         synchronous: true,
