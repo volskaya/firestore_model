@@ -176,6 +176,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
 
   StreamSubscription<dynamic> _streamSubscription; // ignore:cancel_subscriptions
   int _subscribers = 0;
+  int get subscribers => _subscribers;
   bool get isSubscribed => _subscribers > 0;
 
   void _onData(dynamic snapshot, {bool singleUpdate = false}) {

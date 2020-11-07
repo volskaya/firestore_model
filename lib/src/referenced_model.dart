@@ -20,7 +20,10 @@ mixin ReferencedModel {
     if (_references.isEmpty) print('No active references');
     final entries = _references.entries.toList(growable: false)..sort((a, b) => a.key.compareTo(b.key));
     for (final entry in entries) {
-      print('${entry.value.toString().padLeft(3, "0")} - ${entry.key}');
+      final path = entry.key;
+      final references = entry.value;
+      final subscriptions = _cache[entry.key]?.item?.subscribers ?? 0;
+      print('${references.toString().padLeft(3, ".")} - $path, (${subscriptions}s)');
     }
   }
 
