@@ -186,7 +186,7 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
         return Center(
           child: Text(
             emptyLabel,
-            style: theme.textTheme.subtitle2.apply(color: theme.hintColor),
+            style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             textAlign: TextAlign.center,
@@ -219,7 +219,7 @@ class FirestoreCollectionTailBuilder extends StatelessObserverWidget {
           : Center(
               child: Text(
                 label,
-                style: theme.textTheme.subtitle2.apply(color: theme.hintColor),
+                style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 textAlign: TextAlign.center,
