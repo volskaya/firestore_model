@@ -193,8 +193,11 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
         builder: (context, snapshot) => widget.observe
             ? Observer(
                 name: '${widget.bucket}_observer',
-                builder: (context) => widget.builder(context, snapshot.hasData ? snapshot.data : null),
+                builder: (context) => widget.builder(
+                  context,
+                  snapshot.hasData && snapshot.data.path == widget._path ? snapshot.data : null,
+                ),
               )
-            : widget.builder(context, snapshot.hasData ? snapshot.data : null),
+            : widget.builder(context, snapshot.hasData && snapshot.data.path == widget._path ? snapshot.data : null),
       );
 }
