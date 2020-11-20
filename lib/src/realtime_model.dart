@@ -14,15 +14,6 @@ part 'realtime_model.g.dart';
 /// Call [RealtimeModel.subscribe] and [RealtimeModel.unsubscribe]
 /// accordingly
 abstract class RealtimeModel<T> extends _RealtimeModel<T> with _$RealtimeModel<T> {
-  /// Model builder callback to register all your different models,
-  /// that extend [RealtimeModel].
-  ///
-  /// A type is passed to the builder, to differentiate which model to return.
-  /// Must not return null values!
-  ///
-  /// [RealtimeDatabaseModelBuilder] must be set in your flutter main().
-  static set builder(RealtimeDatabaseModelBuilder val) => FirebaseModel.realtimeDatabaseBuilder = val;
-
   /// Build package included models first, then anything else.
   static D build<D>(DatabaseReference reference, [DataSnapshot snapshot]) =>
       FirebaseModel.build<D>(FirebaseModelType.realtime, reference.path, snapshot);

@@ -10,7 +10,8 @@ import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
-typedef FirebaseModelBuilderCallback<T extends FirebaseModel<T>> = Widget Function(BuildContext context, T data);
+/// Widget builder of [FirebaseModelBuilder].
+typedef FirebaseModelWidgetBuilderCallback<T extends FirebaseModel<T>> = Widget Function(BuildContext context, T data);
 
 class _FirebaseModelBuilderBucket<T extends FirebaseModel<T>> {
   FutureItem<T> object;
@@ -68,7 +69,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
   final String bucket;
 
   /// Asynchronous widget builder.
-  final FirebaseModelBuilderCallback<T> builder;
+  final FirebaseModelWidgetBuilderCallback<T> builder;
 
   /// Subscribe to realtime changes.
   final bool subscribe;

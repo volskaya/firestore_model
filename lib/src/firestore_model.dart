@@ -15,15 +15,6 @@ part 'firestore_model.g.dart';
 /// Call [FirestoreModel.subscribe] and [FirestoreModel.unsubscribe]
 /// accordingly
 abstract class FirestoreModel<T> extends _FirestoreModel<T> with _$FirestoreModel<T> {
-  /// Model builder callback to register all your different models,
-  /// that extend [FirestoreModel].
-  ///
-  /// A type is passed to the builder, to differentiate which model to return.
-  /// Must not return null values!
-  ///
-  /// [FirestoreModelBuilder] must be set in your flutter main().
-  static set builder(FirestoreModelBuilder val) => FirebaseModel.firestoreBuilder = val;
-
   /// Build package included models first, then anything else.
   static D build<D>(DocumentReference reference, [DocumentSnapshot snapshot]) =>
       FirebaseModel.build<D>(FirebaseModelType.firestore, reference.path, snapshot);

@@ -8,7 +8,6 @@ import 'package:firestore_model/src/models/toggle.dart';
 import 'package:firestore_model/src/realtime_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firestore_model/src/utils/semaphore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -21,11 +20,9 @@ enum FirebaseModelType {
   realtime,
 }
 
-/// Builder for Firestore models.
-typedef FirestoreModelBuilder = T Function<T>([DocumentSnapshot snapshot]);
-
-/// Builder for Realtime Database models.
-typedef RealtimeDatabaseModelBuilder = T Function<T>([DataSnapshot snapshot]);
+/// Builder for both Firestore and Realtime Database models.
+/// Json map could be null.
+typedef FirebaseModelBuilderCallback = T Function<T>([Map data]);
 
 abstract class _FirebaseModelImpl<T> {
   /// Document path getter from the documents reference. Either [DocumentReference] or [DatabaseReference].
@@ -34,6 +31,7 @@ abstract class _FirebaseModelImpl<T> {
   /// Document ID getter from the [path].
   String get id;
 
+  /// Either a firestore or realtime database type.
   FirebaseModelType get modelType;
 
   /// Internal snapshot handler for both types of [FirebaseModelType].
@@ -51,16 +49,13 @@ abstract class _FirebaseModelImpl<T> {
 /// or else there will be unwanted reads in the background.
 abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   /// Model builder callback to register all your different models,
-  /// that extend [FirebaseModel].
+  /// that extend [FirestoreModel] or [RealtimeModel].
   ///
   /// A type is passed to the builder, to differentiate which model to return.
   /// Must not return null values!
   ///
-  /// [FirestoreModelBuilder] must be set in your flutter main().
-  static FirestoreModelBuilder firestoreBuilder;
-
-  /// See [FirestoreModelBuilder].
-  static RealtimeDatabaseModelBuilder realtimeDatabaseBuilder;
+  /// [FirebaseModelBuilderCallback] must be set in your flutter main().
+  static FirebaseModelBuilderCallback builder;
 
   /// Print the contents of [_cache].
   static void printReferences() => ReferencedModel.printReferences();
@@ -82,8 +77,8 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
             model = (data != null ? Toggle.fromJson(data) : Toggle()) as D;
             break;
           default:
-            assert(FirebaseModel.firestoreBuilder != null, '[FirebaseModel.firestoreBuilder] is not defined');
-            model = FirebaseModel.firestoreBuilder?.call<D>(snapshot);
+            assert(FirebaseModel.builder != null, '[FirebaseModel.builder] is not defined');
+            model = FirebaseModel.builder?.call<D>(snapshot?.data());
         }
 
         if (model == null) throw UnimplementedError();
@@ -101,11 +96,8 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
             model = RealtimeVariable.fromJson(snapshot?.value) as D;
             break;
           default:
-            assert(
-              FirebaseModel.realtimeDatabaseBuilder != null,
-              '[FirebaseModel.realtimeDatabaseBuilder] is not defined',
-            );
-            model = FirebaseModel.realtimeDatabaseBuilder?.call<D>(snapshot);
+            assert(FirebaseModel.builder != null, '[FirebaseModel.builder] is not defined');
+            model = FirebaseModel.builder?.call<D>(snapshot?.value as Map);
         }
 
         if (model == null) throw UnimplementedError();
