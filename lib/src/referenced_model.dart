@@ -85,7 +85,10 @@ mixin ReferencedModel {
   /// and set it as main reference.
   @protected
   static Future<T> referenceWithSnapshot<T extends FirebaseModel<T>>(
-      FirebaseModelType type, String path, T Function() newObject) async {
+    FirebaseModelType type,
+    String path,
+    T Function() newObject,
+  ) async {
     assert(path.isNotEmpty);
     final hasReference = _cache.containsKey(path);
 

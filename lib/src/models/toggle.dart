@@ -8,10 +8,10 @@ part 'toggle.g.dart';
 @JsonSerializable()
 class Toggle extends _Toggle with _$Toggle {
   /// Creates json of [Toggle].
-  Map<String, dynamic> toJson() => _$ToggleToJson(this);
+  Map toJson() => _$ToggleToJson(this);
 
   /// Creates [Toggle] from json.
-  static Toggle fromJson(Map<String, dynamic> json) => _$ToggleFromJson(json);
+  static Toggle fromJson(Map json) => _$ToggleFromJson(json);
 }
 
 abstract class _Toggle extends FirestoreModel<Toggle> with Store {

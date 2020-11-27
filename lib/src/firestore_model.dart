@@ -33,6 +33,8 @@ abstract class FirestoreModel<T> extends _FirestoreModel<T> with _$FirestoreMode
       FirebaseModel.addReference<D>(reference.path, object);
 
   /// Fetches the [DocumentReference] trough a transaction or a regular get and converts it to a model.
+  ///
+  /// This is not reference counted.
   static Future<D> fetch<D extends FirestoreModel<D>>(DocumentReference reference, [Transaction transaction]) =>
       FirebaseModel.fetch(FirebaseModelType.firestore, reference.path);
 
@@ -118,11 +120,11 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
     final firestoreModel = model as FirestoreModel<T>;
 
     snapshot = firestoreModel.snapshot;
-    createTime = firestoreModel.createTime;
-    updateTime = firestoreModel.updateTime;
+    if (createTime != firestoreModel.createTime) createTime = firestoreModel.createTime;
+    if (updateTime != firestoreModel.updateTime) updateTime = firestoreModel.updateTime;
     onSnapshot(model);
     notifyListeners();
 
-    assert(reference?.path == firestoreModel.snapshot.reference.path);
+    assert(firestoreModel.snapshot == null || reference?.path == firestoreModel.snapshot.reference.path);
   }
 }
