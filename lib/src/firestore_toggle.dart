@@ -6,9 +6,9 @@ import 'package:firestore_model/firestore_model.dart';
 import 'package:firestore_model/src/models/toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 
+/// Widget builder callback of [FirestoreToggle].
 typedef ToggleBuilder = Widget Function(
   BuildContext context,
   bool ready,
@@ -43,6 +43,7 @@ class FirestoreToggle extends StatefulObserverWidget {
     this.countDuplicate = false,
     this.createDuplicate = true,
     this.onToggled,
+    this.onToggleTransaction,
   })  : assert(mirror == null || mirror.path == toggle.path),
         assert(duplicateMirror == null || duplicateMirror.parent.path == duplicate?.parent?.path),
         _parent = toggle.parent,
@@ -95,6 +96,11 @@ class FirestoreToggle extends StatefulObserverWidget {
   /// Callback on toggle change.
   final ValueChanged<bool> onToggled;
 
+  /// Operation in the middle of the toggle transaction.
+  ///
+  /// [shouldToggle] will indicate the new status of the toggle, if the transaction is successful.
+  final Future Function(Transaction transaction, bool shouldToggle) onToggleTransaction;
+
   /// Whether this toggle should deliver events.
   ///
   /// For example disabled when the user is not authenticated.
@@ -111,88 +117,96 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
   bool get areTogglesReady => _toggle != null && (widget._mirror != null ? _mirror != null : true);
   bool get isReady => areTogglesReady;
 
-  Future _usingBatch() async {
-    assert(_toggle != null, 'Disable button until the document is ready');
-    final on = !_toggle.exists;
-    final decrementMirror = on && widget._mirror != null ? _mirror.exists : false;
-    final batch = FirebaseFirestore.instance.batch();
+  Future _usingTransaction() async {
+    assert(_toggle != null, 'Disable button until the toggle reference is ready');
 
-    // Untoggle the mirror document.
-    if (decrementMirror) {
-      batch.delete(_mirror.reference);
-      if (widget._duplicateMirror != null && widget.createDuplicate) batch.delete(widget._duplicateMirror);
-    }
+    final toggled = await FirebaseFirestore.instance.runTransaction<bool>((transaction) async {
+      final toggle = await transaction.get(widget._toggle);
+      final shouldToggle = !toggle.exists;
+      final decrementMirror = shouldToggle && widget._mirror != null ? _mirror.exists : false;
 
-    developer.log('Toggling ${on ? "on" : "off"} ${_toggle.reference.path}', name: 'firestore_collection_toggle');
+      await widget.onToggleTransaction?.call(transaction, shouldToggle);
 
-    if (on) {
-      final data = <String, dynamic>{'createTime': FieldValue.serverTimestamp()};
-      batch.set(_toggle.reference, data);
-      if (widget._duplicate != null && widget.createDuplicate) batch.set(widget._duplicate, data);
-    } else {
-      batch.delete(_toggle.reference);
-      if (widget._duplicate != null && widget.createDuplicate) batch.delete(widget._duplicate);
-    }
+      if (decrementMirror) {
+        transaction.delete(_mirror.reference);
+        if (widget._duplicateMirror != null && widget.createDuplicate) transaction.delete(widget._duplicateMirror);
+      }
 
-    // Counter update for parent document
-    if (widget.countToggle) {
-      batch.update(
-        widget._parent,
-        decrementMirror
-            ? <String, dynamic>{
-                'updateTime': FieldValue.serverTimestamp(),
-                widget._toggle.parent.id: FieldValue.increment(1),
-                widget._mirror.parent.id: FieldValue.increment(-1),
-              }
-            : <String, dynamic>{
-                'updateTime': FieldValue.serverTimestamp(),
-                widget._toggle.parent.id: FieldValue.increment(!on ? -1 : 1),
-              },
+      developer.log(
+        'Toggling ${shouldToggle ? "on" : "off"} ${_toggle.reference.path}',
+        name: 'firestore_collection_toggle',
       );
-    }
 
-    if (widget.countDuplicate) {
-      batch.update(
-        widget._duplicateParent,
-        decrementMirror
-            ? <String, dynamic>{
-                'updateTime': FieldValue.serverTimestamp(),
-                widget._duplicate.parent.id: FieldValue.increment(1),
-                widget._duplicateMirror.parent.id: FieldValue.increment(-1),
-              }
-            : <String, dynamic>{
-                'updateTime': FieldValue.serverTimestamp(),
-                widget._duplicate.parent.id: FieldValue.increment(!on ? -1 : 1),
-              },
-      );
-    }
+      if (shouldToggle) {
+        final data = <String, dynamic>{'createTime': FieldValue.serverTimestamp()};
+        transaction.set(_toggle.reference, data);
+        if (widget._duplicate != null && widget.createDuplicate) transaction.set(widget._duplicate, data);
+      } else {
+        transaction.delete(_toggle.reference);
+        if (widget._duplicate != null && widget.createDuplicate) transaction.delete(widget._duplicate);
+      }
 
-    try {
-      await batch.commit();
-    } on PlatformException catch (e) {
-      developer.log('Couldn\'t commit batch', name: 'firestore_collection_toggle', error: e);
-    }
+      // Counter update for parent document
+      if (widget.countToggle) {
+        transaction.update(
+          widget._parent,
+          decrementMirror
+              ? <String, dynamic>{
+                  'updateTime': FieldValue.serverTimestamp(),
+                  widget._toggle.parent.id: FieldValue.increment(1),
+                  widget._mirror.parent.id: FieldValue.increment(-1),
+                }
+              : <String, dynamic>{
+                  'updateTime': FieldValue.serverTimestamp(),
+                  widget._toggle.parent.id: FieldValue.increment(!shouldToggle ? -1 : 1),
+                },
+        );
+      }
 
-    widget.onToggled?.call(on);
+      if (widget.countDuplicate) {
+        transaction.update(
+          widget._duplicateParent,
+          decrementMirror
+              ? <String, dynamic>{
+                  'updateTime': FieldValue.serverTimestamp(),
+                  widget._duplicate.parent.id: FieldValue.increment(1),
+                  widget._duplicateMirror.parent.id: FieldValue.increment(-1),
+                }
+              : <String, dynamic>{
+                  'updateTime': FieldValue.serverTimestamp(),
+                  widget._duplicate.parent.id: FieldValue.increment(!shouldToggle ? -1 : 1),
+                },
+        );
+      }
+
+      return shouldToggle;
+    });
+
+    widget.onToggled?.call(toggled);
   }
 
   Future toggle() async {
     assert(isReady);
-    await _usingBatch();
+    await _usingTransaction();
   }
 
   Future _deferredState() async {
     if (!widget.enabled) return; // Deferred too late
+    assert(widget._toggle != null, 'Disable button until the toggle reference is ready');
+
+    final toggleRef = widget._toggle;
+    final mirrorRef = widget._mirror;
 
     final models = await Future.wait([
-      FirestoreModel.from<Toggle>(widget._toggle, subscribe: true),
-      if (widget._mirror != null) FirestoreModel.from<Toggle>(widget._mirror, subscribe: true),
+      FirestoreModel.from<Toggle>(toggleRef, subscribe: true),
+      if (mirrorRef != null) FirestoreModel.from<Toggle>(mirrorRef, subscribe: true),
     ]);
 
     final toggle = models.first;
-    final mirror = widget._mirror != null ? models[1] : null;
+    final mirror = mirrorRef != null ? models[1] : null;
+    final stillRelevant = toggleRef.path == widget._toggle?.path && mirrorRef?.path == widget._mirror?.path;
 
-    if (mounted) {
+    if (mounted && stillRelevant) {
       setState(() {
         _toggle = toggle;
         _mirror = mirror;
@@ -203,6 +217,8 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
     }
   }
 
+  /// Defer state if this toggle is built in a scrollable tile, that scrolls
+  /// out of view too fast.
   static void _defer(State state, VoidCallback callback) {
     if (!state.mounted) {
       callback();
