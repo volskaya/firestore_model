@@ -99,7 +99,8 @@ class FirestoreToggle extends StatefulObserverWidget {
   /// Operation in the middle of the toggle transaction.
   ///
   /// [shouldToggle] will indicate the new status of the toggle, if the transaction is successful.
-  final Future Function(Transaction transaction, bool shouldToggle) onToggleTransaction;
+  /// Returning true will intercept the transaction.
+  final Future<bool> Function(Transaction transaction, bool shouldToggle) onToggleTransaction;
 
   /// Whether this toggle should deliver events.
   ///
@@ -192,8 +193,9 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
       final toggle = await transaction.get(widget._toggle);
       final shouldToggle = !toggle.exists;
       final decrementMirror = shouldToggle && widget._mirror != null ? _mirror.exists : false;
+      final intercepted = await widget.onToggleTransaction?.call(transaction, shouldToggle) ?? false;
 
-      await widget.onToggleTransaction?.call(transaction, shouldToggle);
+      if (intercepted) return null;
 
       if (decrementMirror) {
         transaction.delete(_mirror.reference);
@@ -250,7 +252,7 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
       return shouldToggle;
     });
 
-    widget.onToggled?.call(toggled);
+    if (toggled != null) widget.onToggled?.call(toggled);
   }
 
   Future toggle() async {
