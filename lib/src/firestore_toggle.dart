@@ -117,6 +117,74 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
   bool get areTogglesReady => _toggle != null && (widget._mirror != null ? _mirror != null : true);
   bool get isReady => areTogglesReady;
 
+  /// Using a batch supports instant update on the UI, so this method is only
+  /// enabled when [widget.onToggleTransaction] is NOT defined.
+  Future _usingBatch() async {
+    assert(_toggle != null, 'Disable button until the toggle reference is ready');
+
+    final shouldToggle = !_toggle.exists;
+    final decrementMirror = shouldToggle && widget._mirror != null ? _mirror.exists : false;
+    final batch = FirebaseFirestore.instance.batch();
+
+    // Untoggle the mirror document.
+    if (decrementMirror) {
+      batch.delete(_mirror.reference);
+      if (widget._duplicateMirror != null && widget.createDuplicate) batch.delete(widget._duplicateMirror);
+    }
+
+    developer.log(
+      'Toggling ${shouldToggle ? "on" : "off"} ${_toggle.reference.path}',
+      name: 'firestore_collection_toggle',
+    );
+
+    if (shouldToggle) {
+      final data = <String, dynamic>{'createTime': FieldValue.serverTimestamp()};
+      batch.set(_toggle.reference, data);
+      if (widget._duplicate != null && widget.createDuplicate) batch.set(widget._duplicate, data);
+    } else {
+      batch.delete(_toggle.reference);
+      if (widget._duplicate != null && widget.createDuplicate) batch.delete(widget._duplicate);
+    }
+
+    // Counter update for parent document
+    if (widget.countToggle) {
+      batch.update(
+        widget._parent,
+        decrementMirror
+            ? <String, dynamic>{
+                'updateTime': FieldValue.serverTimestamp(),
+                widget._toggle.parent.id: FieldValue.increment(1),
+                widget._mirror.parent.id: FieldValue.increment(-1),
+              }
+            : <String, dynamic>{
+                'updateTime': FieldValue.serverTimestamp(),
+                widget._toggle.parent.id: FieldValue.increment(!shouldToggle ? -1 : 1),
+              },
+      );
+    }
+
+    if (widget.countDuplicate) {
+      batch.update(
+        widget._duplicateParent,
+        decrementMirror
+            ? <String, dynamic>{
+                'updateTime': FieldValue.serverTimestamp(),
+                widget._duplicate.parent.id: FieldValue.increment(1),
+                widget._duplicateMirror.parent.id: FieldValue.increment(-1),
+              }
+            : <String, dynamic>{
+                'updateTime': FieldValue.serverTimestamp(),
+                widget._duplicate.parent.id: FieldValue.increment(!shouldToggle ? -1 : 1),
+              },
+      );
+    }
+
+    await batch.commit();
+    widget.onToggled?.call(shouldToggle);
+  }
+
+  /// Using a transaction won't support instant update on the UI, so this method is only
+  /// enabled when [widget.onToggleTransaction] is defined.
   Future _usingTransaction() async {
     assert(_toggle != null, 'Disable button until the toggle reference is ready');
 
@@ -187,7 +255,11 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
 
   Future toggle() async {
     assert(isReady);
-    await _usingTransaction();
+    if (widget.onToggleTransaction != null) {
+      await _usingTransaction();
+    } else {
+      await _usingBatch();
+    }
   }
 
   Future _deferredState() async {
