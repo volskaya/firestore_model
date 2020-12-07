@@ -134,35 +134,33 @@ class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<Fireb
   }
 
   @override
-  void didChangeDependencies() {
-    if (_storage == null) {
-      _storage = widget.bucket != null
-          ? RefreshStorage.write(
-              context: widget.storageContext ?? context,
-              identifier: widget.bucket,
-              builder: () => _FirebaseModelBuilderBucket<T>(),
-              dispose: (storage) => storage.object?.dispose(),
-            )
-          : _FirebaseModelBuilderBucket<T>();
+  void initState() {
+    _storage = widget.bucket != null
+        ? RefreshStorage.write(
+            context: widget.storageContext ?? context,
+            identifier: widget.bucket,
+            builder: () => _FirebaseModelBuilderBucket<T>(),
+            dispose: (storage) => storage.object?.dispose(),
+          )
+        : _FirebaseModelBuilderBucket<T>();
 
-      if (widget._path != null) {
-        if (_storage.object == null || _storage.object.path != widget._path) {
-          developer.log('Bucket item null, creating: ${widget._path} (${widget._type})', name: 'firestore_model');
+    if (widget._path != null) {
+      if (_storage.object == null || _storage.object.path != widget._path) {
+        developer.log('Bucket item null, creating: ${widget._path} (${widget._type})', name: 'firestore_model');
 
-          if (_storage.object != null) {
-            // Path changed, dispose the previous item.
-            _storage.object?.dispose();
-            _storage.object = null;
-          }
-
-          _updateObject();
-        } else {
-          developer.log('Reusing bucket storage: ${widget._path} (${widget._type})', name: 'firestore_model');
+        if (_storage.object != null) {
+          // Path changed, dispose the previous item.
+          _storage.object?.dispose();
+          _storage.object = null;
         }
+
+        _updateObject();
+      } else {
+        developer.log('Reusing bucket storage: ${widget._path} (${widget._type})', name: 'firestore_model');
       }
     }
 
-    super.didChangeDependencies();
+    super.initState();
   }
 
   @override

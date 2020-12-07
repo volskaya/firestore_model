@@ -8,6 +8,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 
+/// Allows scheduling a future with [SchedulerBinding.instance.scheduleTask].
+Future<T> scheduleFuture<T>(Future<T> Function() callback, [Priority priority = Priority.touch]) {
+  final completer = Completer<T>();
+  final stopwatch = Stopwatch()..start();
+  SchedulerBinding.instance.scheduleTask(
+    () async {
+      stopwatch.stop();
+      print('Scheduled firebase model in ${stopwatch.elapsedMilliseconds}ms');
+
+      try {
+        final value = await callback();
+        completer.complete(value);
+      } catch (e) {
+        completer.completeError(e);
+      }
+    },
+    priority,
+  );
+  return completer.future;
+}
+
 /// Asynchronous/Synchronous loader of [FirestoreModel]s.
 class FutureItem<D extends FirebaseModel<D>> {
   FutureItem._({
@@ -84,7 +105,9 @@ class FutureItem<D extends FirebaseModel<D>> {
     assert(!_disposed);
     if (_disposed || synchronous) return null;
 
-    final fetchedItem = await FirebaseModel.from<D>(type, path, subscribe: subscribe);
+    // Item is not in the cache so [FirebaseModel.from] is expected to fetch the model from firebase.
+    // It's okay to delay/schedule the call here.
+    final fetchedItem = await scheduleFuture<D>(() => FirebaseModel.from<D>(type, path, subscribe: subscribe));
     developer.log('Fetched future item: ${fetchedItem.path} ($type)', name: 'firestore_model');
 
     if (!_disposed) {

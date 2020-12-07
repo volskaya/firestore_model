@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firestore_model/src/utils/future_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -27,11 +28,13 @@ enum FirestoreCollectionStatus {
   ready,
 }
 
+/// Either a subscription or pagination query builder.
 typedef FirestoreCollectionQueryBuilder<T extends FirestoreModel<T>> = Query Function(
   FirestoreCollectionBuilderState<T> state,
   Query collection,
 );
 
+/// Child builder of [FirestoreCollectionBuilder].
 typedef FirestoreCollectionChildBuilder<T extends FirestoreModel<T>> = Widget Function(
   BuildContext context,
   FirestoreCollectionBuilderState<T> state,
@@ -127,7 +130,7 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>> extends StatefulWi
   final bool observe;
 
   /// Storage override passed to the [RefreshStorage] builder.
-  final PageStorageBucket storageOverride;
+  final RefreshStorageState storageOverride;
 
   /// Route override passed to the [RefreshStorage] builder.
   final ModalRoute routeOverride;
@@ -255,18 +258,21 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
       paginatedItemIndex > (paginatedItems.length - itemsPerPage) ? () => _fetchPage(page + 1) : null;
 
   /// Seen items are added to [_seenItems] and never returned twice.
-  Future<List<T>> _deserializeQuerySnapshot(Iterable<DocumentSnapshot> docs, {bool subscribed = false}) => Future.wait(
-        docs.where((doc) {
-          if (_seenItems.contains(doc.id)) return false;
-          if (!subscribed && (widget.shouldSkip?.call(doc) ?? false)) {
+  Future<List<T>> _deserializeQuerySnapshot(Iterable<DocumentSnapshot> docs, {bool subscribed = false}) =>
+      scheduleFuture(
+        () => Future.wait(
+          docs.where((doc) {
+            if (_seenItems.contains(doc.id)) return false;
+            if (!subscribed && (widget.shouldSkip?.call(doc) ?? false)) {
+              _seenItems.add(doc.id);
+              return false;
+            }
+            return true;
+          }).map((doc) {
             _seenItems.add(doc.id);
-            return false;
-          }
-          return true;
-        }).map((doc) {
-          _seenItems.add(doc.id);
-          return FirestoreModel.withReference(doc.reference, doc);
-        }),
+            return FirestoreModel.withReference(doc.reference, doc);
+          }),
+        ),
       );
 
   void _checkStatus() {
@@ -432,6 +438,10 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     pageTime = DateTime.now();
+    _setupPageStorage(); // Sets `_pageStorage`.
+    _startListening();
+    _pendingItemsReaction = autorun((_) => widget.onPendingItemsChanged?.call(pendingItems));
+    widget.scrollController?.addListener(_handleScroll);
     super.initState();
   }
 
@@ -439,17 +449,6 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
   void didUpdateWidget(covariant FirestoreCollectionBuilder<T> oldWidget) {
     assert(oldWidget.bucket == widget.bucket, 'Bucket must not change');
     super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void didChangeDependencies() {
-    if (_pageStorage == null) {
-      widget.scrollController?.addListener(_handleScroll);
-      _setupPageStorage(); // Sets _pageStorage
-      _startListening();
-      _pendingItemsReaction = autorun((_) => widget.onPendingItemsChanged?.call(pendingItems));
-    }
-    super.didChangeDependencies();
   }
 
   @override

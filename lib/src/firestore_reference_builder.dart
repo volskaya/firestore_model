@@ -108,41 +108,39 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    _bucket = widget.bucket != null
+        ? RefreshStorage.write(
+            context: widget.storageContext ?? context,
+            identifier: widget.bucket,
+            builder: () => _FirestoreReferenceBuilderBucket<T>(),
+            dispose: (storage) => storage.item?.dispose(),
+          )
+        : _FirestoreReferenceBuilderBucket<T>();
 
-    if (_bucket == null) {
-      _bucket = widget.bucket != null
-          ? RefreshStorage.write(
-              context: widget.storageContext ?? context,
-              identifier: widget.bucket,
-              builder: () => _FirestoreReferenceBuilderBucket<T>(),
-              dispose: (storage) => storage.item?.dispose(),
-            )
-          : _FirestoreReferenceBuilderBucket<T>();
+    if (widget.reference != null) {
+      /// Initial value will be added in [ReferencedModel], to allow
+      /// `_updateObject` to build a synchronous future item. Consumers
+      /// of this ReferencedBuilder can receive empty models, to which
+      /// they need to subscribe or call document manually
+      final referenceExists = FirestoreModel.isReferenced(widget.reference);
+      if (widget.initialValue != null && !referenceExists) {
+        developer.log('Initial value passed, adding it to [ReferencedModel]', name: 'firestore_model');
 
-      if (widget.reference != null) {
-        /// Initial value will be added in [ReferencedModel], to allow
-        /// `_updateObject` to build a synchronous future item. Consumers
-        /// of this ReferencedBuilder can receive empty models, to which
-        /// they need to subscribe or call document manually
-        final referenceExists = FirestoreModel.isReferenced(widget.reference);
-        if (widget.initialValue != null && !referenceExists) {
-          developer.log('Initial value passed, adding it to [ReferencedModel]', name: 'firestore_model');
+        // NOTE: Reference count is incremented
+        _wasInitialValueAddedAsReference = true;
+        FirestoreModel.addReference<T>(widget.reference, widget.initialValue);
+      }
 
-          // NOTE: Reference count is incremented
-          _wasInitialValueAddedAsReference = true;
-          FirestoreModel.addReference<T>(widget.reference, widget.initialValue);
-        }
-
-        if (_bucket.item == null) {
-          developer.log('Bucket storage item null, creating: ${widget.reference?.path}', name: 'firestore_model');
-          _updateObject();
-        } else {
-          developer.log('Reusing bucket storage: ${widget.reference?.path}', name: 'firestore_model');
-        }
+      if (_bucket.item == null) {
+        developer.log('Bucket storage item null, creating: ${widget.reference?.path}', name: 'firestore_model');
+        _updateObject();
+      } else {
+        developer.log('Reusing bucket storage: ${widget.reference?.path}', name: 'firestore_model');
       }
     }
+
+    super.initState();
   }
 
   @override

@@ -58,6 +58,7 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
 
     if (collection.status != FirestoreCollectionStatus.ready) {
       body = SingleChildScrollView(
+        clipBehavior: Clip.none,
         key: ValueKey(collection.status),
         padding: contentPadding ?? MediaQuery.of(context).padding,
         physics: const AlwaysScrollableScrollPhysics(),
@@ -171,6 +172,8 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final horizontalPadding = mediaQuery.padding.copyWith(top: 0, bottom: 0);
     final theme = Theme.of(context);
 
     assert(
@@ -181,15 +184,21 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
     switch (status) {
       case FirestoreCollectionStatus.idle:
       case FirestoreCollectionStatus.loading:
-        return const DelayedProgressIndicator();
+        return Padding(
+          padding: horizontalPadding,
+          child: const DelayedProgressIndicator(),
+        );
       case FirestoreCollectionStatus.empty:
         return Center(
-          child: Text(
-            emptyLabel,
-            style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            textAlign: TextAlign.center,
+          child: Padding(
+            padding: horizontalPadding,
+            child: Text(
+              emptyLabel,
+              style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+            ),
           ),
         );
       default:
@@ -217,12 +226,15 @@ class FirestoreCollectionTailBuilder extends StatelessObserverWidget {
       child: !collection.isEndReached
           ? const DelayedProgressIndicator()
           : Center(
-              child: Text(
-                label,
-                style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                textAlign: TextAlign.center,
+              child: Padding(
+                padding: MediaQuery.of(context).padding.copyWith(top: 0, bottom: 0),
+                child: Text(
+                  label,
+                  style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
     );

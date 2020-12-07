@@ -197,8 +197,12 @@ mixin ReferencedModel {
 
       _references.remove(model.path);
       if (_cache.containsKey(model.path)) {
-        onInvalidated();
-        _cache.remove(model.path).invalidate();
+        try {
+          _cache.remove(model.path).invalidate();
+          assert(!_cache.containsKey(model.path));
+        } finally {
+          onInvalidated();
+        }
       }
     } else {
       assert(_cache.containsKey(model.path));
