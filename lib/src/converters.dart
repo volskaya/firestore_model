@@ -39,3 +39,19 @@ class StringWithLineBreaksConverter implements JsonConverter<String, String> {
   @override
   String toJson(String object) => object?.replaceAll('\n', '\\n');
 }
+
+/// Uses [RegExp] to remove redundant lines from the string.
+///
+/// This only affects `fromJson` - `toJson` will not change the string.
+class StringWithNoRedundantLinesConverter implements JsonConverter<String, String> {
+  /// Creates [StringWithNoRedundantLinesConverter].
+  const StringWithNoRedundantLinesConverter();
+
+  static final _redundantNewLineRegExp = RegExp(r'\n+');
+
+  @override
+  String fromJson(String json) => json?.replaceAll(_redundantNewLineRegExp, '\n');
+
+  @override
+  String toJson(String object) => object;
+}

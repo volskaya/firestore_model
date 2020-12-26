@@ -258,21 +258,18 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
       paginatedItemIndex > (paginatedItems.length - itemsPerPage) ? () => _fetchPage(page + 1) : null;
 
   /// Seen items are added to [_seenItems] and never returned twice.
-  Future<List<T>> _deserializeQuerySnapshot(Iterable<DocumentSnapshot> docs, {bool subscribed = false}) =>
-      scheduleFuture(
-        () => Future.wait(
-          docs.where((doc) {
-            if (_seenItems.contains(doc.id)) return false;
-            if (!subscribed && (widget.shouldSkip?.call(doc) ?? false)) {
-              _seenItems.add(doc.id);
-              return false;
-            }
-            return true;
-          }).map((doc) {
+  Future<List<T>> _deserializeQuerySnapshot(Iterable<DocumentSnapshot> docs, {bool subscribed = false}) => Future.wait(
+        docs.where((doc) {
+          if (_seenItems.contains(doc.id)) return false;
+          if (!subscribed && (widget.shouldSkip?.call(doc) ?? false)) {
             _seenItems.add(doc.id);
-            return FirestoreModel.withReference(doc.reference, doc);
-          }),
-        ),
+            return false;
+          }
+          return true;
+        }).map((doc) {
+          _seenItems.add(doc.id);
+          return FirestoreModel.withReference(doc.reference, doc);
+        }),
       );
 
   void _checkStatus() {

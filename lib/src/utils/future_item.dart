@@ -5,29 +5,8 @@ import 'dart:developer' as developer;
 
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:firestore_model/src/firestore_model.dart';
-
-/// Allows scheduling a future with [SchedulerBinding.instance.scheduleTask].
-Future<T> scheduleFuture<T>(Future<T> Function() callback, [Priority priority = Priority.touch]) {
-  final completer = Completer<T>();
-  final stopwatch = Stopwatch()..start();
-  SchedulerBinding.instance.scheduleTask(
-    () async {
-      stopwatch.stop();
-      print('Scheduled firebase model in ${stopwatch.elapsedMilliseconds}ms');
-
-      try {
-        final value = await callback();
-        completer.complete(value);
-      } catch (e) {
-        completer.completeError(e);
-      }
-    },
-    priority,
-  );
-  return completer.future;
-}
+import 'package:flutter/scheduler.dart';
 
 /// Asynchronous/Synchronous loader of [FirestoreModel]s.
 class FutureItem<D extends FirebaseModel<D>> {
@@ -110,7 +89,7 @@ class FutureItem<D extends FirebaseModel<D>> {
 
     // Item is not in the cache so [FirebaseModel.from] is expected to fetch the model from firebase.
     // It's okay to delay/schedule the call here.
-    final fetchedItem = await scheduleFuture<D>(() => FirebaseModel.from<D>(type, path, subscribe: subscribe));
+    final fetchedItem = await FirebaseModel.from<D>(type, path, subscribe: subscribe);
     developer.log('Fetched future item: ${fetchedItem.path} ($type)', name: 'firestore_model');
 
     if (!_disposed) {
@@ -132,9 +111,13 @@ class FutureItem<D extends FirebaseModel<D>> {
   }
 
   void _deferLoad() {
-    final completer = Completer<D>();
-    _defer(state, () async => completer.complete(await _getItem()));
-    future = completer.future;
+    if (state != null) {
+      final completer = Completer<D>();
+      _defer(state, () async => completer.complete(await _getItem()));
+      future = completer.future;
+    } else {
+      future = _getItem();
+    }
   }
 
   /// Dispose the [FirestoreModel] and unsubscribe, if [subscribe] is true.
