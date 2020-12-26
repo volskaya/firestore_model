@@ -1,27 +1,21 @@
-import 'dart:developer' as developer;
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firebase_model.dart';
-import 'package:firestore_model/src/referenced_model.dart';
-import 'package:firestore_model/src/utils/future_item.dart';
+import 'package:firestore_model/src/firebase_model_hook.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firestore_model/src/firestore_model.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
 /// Widget builder of [FirebaseModelBuilder].
 typedef FirebaseModelWidgetBuilderCallback<T extends FirebaseModel<T>> = Widget Function(BuildContext context, T data);
 
-class _FirebaseModelBuilderBucket<T extends FirebaseModel<T>> {
-  FutureItem<T> object;
-}
-
 /// Asynchronous widget builder of reference counted [FirebaseModel]s.
 ///
 /// If the firestore reference is already fetched, the widget builds
 /// synchronously.
-class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
+class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
   /// Creates Firestore version of [FirebaseModelBuilder].
   ///
   /// A generic type, that extends [FirestoreModel], must be provided!
@@ -30,7 +24,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
 
     /// Firestore reference to build.
     @required DocumentReference reference,
-    @required this.bucket,
+    this.bucket,
     this.builder,
     this.subscribe = false,
     this.placeholder,
@@ -49,7 +43,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
 
     /// Realtime Database reference to build.
     @required DatabaseReference reference,
-    @required this.bucket,
+    this.bucket,
     this.builder,
     this.subscribe = false,
     this.placeholder,
@@ -84,119 +78,45 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends StatefulWidget {
   /// Whether to automatically wrap the builder in an [Observer].
   final bool observe;
 
-  /// Request the model to update, when this widget is built.
+  /// Request the model to update, when this widget is initialized.
   final bool update;
 
   @override
-  _FirebaseModelBuilderState<T> createState() => _FirebaseModelBuilderState<T>();
-}
+  Widget build(BuildContext context) {
+    T data;
 
-class _FirebaseModelBuilderState<T extends FirebaseModel<T>> extends State<FirebaseModelBuilder<T>> {
-  _FirebaseModelBuilderBucket<T> _storage;
-
-  /// If the object is already cached, build synchronously
-  void _updateObject() {
-    assert(widget._path != null);
-
-    // Attempt to get cached object synchronously. If the object is not null,
-    // build the widget without [FutureBuilder]
-    //
-    // This will increment the reference counter and instantiate the future item
-    // as a "synchronous item". When the future item is disposed, this reference
-    // will dispose as well.
-    final object = ReferencedModel.getRef<T>(widget._path);
-
-    if (object != null) {
-      developer.log('Instantiated with a synchronous ${widget._path} (${widget._type})', name: 'firestore_model');
-      _storage.object = FutureItem<T>.of(
-        type: widget._type,
-        item: object,
-        subscribe: widget.subscribe,
-        state: this,
-      );
-
-      // If an empty synchronous item is instantiated with subscription off,
-      // it may never get data, so always request 1 update
-      if (widget.update && !widget.subscribe) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _storage.object.item?.update();
-        });
-      }
-    } else {
-      developer.log('Instantiating asynchronously ${widget._path} (${widget._type})', name: 'firestore_model');
-      _storage.object = FutureItem<T>(
-        type: widget._type,
-        path: widget._path,
-        subscribe: widget.subscribe,
-        state: this,
-      );
+    switch (_type) {
+      case FirebaseModelType.firestore:
+        data = use<T>(
+          FirebaseModelHook<T>.firestore(
+            reference: _path != null ? FirebaseFirestore.instance.doc(_path) : null,
+            bucket: bucket ?? _path,
+            placeholder: placeholder,
+            subscribe: subscribe,
+            storageContext: storageContext,
+            update: update,
+          ),
+        );
+        break;
+      case FirebaseModelType.realtime:
+        data = use<T>(
+          FirebaseModelHook<T>.realtime(
+            reference: _path != null ? FirebaseDatabase.instance.reference().child(_path) : null,
+            bucket: bucket ?? _path,
+            placeholder: placeholder,
+            subscribe: subscribe,
+            storageContext: storageContext,
+            update: update,
+          ),
+        );
+        break;
     }
-  }
 
-  @override
-  void initState() {
-    _storage = widget.bucket != null
-        ? RefreshStorage.write(
-            context: widget.storageContext ?? context,
-            identifier: widget.bucket,
-            builder: () => _FirebaseModelBuilderBucket<T>(),
-            dispose: (storage) => storage.object?.dispose(),
+    return observe
+        ? Observer(
+            name: '${bucket ?? _path}_observer',
+            builder: (context) => builder(context, data?.path == _path ? data : null),
           )
-        : _FirebaseModelBuilderBucket<T>();
-
-    if (widget._path != null) {
-      if (_storage.object == null || _storage.object.path != widget._path) {
-        developer.log('Bucket item null, creating: ${widget._path} (${widget._type})', name: 'firestore_model');
-
-        if (_storage.object != null) {
-          // Path changed, dispose the previous item.
-          _storage.object?.dispose();
-          _storage.object = null;
-        }
-
-        _updateObject();
-      } else {
-        developer.log('Reusing bucket storage: ${widget._path} (${widget._type})', name: 'firestore_model');
-      }
-    }
-
-    super.initState();
+        : builder(context, data?.path == _path ? data : null);
   }
-
-  @override
-  void didUpdateWidget(FirebaseModelBuilder<T> oldWidget) {
-    assert(oldWidget.subscribe == widget.subscribe);
-    assert(oldWidget.bucket == widget.bucket);
-    assert(oldWidget._type == widget._type);
-
-    if (oldWidget._path != widget._path) {
-      developer.log('${oldWidget._path} changed to ${widget._path}', name: 'firestore_model');
-      _storage.object?.dispose();
-      _storage.object = null;
-      if (widget._path != null) _updateObject();
-    }
-
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void dispose() {
-    if (widget.bucket == null) _storage?.object?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => FutureBuilder<T>(
-        future: _storage.object?.future,
-        initialData: _storage.object?.item ?? widget.placeholder,
-        builder: (context, snapshot) => widget.observe
-            ? Observer(
-                name: '${widget.bucket}_observer',
-                builder: (context) => widget.builder(
-                  context,
-                  snapshot.hasData && snapshot.data.path == widget._path ? snapshot.data : null,
-                ),
-              )
-            : widget.builder(context, snapshot.hasData && snapshot.data.path == widget._path ? snapshot.data : null),
-      );
 }

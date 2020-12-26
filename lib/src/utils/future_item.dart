@@ -33,20 +33,20 @@ Future<T> scheduleFuture<T>(Future<T> Function() callback, [Priority priority = 
 class FutureItem<D extends FirebaseModel<D>> {
   FutureItem._({
     @required this.path,
-    @required this.state,
     @required this.subscribe,
     @required this.item,
     @required this.future,
     @required this.synchronous,
     @required this.type,
+    this.state,
   });
 
   /// Creates an asynchronous [FutureItem].
   factory FutureItem({
     @required String path,
-    @required State state,
     @required FirebaseModelType type,
     bool subscribe = false,
+    State state,
   }) =>
       FutureItem._(
         item: null,
@@ -61,9 +61,9 @@ class FutureItem<D extends FirebaseModel<D>> {
   /// Creates a synchronous [FutureItem] with an already ready [item].
   factory FutureItem.of({
     @required D item,
-    @required State state,
     @required FirebaseModelType type,
     bool subscribe = false,
+    State state,
   }) =>
       FutureItem._(
         item: (() => subscribe ? (item..subscribe()) : item)(),
@@ -81,7 +81,10 @@ class FutureItem<D extends FirebaseModel<D>> {
   /// Whether to subscribe to the fetched model or not.
   final bool subscribe;
 
-  /// State of the widget where this [FutureItem] is held.
+  /// Optional state of the widget where this [FutureItem] is held.
+  ///
+  /// When this is defined, the [FutureItem] will defer the fetch of the model
+  /// till the nearest scroll view has slowed down.
   final State state;
 
   /// True when this [FutureItem] was constructed with an already existing item.

@@ -79,7 +79,7 @@ abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, 
   DataSnapshot snapshot;
 
   /// Returns true if the last [snapshot.exists] was true.
-  /// Observable is null, until first [DocumentSnapshot].
+  /// Observable is null, until the first [DocumentSnapshot].
   @computed
   bool get exists => snapshot != null ? snapshot.value != null : null;
 

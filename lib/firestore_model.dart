@@ -3,6 +3,7 @@ library firestore_model;
 export 'src/converters.dart';
 export 'src/firebase_model.dart';
 export 'src/firebase_model_builder.dart';
+export 'src/firebase_model_hook.dart';
 export 'src/firestore_collection_builder.dart';
 export 'src/firestore_collection_helpers.dart';
 export 'src/firestore_model.dart';

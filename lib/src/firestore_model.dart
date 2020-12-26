@@ -10,7 +10,7 @@ import 'package:mobx/mobx.dart';
 
 part 'firestore_model.g.dart';
 
-/// Reference counter subscribe/unsubscribe helper methods
+/// Reference counted subscribe/unsubscribe helper methods
 ///
 /// Call [FirestoreModel.subscribe] and [FirestoreModel.unsubscribe]
 /// accordingly
