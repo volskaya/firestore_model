@@ -117,6 +117,7 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
 
   bool get areTogglesReady => _toggle != null && (widget._mirror != null ? _mirror != null : true);
   bool get isReady => areTogglesReady;
+  bool _transactionInProgress = false;
 
   /// Using a batch supports instant update on the UI, so this method is only
   /// enabled when [widget.onToggleTransaction] is NOT defined.
@@ -188,71 +189,78 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
   /// enabled when [widget.onToggleTransaction] is defined.
   Future _usingTransaction() async {
     assert(_toggle != null, 'Disable button until the toggle reference is ready');
+    assert(!_transactionInProgress);
 
-    final toggled = await FirebaseFirestore.instance.runTransaction<bool>((transaction) async {
-      final toggle = await transaction.get(widget._toggle);
-      final shouldToggle = !toggle.exists;
-      final decrementMirror = shouldToggle && widget._mirror != null ? _mirror.exists : false;
-      final intercepted = await widget.onToggleTransaction?.call(transaction, shouldToggle) ?? false;
+    setState(() => _transactionInProgress = true);
 
-      if (intercepted) return null;
+    try {
+      final toggled = await FirebaseFirestore.instance.runTransaction<bool>((transaction) async {
+        final toggle = await transaction.get(widget._toggle);
+        final shouldToggle = !toggle.exists;
+        final decrementMirror = shouldToggle && widget._mirror != null ? _mirror.exists : false;
+        final intercepted = await widget.onToggleTransaction?.call(transaction, shouldToggle) ?? false;
 
-      if (decrementMirror) {
-        transaction.delete(_mirror.reference);
-        if (widget._duplicateMirror != null && widget.createDuplicate) transaction.delete(widget._duplicateMirror);
-      }
+        if (intercepted) return null;
 
-      developer.log(
-        'Toggling ${shouldToggle ? "on" : "off"} ${_toggle.reference.path}',
-        name: 'firestore_collection_toggle',
-      );
+        if (decrementMirror) {
+          transaction.delete(_mirror.reference);
+          if (widget._duplicateMirror != null && widget.createDuplicate) transaction.delete(widget._duplicateMirror);
+        }
 
-      if (shouldToggle) {
-        final data = <String, dynamic>{'createTime': FieldValue.serverTimestamp()};
-        transaction.set(_toggle.reference, data);
-        if (widget._duplicate != null && widget.createDuplicate) transaction.set(widget._duplicate, data);
-      } else {
-        transaction.delete(_toggle.reference);
-        if (widget._duplicate != null && widget.createDuplicate) transaction.delete(widget._duplicate);
-      }
-
-      // Counter update for parent document
-      if (widget.countToggle) {
-        transaction.update(
-          widget._parent,
-          decrementMirror
-              ? <String, dynamic>{
-                  'updateTime': FieldValue.serverTimestamp(),
-                  widget._toggle.parent.id: FieldValue.increment(1),
-                  widget._mirror.parent.id: FieldValue.increment(-1),
-                }
-              : <String, dynamic>{
-                  'updateTime': FieldValue.serverTimestamp(),
-                  widget._toggle.parent.id: FieldValue.increment(!shouldToggle ? -1 : 1),
-                },
+        developer.log(
+          'Toggling ${shouldToggle ? "on" : "off"} ${_toggle.reference.path}',
+          name: 'firestore_collection_toggle',
         );
-      }
 
-      if (widget.countDuplicate) {
-        transaction.update(
-          widget._duplicateParent,
-          decrementMirror
-              ? <String, dynamic>{
-                  'updateTime': FieldValue.serverTimestamp(),
-                  widget._duplicate.parent.id: FieldValue.increment(1),
-                  widget._duplicateMirror.parent.id: FieldValue.increment(-1),
-                }
-              : <String, dynamic>{
-                  'updateTime': FieldValue.serverTimestamp(),
-                  widget._duplicate.parent.id: FieldValue.increment(!shouldToggle ? -1 : 1),
-                },
-        );
-      }
+        if (shouldToggle) {
+          final data = <String, dynamic>{'createTime': FieldValue.serverTimestamp()};
+          transaction.set(_toggle.reference, data);
+          if (widget._duplicate != null && widget.createDuplicate) transaction.set(widget._duplicate, data);
+        } else {
+          transaction.delete(_toggle.reference);
+          if (widget._duplicate != null && widget.createDuplicate) transaction.delete(widget._duplicate);
+        }
 
-      return shouldToggle;
-    });
+        // Counter update for parent document
+        if (widget.countToggle) {
+          transaction.update(
+            widget._parent,
+            decrementMirror
+                ? <String, dynamic>{
+                    'updateTime': FieldValue.serverTimestamp(),
+                    widget._toggle.parent.id: FieldValue.increment(1),
+                    widget._mirror.parent.id: FieldValue.increment(-1),
+                  }
+                : <String, dynamic>{
+                    'updateTime': FieldValue.serverTimestamp(),
+                    widget._toggle.parent.id: FieldValue.increment(!shouldToggle ? -1 : 1),
+                  },
+          );
+        }
 
-    if (toggled != null) widget.onToggled?.call(toggled);
+        if (widget.countDuplicate) {
+          transaction.update(
+            widget._duplicateParent,
+            decrementMirror
+                ? <String, dynamic>{
+                    'updateTime': FieldValue.serverTimestamp(),
+                    widget._duplicate.parent.id: FieldValue.increment(1),
+                    widget._duplicateMirror.parent.id: FieldValue.increment(-1),
+                  }
+                : <String, dynamic>{
+                    'updateTime': FieldValue.serverTimestamp(),
+                    widget._duplicate.parent.id: FieldValue.increment(!shouldToggle ? -1 : 1),
+                  },
+          );
+        }
+
+        return shouldToggle;
+      });
+
+      if (toggled != null) widget.onToggled?.call(toggled);
+    } finally {
+      setState(() => _transactionInProgress = false);
+    }
   }
 
   Future toggle() async {
@@ -291,21 +299,9 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
     }
   }
 
-  /// Defer state if this toggle is built in a scrollable tile, that scrolls
-  /// out of view too fast.
-  static void _defer(State state, VoidCallback callback) {
-    if (!state.mounted) {
-      callback();
-    } else if (Scrollable.recommendDeferredLoadingForContext(state.context)) {
-      SchedulerBinding.instance.scheduleFrameCallback((_) => _defer(state, callback));
-    } else {
-      callback();
-    }
-  }
-
   @override
   void initState() {
-    if (widget.enabled) _defer(this, _deferredState);
+    if (widget.enabled) _deferredState();
     super.initState();
   }
 
@@ -339,5 +335,10 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.builder(context, isReady, _toggle?.exists ?? false, toggle);
+  Widget build(BuildContext context) => widget.builder(
+        context,
+        isReady,
+        _toggle?.exists ?? false,
+        !_transactionInProgress ? toggle : null,
+      );
 }
