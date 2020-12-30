@@ -27,9 +27,6 @@ dependencies:
   delayed_progress_indicator:
     path: /home/projects/packages/flutter_helpers/delayed_progress_indicator
 
-dependency_overrides:
-  analyzer: '0.39.14'
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

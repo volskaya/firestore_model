@@ -12,16 +12,21 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   Computed<bool> _$existsComputed;
 
   @override
-  bool get exists => (_$existsComputed ??= Computed<bool>(() => super.exists, name: '_FirestoreModel.exists')).value;
+  bool get exists => (_$existsComputed ??=
+          Computed<bool>(() => super.exists, name: '_FirestoreModel.exists'))
+      .value;
   Computed<bool> _$deletedComputed;
 
   @override
-  bool get deleted =>
-      (_$deletedComputed ??= Computed<bool>(() => super.deleted, name: '_FirestoreModel.deleted')).value;
+  bool get deleted => (_$deletedComputed ??=
+          Computed<bool>(() => super.deleted, name: '_FirestoreModel.deleted'))
+      .value;
   Computed<bool> _$isNewComputed;
 
   @override
-  bool get isNew => (_$isNewComputed ??= Computed<bool>(() => super.isNew, name: '_FirestoreModel.isNew')).value;
+  bool get isNew => (_$isNewComputed ??=
+          Computed<bool>(() => super.isNew, name: '_FirestoreModel.isNew'))
+      .value;
 
   final _$snapshotAtom = Atom(name: '_FirestoreModel.snapshot');
 
