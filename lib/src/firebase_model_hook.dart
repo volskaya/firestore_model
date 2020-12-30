@@ -30,7 +30,6 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
     @required DocumentReference reference,
     @required this.bucket,
     this.subscribe = false,
-    this.placeholder,
     this.storageContext,
     this.update = false,
     this.state,
@@ -45,7 +44,6 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
     @required DatabaseReference reference,
     @required this.bucket,
     this.subscribe = false,
-    this.placeholder,
     this.storageContext,
     this.update = false,
     this.state,
@@ -62,9 +60,6 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
 
   /// Subscribe to realtime changes.
   final bool subscribe;
-
-  /// Optional value to pass to [builder], while the [reference] is not fetched.
-  final T placeholder;
 
   /// Allow overriding context of [MyApp.storage] to support building
   /// within an overlay.
@@ -86,7 +81,6 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
     DocumentReference reference, {
     String bucket,
     bool subscribe = false,
-    T placeholder,
     BuildContext storageContext,
     bool update = false,
     State state,
@@ -96,7 +90,6 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
           reference: reference,
           bucket: bucket ?? reference?.path,
           subscribe: subscribe,
-          placeholder: placeholder,
           storageContext: storageContext,
           update: update,
           state: state,
@@ -110,7 +103,6 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
     DatabaseReference reference, {
     String bucket,
     bool subscribe = false,
-    T placeholder,
     BuildContext storageContext,
     bool update = false,
     State state,
@@ -120,7 +112,6 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
           reference: reference,
           bucket: bucket ?? reference?.path,
           subscribe: subscribe,
-          placeholder: placeholder,
           storageContext: storageContext,
           update: update,
           state: state,

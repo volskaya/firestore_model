@@ -21,6 +21,8 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
     @required this.collection,
     @required this.builder,
     this.contentPadding,
+    this.fillColor = Colors.transparent,
+    this.duration = const Duration(milliseconds: 300),
   })  : _axis = Axis.vertical,
         super(key: key, name: 'firestore_collection_switcher');
 
@@ -30,6 +32,8 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
     @required this.collection,
     @required this.builder,
     this.contentPadding,
+    this.fillColor = Colors.transparent,
+    this.duration = const Duration(milliseconds: 300),
   })  : _axis = Axis.horizontal,
         super(key: key, name: 'firestore_collection_switcher');
 
@@ -42,12 +46,18 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
   /// Content padding of the [SingleChildScrollView], when status != [FirestoreCollectionStatus.ready].
   final EdgeInsets contentPadding;
 
+  /// Switcher's background color.
+  final Color fillColor;
+
+  /// Switcher's animation duration.
+  final Duration duration;
+
   final Axis _axis;
 
   @override
   Widget build(BuildContext context) {
     final key = ValueKey(collection.status);
-    Widget body = KeyedSubtree(key: key, child: builder(context, collection.status));
+    Widget body = Center(key: key, child: builder(context, collection.status));
 
     if (contentPadding != null) {
       body = MediaQuery(
@@ -57,21 +67,37 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
     }
 
     if (collection.status != FirestoreCollectionStatus.ready) {
-      body = SingleChildScrollView(
-        clipBehavior: Clip.none,
-        key: ValueKey(collection.status),
-        padding: contentPadding ?? MediaQuery.of(context).padding,
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: body,
+      body = CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(), // Always scroll so this can send events to refresh containers.
         scrollDirection: _axis,
+        clipBehavior: Clip.none,
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: body,
+          ),
+        ],
       );
     }
 
+    body = FancySwitcherTag(
+      tag: collection.status.index,
+      child: SizedBox.expand(child: body),
+    );
+
     switch (_axis) {
       case Axis.horizontal:
-        return FancySwitcher.horizontal(child: body);
+        return FancySwitcher.horizontal(
+          child: body,
+          fillColor: fillColor,
+          duration: duration,
+        );
       case Axis.vertical:
-        return FancySwitcher.vertical(child: body);
+        return FancySwitcher.vertical(
+          child: body,
+          fillColor: fillColor,
+          duration: duration,
+        );
       default:
         throw UnimplementedError();
     }
@@ -135,8 +161,7 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
                 throw UnimplementedError();
             }
           } else if (tailBuilder != null && collection.status == FirestoreCollectionStatus.ready && i == childCount) {
-            // Build the last tile.
-            return tailBuilder(context);
+            return tailBuilder(context); // Build the last tile.
           }
 
           // All the other tiles.
@@ -145,7 +170,7 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
         addAutomaticKeepAlives: false,
         childCount: math.max(
           collection.status == FirestoreCollectionStatus.ready && tailBuilder != null ? childCount + 1 : childCount,
-          1,
+          collection.status != FirestoreCollectionStatus.ready ? 1 : 0,
         ),
       );
 

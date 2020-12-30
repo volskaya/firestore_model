@@ -27,7 +27,6 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
     this.bucket,
     this.builder,
     this.subscribe = false,
-    this.placeholder,
     this.storageContext,
     this.observe = true,
     this.update = false,
@@ -46,7 +45,6 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
     this.bucket,
     this.builder,
     this.subscribe = false,
-    this.placeholder,
     this.storageContext,
     this.observe = true,
     this.update = false,
@@ -68,9 +66,6 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
   /// Subscribe to realtime changes.
   final bool subscribe;
 
-  /// Optional value to pass to [builder], while the [reference] is not fetched.
-  final T placeholder;
-
   /// Allow overriding context of [MyApp.storage] to support building
   /// within an overlay.
   final BuildContext storageContext;
@@ -91,7 +86,6 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
           FirebaseModelHook<T>.firestore(
             reference: _path != null ? FirebaseFirestore.instance.doc(_path) : null,
             bucket: bucket ?? _path,
-            placeholder: placeholder,
             subscribe: subscribe,
             storageContext: storageContext,
             update: update,
@@ -103,7 +97,6 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
           FirebaseModelHook<T>.realtime(
             reference: _path != null ? FirebaseDatabase.instance.reference().child(_path) : null,
             bucket: bucket ?? _path,
-            placeholder: placeholder,
             subscribe: subscribe,
             storageContext: storageContext,
             update: update,
