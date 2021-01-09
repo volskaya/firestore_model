@@ -43,17 +43,22 @@ class _FirestoreCollectionStorage<T extends FirestoreModel<T>> = _FirestoreColle
     with _$_FirestoreCollectionStorage<T>;
 
 abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> with Store {
+  _FirestoreCollectionStorageStore({@required this.identifier});
+
+  final String identifier;
+
   final paginatedItems = ObservableList<T>();
   final subscribedItems = ObservableList<T>();
   final pendingItems = ObservableList<T>();
+  final _states = <FirestoreCollectionBuilderState<T>>[];
   final _seenItems = <String>{}; // Seen document IDs to filter redundant items.
 
   bool _fetchingPage = false;
   int page = 0;
   StreamSubscription<QuerySnapshot> _streamSubscription;
-  FirestoreCollectionBuilderState<T> _state;
-  String _identifier;
+
   bool get isSubscribed => _streamSubscription != null;
+  FirestoreCollectionBuilderState<T> get _state => _states.isNotEmpty ? _states.last : null;
 
   @observable
   FirestoreCollectionStatus listStatus = FirestoreCollectionStatus.idle;
@@ -168,11 +173,11 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> wit
 
     if (snapshots.size < _state.widget.itemsPerPage) {
       isEndReached = true;
-      developer.log('$_identifier collection end reached', name: 'firestore_model');
+      developer.log('$identifier collection end reached', name: 'firestore_model');
     }
 
     final items = await _deserializeQuerySnapshot(snapshots.docs);
-    developer.log('$_identifier pagination got ${items.length} new items', name: 'firestore_model');
+    developer.log('$identifier pagination got ${items.length} new items', name: 'firestore_model');
 
     if (_state?.mounted == true) {
       paginatedItems.addAll(items);
@@ -187,13 +192,13 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> wit
 
     if (!isSubscribed) {
       try {
-        developer.log('Subscribing to $_identifier', name: 'firestore_model');
+        developer.log('Subscribing to $identifier', name: 'firestore_model');
         _streamSubscription = _subscriptionQuery
             .limit(_state.widget.itemsPerPage)
             .snapshots(includeMetadataChanges: true)
             .listen(_handleQuerySubscription);
       } on PlatformException catch (e, t) {
-        developer.log('Couldn\'t attach a listener to $_identifier', name: 'firestore_model', error: e, stackTrace: t);
+        developer.log('Couldn\'t attach a listener to $identifier', name: 'firestore_model', error: e, stackTrace: t);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_state?.widget?.subscribe == true) startSubscription(); // Attempt to resubscribe.
         });
@@ -237,7 +242,7 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> wit
       if (upstreamDocuments.isNotEmpty) stopSubscription(); // The subscription will resubscribe from a newer document.
       final allowOffline = _state?.widget?.allowOfflineItems == true;
       final documents = allowOffline ? snapshot.docs.where((x) => !_seenItems.contains(x.id)) : upstreamDocuments;
-      developer.log('$_identifier subscription got ${documents.length} new items', name: 'firestore_model');
+      developer.log('$identifier subscription got ${documents.length} new items', name: 'firestore_model');
       final items = await _deserializeQuerySnapshot(documents, subscribed: true);
 
       if (_state?.mounted == true) {
@@ -258,16 +263,18 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> wit
   }
 
   @action
-  void dispose() => pendingItems.followedBy(subscribedItems).followedBy(paginatedItems).forEach((item) => item.dispose);
+  void dispose() =>
+      pendingItems.followedBy(subscribedItems).followedBy(paginatedItems).forEach((item) => item.dispose());
 
   @action
   void mount(FirestoreCollectionBuilderState<T> state) {
-    if (_state != null) throw 'Already mounted';
-
-    _state = state;
-    _identifier = state.identifier;
+    if (_states.contains(state)) throw 'Already mounted';
+    _states.add(state);
 
     // Move pending & subscribed items to the paginated list.
+    //
+    // FIXME: Pushing items to the paginated list, when a new state is mounted,
+    // will cause the list to update in all the previous states.
     if (pendingItems.isNotEmpty || subscribedItems.isNotEmpty) {
       paginatedItems.insertAll(0, pendingItems.reversed.followedBy(subscribedItems.reversed));
       pendingItems.clear();
@@ -275,12 +282,12 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> wit
     }
   }
 
-  /// Unreferences `_state` but leaves `_identifier` as is.
+  /// Unreferences `_state`.
   void unmount(FirestoreCollectionBuilderState<T> state) {
-    assert(_state == state);
-    _state = null;
-    _identifier = null;
-    stopSubscription();
+    assert(_states.contains(state));
+    final removed = _states.remove(state);
+    assert(removed, 'Unmounted a state that has not been mouted');
+    if (_states.isEmpty) stopSubscription();
   }
 }
 
@@ -446,7 +453,7 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
         ? RefreshStorage.write<_FirestoreCollectionStorage<T>>(
             context: context,
             identifier: identifier,
-            builder: () => _FirestoreCollectionStorage<T>(),
+            builder: () => _FirestoreCollectionStorage<T>(identifier: identifier),
             route: widget.routeOverride,
             storage: widget.storageOverride,
             dispose: (storage) => storage.dispose(),
