@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-/// Json serializable converter for firestore [Timestamp].
+/// Convert Firestore's [Timestamp] to json.
 class FirestoreTimestampConverter implements JsonConverter<Timestamp, dynamic> {
   /// Creates [FirestoreTimestampConverter].
   const FirestoreTimestampConverter();
@@ -13,6 +13,8 @@ class FirestoreTimestampConverter implements JsonConverter<Timestamp, dynamic> {
       return null;
     } else if (json is Timestamp) {
       return json;
+    } else if (json is num) {
+      return Timestamp.fromMillisecondsSinceEpoch(json.toInt());
     } else if (json is Map<String, dynamic>) {
       final seconds = json['_seconds'] as int;
       final nanoseconds = json['_nanoseconds'] as int;
@@ -26,6 +28,18 @@ class FirestoreTimestampConverter implements JsonConverter<Timestamp, dynamic> {
   /// Convert [Timestamp] to json
   @override
   dynamic toJson(Timestamp object) => object;
+}
+
+/// Convert Flutter's [Duration] to an int in milliseconds.
+class FirestoreDurationConverter implements JsonConverter<Duration, dynamic> {
+  /// Creates [FirestoreDurationConverter].
+  const FirestoreDurationConverter();
+
+  @override
+  Duration fromJson(dynamic json) => json != null && json is int ? Duration(milliseconds: json) : null;
+
+  @override
+  dynamic toJson(Duration object) => object?.inMilliseconds;
 }
 
 /// Serializes new lines in Firebase strings.

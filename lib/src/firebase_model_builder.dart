@@ -78,6 +78,9 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Subscription choice is not allowed to change, until the widget is disposed.
+    final subscribe = useMemoized(() => this.subscribe);
+
     T data;
 
     switch (_type) {
@@ -108,7 +111,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
     return observe
         ? Observer(
             name: '${bucket ?? _path}_observer',
-            builder: (context) => builder(context, data?.path == _path ? data : null),
+            builder: (context, __) => builder(context, data?.path == _path ? data : null),
           )
         : builder(context, data?.path == _path ? data : null);
   }

@@ -8,6 +8,7 @@ import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
+/// -
 typedef FirestoreReferenceBuilderCallback<T extends FirestoreModel<T>> = Widget Function(BuildContext context, T data);
 
 class _FirestoreReferenceBuilderBucket<T extends FirestoreModel<T>> {
@@ -172,7 +173,7 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
         builder: (context, snapshot) => widget.observe
             ? Observer(
                 name: '${widget.bucket}_observer',
-                builder: (context) => widget.builder(context, snapshot.hasData ? snapshot.data : null),
+                builder: (context, __) => widget.builder(context, snapshot.hasData ? snapshot.data : null),
               )
             : widget.builder(context, snapshot.hasData ? snapshot.data : null),
       );

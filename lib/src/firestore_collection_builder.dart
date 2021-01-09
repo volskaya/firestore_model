@@ -497,7 +497,7 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>> extends State
         child: widget.observe
             ? Observer(
                 name: widget.bucket,
-                builder: (context) => widget.builder(context, this),
+                builder: (context, __) => widget.builder(context, this),
               )
             : widget.builder(context, this),
       );
