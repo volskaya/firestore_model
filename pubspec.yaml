@@ -20,12 +20,16 @@ dependencies:
   provider: ^4.3.2+2
   flutter_hooks: ^0.15.0
 
+  log:
+    path: /home/projects/packages/flutter_helpers/log
   refresh_storage:
     path: /home/projects/packages/flutter_helpers/refresh_storage
   fancy_switcher:
     path: /home/projects/packages/fancy_switcher
   delayed_progress_indicator:
     path: /home/projects/packages/flutter_helpers/delayed_progress_indicator
+  loader_coordinator:
+    path: /home/projects/packages/flutter_helpers/loader_coordinator
 
 dependency_overrides:
   # Conditionally checks if an observable should update.

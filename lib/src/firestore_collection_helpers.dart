@@ -111,8 +111,6 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
     Key key,
     @required this.collection,
     @required this.childBuilder,
-    this.statusBuilder,
-    this.tailBuilder,
   })  : itemExtent = null,
         super(key: key, name: 'firestore_collection_sliver_list');
 
@@ -122,8 +120,6 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
     @required this.collection,
     @required this.childBuilder,
     @required this.itemExtent,
-    this.statusBuilder,
-    this.tailBuilder,
   }) : super(key: key, name: 'firestore_collection_sliver_list');
 
   /// The collection this builder will observe.
@@ -132,12 +128,6 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
   /// Builder of the list items.
   final IndexedWidgetBuilder childBuilder;
 
-  /// Builder of the status tile, when collection status != [FirestoreCollectionStatus.ready]
-  final FirestoreCollectionSwitcherBuilder statusBuilder;
-
-  /// Optional tile to build at the end of the list.
-  final WidgetBuilder tailBuilder;
-
   /// Item extent.
   final double itemExtent;
 
@@ -145,31 +135,9 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
   int get childCount => collection.paginatedItems.length;
 
   SliverChildBuilderDelegate _getDelegate() => SliverChildBuilderDelegate(
-        (context, i) {
-          if (statusBuilder != null && i == 0) {
-            // Build the first tile.
-            switch (collection.status) {
-              case FirestoreCollectionStatus.ready:
-                break; // Continue to the default builder.
-              case FirestoreCollectionStatus.idle:
-              case FirestoreCollectionStatus.loading:
-              case FirestoreCollectionStatus.empty:
-                return statusBuilder(context, collection.status);
-              default:
-                throw UnimplementedError();
-            }
-          } else if (tailBuilder != null && collection.status == FirestoreCollectionStatus.ready && i == childCount) {
-            return tailBuilder(context); // Build the last tile.
-          }
-
-          // All the other tiles.
-          return childBuilder(context, i);
-        },
+        childBuilder,
         addAutomaticKeepAlives: false,
-        childCount: math.max(
-          collection.status == FirestoreCollectionStatus.ready && tailBuilder != null ? childCount + 1 : childCount,
-          collection.status != FirestoreCollectionStatus.ready ? 1 : 0,
-        ),
+        childCount: collection.paginatedItems.length,
       );
 
   @override
@@ -185,6 +153,7 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
     Key key,
     @required this.status,
     @required this.emptyLabel,
+    this.size,
   }) : super(key: key);
 
   /// The collection status this builder will build off of.
@@ -193,26 +162,30 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
   /// Text widget built, when the collection has no items.
   final String emptyLabel;
 
+  /// [Size] of an optional [SizedBox] to wrap the widget with.
+  ///
+  /// No poin to use this when building inside a fixed extent list.
+  final Size size;
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final horizontalPadding = mediaQuery.padding.copyWith(top: 0, bottom: 0);
     final theme = Theme.of(context);
 
-    assert(
-      status != FirestoreCollectionStatus.ready,
-      'This widget is intended for other statuses, except ready',
-    );
+    Widget child;
 
     switch (status) {
+      case FirestoreCollectionStatus.ready:
       case FirestoreCollectionStatus.idle:
       case FirestoreCollectionStatus.loading:
-        return Padding(
+        child = Padding(
           padding: horizontalPadding,
           child: const DelayedProgressIndicator(),
         );
+        break;
       case FirestoreCollectionStatus.empty:
-        return Center(
+        child = Center(
           child: Padding(
             padding: horizontalPadding,
             child: Text(
@@ -224,42 +197,48 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
             ),
           ),
         );
+        break;
       default:
         throw UnimplementedError();
     }
+
+    return size != null ? SizedBox.fromSize(size: size, child: child) : child;
   }
 }
 
 /// Default tail builder of [FirestoreCollectionnSliverList].
-class FirestoreCollectionTailBuilder extends StatelessObserverWidget {
+class FirestoreCollectionTailBuilder extends StatelessWidget {
   /// Creates [FirestoreCollectionTailBuilder].
   const FirestoreCollectionTailBuilder({
     Key key,
     @required this.label,
-  }) : super(key: key, name: 'firestore_collection_tail_builder');
+    this.size,
+  }) : super(key: key);
 
   /// Text to display as the tail.
   final String label;
 
+  /// [Size] of an optional [SizedBox] to wrap the widget with.
+  ///
+  /// No poin to use this when building inside a fixed extent list.
+  final Size size;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final collection = FirestoreCollectionBuilder.of(context);
-    return FancySwitcher(
-      child: !collection.isEndReached
-          ? const DelayedProgressIndicator()
-          : Center(
-              child: Padding(
-                padding: MediaQuery.of(context).padding.copyWith(top: 0, bottom: 0),
-                child: Text(
-                  label,
-                  style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
+    final child = Center(
+      child: Padding(
+        padding: MediaQuery.of(context).padding.copyWith(top: 0, bottom: 0),
+        child: Text(
+          label,
+          style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
+
+    return size != null ? SizedBox.fromSize(size: size, child: child) : child;
   }
 }

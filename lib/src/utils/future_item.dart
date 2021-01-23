@@ -7,6 +7,28 @@ import 'package:firestore_model/src/firebase_model.dart';
 import 'package:flutter/material.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:loader_coordinator/loader_coordinator.dart';
+
+/// Allows scheduling a future with [SchedulerBinding.instance.scheduleTask].
+Future<T> scheduleFuture<T>(FutureOr<T> Function() callback, [Priority priority = Priority.touch]) {
+  final completer = Completer<T>();
+  final stopwatch = Stopwatch()..start();
+  SchedulerBinding.instance.scheduleTask(
+    () async {
+      stopwatch.stop();
+      print('Scheduled firebase model in ${stopwatch.elapsedMilliseconds}ms');
+
+      try {
+        final value = await callback();
+        completer.complete(value);
+      } catch (e) {
+        completer.completeError(e);
+      }
+    },
+    priority,
+  );
+  return completer.future;
+}
 
 /// Asynchronous/Synchronous loader of [FirestoreModel]s.
 class FutureItem<D extends FirebaseModel<D>> {
@@ -87,19 +109,26 @@ class FutureItem<D extends FirebaseModel<D>> {
     assert(!_disposed);
     if (_disposed || synchronous) return null;
 
-    // Item is not in the cache so [FirebaseModel.from] is expected to fetch the model from firebase.
-    // It's okay to delay/schedule the call here.
-    final fetchedItem = await FirebaseModel.from<D>(type, path, subscribe: subscribe);
-    developer.log('Fetched future item: ${fetchedItem.path} ($type)', name: 'firestore_model');
+    final loader = LoaderCoordinator.instance.touch();
 
-    if (!_disposed) {
-      item = fetchedItem;
-    } else {
-      fetchedItem.dispose(unsubscribe: subscribe);
-      return null;
+    try {
+      // Item is not in the cache so [FirebaseModel.from] is expected to fetch the model from firebase.
+      // It's okay to delay/schedule the call here.
+      final fetchedItem = await FirebaseModel.from<D>(type, path, subscribe: subscribe);
+      // final fetchedItem = await scheduleFuture<D>(() => FirebaseModel.from<D>(type, path, subscribe: subscribe));
+      developer.log('Fetched future item: ${fetchedItem.path} ($type)', name: 'firestore_model');
+
+      if (!_disposed) {
+        item = fetchedItem;
+      } else {
+        fetchedItem.dispose(unsubscribe: subscribe);
+        return null;
+      }
+
+      return fetchedItem;
+    } finally {
+      loader.dispose();
     }
-
-    return fetchedItem;
   }
 
   static void _defer(State state, VoidCallback callback) {
@@ -112,6 +141,7 @@ class FutureItem<D extends FirebaseModel<D>> {
 
   void _deferLoad() {
     if (state != null) {
+      assert(false);
       final completer = Completer<D>();
       _defer(state, () async => completer.complete(await _getItem()));
       future = completer.future;
@@ -124,7 +154,11 @@ class FutureItem<D extends FirebaseModel<D>> {
   void dispose() {
     final shouldDispose = !_disposed;
     _disposed = true;
-    if (shouldDispose) item?.dispose(unsubscribe: subscribe);
+    if (shouldDispose) {
+      item?.dispose(unsubscribe: subscribe);
+      item = null;
+      future = null;
+    }
     assert(shouldDispose, 'Disposing the same [FutureItem] twice might indicate a mistake in code. Path: $path');
   }
 }

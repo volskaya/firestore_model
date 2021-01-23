@@ -161,11 +161,6 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
 abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements _FirebaseModelImpl<T> {
   final _firstSnapshotCompleter = Completer<void>();
 
-  @override
-  bool operator ==(dynamic other) => other.id == id;
-  @override
-  int get hashCode => id.hashCode;
-
   StreamSubscription<dynamic> _streamSubscription; // ignore:cancel_subscriptions
   int _subscribers = 0;
   int get subscribers => _subscribers;
@@ -269,10 +264,16 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   @override
   void dispose({bool unsubscribe = false}) => releaseRef(
       model: this as FirebaseModel<T>,
-      onDecremented: () => unsubscribe ? this.unsubscribe() : null,
+      onDecremented: unsubscribe ? this.unsubscribe : null,
       onInvalidated: () {
         developer.log('Disposing ${T.toString()} - $id', name: 'firestore_model');
         if (isSubscribed) this.unsubscribe(force: true);
         super.dispose();
       });
+
+  @override
+  bool operator ==(dynamic other) => other.path == path;
+
+  @override
+  int get hashCode => path.hashCode;
 }

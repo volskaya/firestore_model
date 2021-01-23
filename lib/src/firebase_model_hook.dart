@@ -131,7 +131,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
   Future _scheduleRebuild(FutureItem object) async {
     assert(!object.synchronous);
 
-    if (object.item != null || object.synchronous) return;
+    if (object.item != null || object.synchronous) return; // Already built.
     await object.future;
     if (_storage?.object?.path == object.path) markMayNeedRebuild();
   }
@@ -196,7 +196,10 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
             context: hook.storageContext ?? context,
             identifier: _bucket,
             builder: () => _FirebaseModelHookBucket<T>(),
-            dispose: (storage) => storage.object?.dispose(),
+            dispose: (storage) {
+              storage.object?.dispose();
+              storage.object = null;
+            },
           )
         : _FirebaseModelHookBucket<T>();
 
@@ -236,7 +239,12 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
   @override
   void dispose() {
     _mounted = false;
-    if (!_usingPageStorage) _storage?.object?.dispose();
+    if (!_usingPageStorage) {
+      _storage?.object?.dispose();
+      _storage?.object = null;
+    }
+    _storage = null; // HACK: Fixes memory leak.
+    _bucket = null;
     super.dispose();
   }
 

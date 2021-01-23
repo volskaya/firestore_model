@@ -78,9 +78,6 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Subscription choice is not allowed to change, until the widget is disposed.
-    final subscribe = useMemoized(() => this.subscribe);
-
     T data;
 
     switch (_type) {
