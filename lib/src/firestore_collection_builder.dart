@@ -155,9 +155,7 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> wit
     }
 
     try {
-      await _paginate();
-      this.page += 1;
-      _checkStatus();
+      await _paginate(page);
       assert(_state?.mounted != true || page == this.page);
     } finally {
       _fetchingPage = false;
@@ -165,8 +163,9 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> wit
   }
 
   @action
-  Future _paginate() async {
+  Future _paginate(int page) async {
     assert(_state != null);
+    assert(page > this.page);
 
     final snapshots = await _pageQuery.limit(_state.widget.itemsPerPage).get();
     if (_state?.mounted != true) return;
@@ -181,6 +180,8 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>> wit
 
     if (_state?.mounted == true) {
       paginatedItems.addAll(items);
+      this.page = page;
+      _checkStatus();
     } else {
       for (final item in items) item.dispose();
     }

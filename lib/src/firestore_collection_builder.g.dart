@@ -8,8 +8,8 @@ part of 'firestore_collection_builder.dart';
 
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
 
-mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>>
-    on _FirestoreCollectionStorageStore<T>, Store {
+mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
+    on _FirestoreCollectionStorageStore<T, D>, Store {
   final _$listStatusAtom =
       Atom(name: '_FirestoreCollectionStorageStore.listStatus');
 
@@ -21,9 +21,11 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>>
 
   @override
   set listStatus(FirestoreCollectionStatus value) {
-    _$listStatusAtom.reportWrite(value, super.listStatus, () {
-      super.listStatus = value;
-    });
+    if (super.listStatus != value) {
+      _$listStatusAtom.reportWrite(value, super.listStatus, () {
+        super.listStatus = value;
+      });
+    }
   }
 
   final _$isEndReachedAtom =
@@ -37,9 +39,11 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>>
 
   @override
   set isEndReached(bool value) {
-    _$isEndReachedAtom.reportWrite(value, super.isEndReached, () {
-      super.isEndReached = value;
-    });
+    if (super.isEndReached != value) {
+      _$isEndReachedAtom.reportWrite(value, super.isEndReached, () {
+        super.isEndReached = value;
+      });
+    }
   }
 
   final _$fetchPageAsyncAction =
@@ -54,8 +58,8 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>>
       AsyncAction('_FirestoreCollectionStorageStore._paginate');
 
   @override
-  Future<dynamic> _paginate() {
-    return _$_paginateAsyncAction.run(() => super._paginate());
+  Future<dynamic> _paginate(int page) {
+    return _$_paginateAsyncAction.run(() => super._paginate(page));
   }
 
   final _$_handleQuerySubscriptionAsyncAction =
@@ -109,7 +113,7 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>>
   }
 
   @override
-  void mount(FirestoreCollectionBuilderState<T> state) {
+  void mount(FirestoreCollectionBuilderState<T, D> state) {
     final _$actionInfo = _$_FirestoreCollectionStorageStoreActionController
         .startAction(name: '_FirestoreCollectionStorageStore.mount');
     try {

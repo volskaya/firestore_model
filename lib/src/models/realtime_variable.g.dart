@@ -19,9 +19,11 @@ mixin _$RealtimeVariable on _RealtimeVariable, Store {
 
   @override
   set value(dynamic value) {
-    _$valueAtom.reportWrite(value, super.value, () {
-      super.value = value;
-    });
+    if (super.value != value) {
+      _$valueAtom.reportWrite(value, super.value, () {
+        super.value = value;
+      });
+    }
   }
 
   final _$_RealtimeVariableActionController =

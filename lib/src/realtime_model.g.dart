@@ -26,9 +26,11 @@ mixin _$RealtimeModel<T> on _RealtimeModel<T>, Store {
 
   @override
   set snapshot(DataSnapshot value) {
-    _$snapshotAtom.reportWrite(value, super.snapshot, () {
-      super.snapshot = value;
-    });
+    if (super.snapshot != value) {
+      _$snapshotAtom.reportWrite(value, super.snapshot, () {
+        super.snapshot = value;
+      });
+    }
   }
 
   final _$_RealtimeModelActionController =

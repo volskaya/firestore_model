@@ -38,9 +38,11 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
 
   @override
   set snapshot(DocumentSnapshot value) {
-    _$snapshotAtom.reportWrite(value, super.snapshot, () {
-      super.snapshot = value;
-    });
+    if (super.snapshot != value) {
+      _$snapshotAtom.reportWrite(value, super.snapshot, () {
+        super.snapshot = value;
+      });
+    }
   }
 
   final _$createTimeAtom = Atom(name: '_FirestoreModel.createTime');
@@ -57,9 +59,11 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   @JsonKey()
   @FirestoreTimestampConverter()
   set createTime(Timestamp value) {
-    _$createTimeAtom.reportWrite(value, super.createTime, () {
-      super.createTime = value;
-    });
+    if (super.createTime != value) {
+      _$createTimeAtom.reportWrite(value, super.createTime, () {
+        super.createTime = value;
+      });
+    }
   }
 
   final _$updateTimeAtom = Atom(name: '_FirestoreModel.updateTime');
@@ -76,9 +80,11 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   @JsonKey()
   @FirestoreTimestampConverter()
   set updateTime(Timestamp value) {
-    _$updateTimeAtom.reportWrite(value, super.updateTime, () {
-      super.updateTime = value;
-    });
+    if (super.updateTime != value) {
+      _$updateTimeAtom.reportWrite(value, super.updateTime, () {
+        super.updateTime = value;
+      });
+    }
   }
 
   final _$_FirestoreModelActionController =
