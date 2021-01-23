@@ -6,6 +6,7 @@ import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/realtime_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
+import 'package:firestore_model/src/utils/disposable_hook_context.dart';
 import 'package:firestore_model/src/utils/future_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -32,7 +33,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
     this.subscribe = false,
     this.storageContext,
     this.update = false,
-    this.state,
+    this.scrollAware = false,
   })  : _type = FirebaseModelType.firestore,
         _path = reference?.path;
 
@@ -46,7 +47,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
     this.subscribe = false,
     this.storageContext,
     this.update = false,
-    this.state,
+    this.scrollAware = false,
   })  : _type = FirebaseModelType.realtime,
         _path = reference?.path;
 
@@ -68,11 +69,9 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
   /// Request the model to update, when this hook is initialized.
   final bool update;
 
-  /// Optional state of the widget under which the [FutureItem]s are held.
-  ///
-  /// When this is defined, the [FutureItem]s will defer their fetch of the model
+  /// When this is toggled, the [FutureItem]s will defer their fetch of the model
   /// till the nearest scroll view has slowed down.
-  final State state;
+  final bool scrollAware;
 
   /// Creates Firestore version of [FirebaseModelHook].
   ///
@@ -83,7 +82,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
     bool subscribe = false,
     BuildContext storageContext,
     bool update = false,
-    State state,
+    bool scrollAware = false,
   }) =>
       use<T>(
         FirebaseModelHook<T>.firestore(
@@ -92,7 +91,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
           subscribe: subscribe,
           storageContext: storageContext,
           update: update,
-          state: state,
+          scrollAware: scrollAware,
         ),
       );
 
@@ -105,7 +104,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
     bool subscribe = false,
     BuildContext storageContext,
     bool update = false,
-    State state,
+    bool scrollAware = false,
   }) =>
       use<T>(
         FirebaseModelHook<T>.realtime(
@@ -114,7 +113,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
           subscribe: subscribe,
           storageContext: storageContext,
           update: update,
-          state: state,
+          scrollAware: scrollAware,
         ),
       );
 
@@ -153,7 +152,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
         type: hook._type,
         item: object,
         subscribe: hook.subscribe,
-        state: hook.state,
+        scrollAwareContext: _disposableContext,
       );
 
       // If an empty synchronous item is instantiated with subscription off,
@@ -169,7 +168,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
         type: hook._type,
         path: hook._path,
         subscribe: hook.subscribe,
-        state: hook.state,
+        scrollAwareContext: _disposableContext,
       );
       _scheduleRebuild(_storage.object);
     }
@@ -183,10 +182,13 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
     }
   }
 
+  DisposableHookContext _disposableContext;
+
   @override
   void initHook() {
     super.initHook();
     final storage = _FirebaseModelHookState._getStorage(hook.storageContext ?? context);
+    _disposableContext = hook.scrollAware ? DisposableHookContext(this) : null;
     _bucket = hook.bucket; // Bucket is not allowed to change.
     _mounted = true;
     _usingPageStorage = storage != null;
@@ -243,6 +245,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
       _storage?.object?.dispose();
       _storage?.object = null;
     }
+    _disposableContext?.dispose();
     _storage = null; // HACK: Fixes memory leak.
     _bucket = null;
     super.dispose();

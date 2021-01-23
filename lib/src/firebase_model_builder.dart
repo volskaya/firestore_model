@@ -30,6 +30,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
     this.storageContext,
     this.observe = true,
     this.update = false,
+    this.scrollAware = false,
   })  : _type = FirebaseModelType.firestore,
         _path = reference?.path,
         super(key: key);
@@ -48,6 +49,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
     this.storageContext,
     this.observe = true,
     this.update = false,
+    this.scrollAware = false,
   })  : _type = FirebaseModelType.realtime,
         _path = reference?.path,
         super(key: key);
@@ -76,6 +78,10 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
   /// Request the model to update, when this widget is initialized.
   final bool update;
 
+  /// When this is toggled, the [FutureItem]s will defer their fetch of the model
+  /// till the nearest scroll view has slowed down.
+  final bool scrollAware;
+
   @override
   Widget build(BuildContext context) {
     T data;
@@ -89,6 +95,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
             subscribe: subscribe,
             storageContext: storageContext,
             update: update,
+            scrollAware: scrollAware,
           ),
         );
         break;
@@ -100,6 +107,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
             subscribe: subscribe,
             storageContext: storageContext,
             update: update,
+            scrollAware: scrollAware,
           ),
         );
         break;

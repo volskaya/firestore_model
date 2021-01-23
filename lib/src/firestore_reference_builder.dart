@@ -87,7 +87,6 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
         type: FirebaseModelType.firestore,
         item: object,
         subscribe: widget.subscribe,
-        state: this,
       );
 
       // If an empty synchronous item is instantiated with subscription off,
@@ -103,7 +102,6 @@ class _FirestoreReferenceBuilderState<T extends FirestoreModel<T>> extends State
         type: FirebaseModelType.firestore,
         path: widget.reference?.path,
         subscribe: widget.subscribe,
-        state: this,
       );
     }
   }

@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:firestore_model/src/firebase_model.dart';
+import 'package:firestore_model/src/utils/disposable_hook_context.dart';
 import 'package:flutter/material.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter/scheduler.dart';
@@ -39,7 +40,7 @@ class FutureItem<D extends FirebaseModel<D>> {
     @required this.future,
     @required this.synchronous,
     @required this.type,
-    this.state,
+    this.scrollAwareContext,
   });
 
   /// Creates an asynchronous [FutureItem].
@@ -47,14 +48,14 @@ class FutureItem<D extends FirebaseModel<D>> {
     @required String path,
     @required FirebaseModelType type,
     bool subscribe = false,
-    State state,
+    DisposableHookContext scrollAwareContext,
   }) =>
       FutureItem._(
         item: null,
         future: null,
         path: path,
         subscribe: subscribe,
-        state: state,
+        scrollAwareContext: scrollAwareContext,
         synchronous: false,
         type: type,
       ).._deferLoad();
@@ -64,14 +65,14 @@ class FutureItem<D extends FirebaseModel<D>> {
     @required D item,
     @required FirebaseModelType type,
     bool subscribe = false,
-    State state,
+    DisposableHookContext scrollAwareContext,
   }) =>
       FutureItem._(
         item: (() => subscribe ? (item..subscribe()) : item)(),
         future: Future.value(item),
         path: item.path,
         subscribe: subscribe,
-        state: state,
+        scrollAwareContext: scrollAwareContext,
         synchronous: true,
         type: type,
       );
@@ -86,7 +87,7 @@ class FutureItem<D extends FirebaseModel<D>> {
   ///
   /// When this is defined, the [FutureItem] will defer the fetch of the model
   /// till the nearest scroll view has slowed down.
-  final State state;
+  final DisposableHookContext scrollAwareContext;
 
   /// True when this [FutureItem] was constructed with an already existing item.
   final bool synchronous;
@@ -115,7 +116,6 @@ class FutureItem<D extends FirebaseModel<D>> {
       // Item is not in the cache so [FirebaseModel.from] is expected to fetch the model from firebase.
       // It's okay to delay/schedule the call here.
       final fetchedItem = await FirebaseModel.from<D>(type, path, subscribe: subscribe);
-      // final fetchedItem = await scheduleFuture<D>(() => FirebaseModel.from<D>(type, path, subscribe: subscribe));
       developer.log('Fetched future item: ${fetchedItem.path} ($type)', name: 'firestore_model');
 
       if (!_disposed) {
@@ -131,19 +131,19 @@ class FutureItem<D extends FirebaseModel<D>> {
     }
   }
 
-  static void _defer(State state, VoidCallback callback) {
-    if (state.mounted && Scrollable.recommendDeferredLoadingForContext(state.context)) {
-      SchedulerBinding.instance.scheduleFrameCallback((_) => _defer(state, callback));
+  static void _defer(DisposableHookContext scrollAware, VoidCallback callback) {
+    if (scrollAware?.context != null && Scrollable.recommendDeferredLoadingForContext(scrollAware.context)) {
+      SchedulerBinding.instance.scheduleFrameCallback((_) => _defer(scrollAware, callback));
     } else {
       callback();
     }
   }
 
   void _deferLoad() {
-    if (state != null) {
+    if (scrollAwareContext?.context != null) {
       assert(false);
       final completer = Completer<D>();
-      _defer(state, () async => completer.complete(await _getItem()));
+      _defer(scrollAwareContext, () async => completer.complete(await _getItem()));
       future = completer.future;
     } else {
       future = _getItem();
