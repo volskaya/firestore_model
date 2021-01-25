@@ -101,11 +101,11 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
   }
 
   @override
-  void dispose() {
+  void dispose([dynamic _]) {
     final _$actionInfo = _$_FirestoreCollectionStorageStoreActionController
         .startAction(name: '_FirestoreCollectionStorageStore.dispose');
     try {
-      return super.dispose();
+      return super.dispose(_);
     } finally {
       _$_FirestoreCollectionStorageStoreActionController
           .endAction(_$actionInfo);

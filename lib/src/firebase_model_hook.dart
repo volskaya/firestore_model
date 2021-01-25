@@ -13,9 +13,16 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
 /// Page storage of [FirebaseModelHook].
-class _FirebaseModelHookBucket<T extends FirebaseModel<T>> {
+class _FirebaseModelHookBucket<T extends FirebaseModel<T>> extends RefreshStorageItem {
   /// The memoizer of [FirebaseModel]s.
   FutureItem<T> object;
+
+  @override
+  void dispose([dynamic _]) {
+    super.dispose(_);
+    object?.dispose();
+    object = null;
+  }
 }
 
 /// Asynchronous hooks of reference counted [FirebaseModel]s.
@@ -122,17 +129,17 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
 }
 
 class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, FirebaseModelHook<T>> {
-  _FirebaseModelHookBucket<T> _storage;
+  RefreshStorageEntry<_FirebaseModelHookBucket<T>> _storage;
   bool _mounted = false;
   bool _usingPageStorage = false;
   String _bucket;
 
   Future _scheduleRebuild(FutureItem object) async {
-    assert(!object.synchronous);
+    assert(object?.synchronous == false);
 
     if (object.item != null || object.synchronous) return; // Already built.
     await object.future;
-    if (_storage?.object?.path == object.path) markMayNeedRebuild();
+    if (_storage?.value?.object?.path == object.path) markMayNeedRebuild();
   }
 
   void _updateObject() {
@@ -148,7 +155,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
 
     if (object != null) {
       developer.log('Instantiated with a synchronous ${hook._path} (${hook._type})', name: 'firestore_model');
-      _storage.object = FutureItem<T>.of(
+      _storage?.value?.object = FutureItem<T>.of(
         type: hook._type,
         item: object,
         subscribe: hook.subscribe,
@@ -159,18 +166,18 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
       // it may never get data, so always request 1 update.
       if (hook.update && !hook.subscribe) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_mounted) _storage.object.item?.update();
+          if (_mounted) _storage?.value?.object?.item?.update();
         });
       }
     } else {
       developer.log('Instantiating asynchronously ${hook._path} (${hook._type})', name: 'firestore_model');
-      _storage.object = FutureItem<T>(
+      _storage?.value?.object = FutureItem<T>(
         type: hook._type,
         path: hook._path,
         subscribe: hook.subscribe,
         scrollAwareContext: _disposableContext,
       );
-      _scheduleRebuild(_storage.object);
+      if (_storage?.value?.object != null) _scheduleRebuild(_storage.value.object);
     }
   }
 
@@ -198,21 +205,17 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
             context: hook.storageContext ?? context,
             identifier: _bucket,
             builder: () => _FirebaseModelHookBucket<T>(),
-            dispose: (storage) {
-              storage.object?.dispose();
-              storage.object = null;
-            },
           )
-        : _FirebaseModelHookBucket<T>();
+        : RefreshStorageEntry(_bucket, _FirebaseModelHookBucket<T>());
 
     if (hook._path != null) {
-      if (_storage.object == null || _storage.object.path != hook._path) {
+      if (_storage?.value?.object == null || _storage?.value?.object?.path != hook._path) {
         developer.log('Bucket item null, creating: ${hook._path} (${hook._type})', name: 'firestore_model');
 
-        if (_storage.object != null) {
+        if (_storage.value.object != null) {
           // Path changed, dispose the previous item.
-          _storage.object?.dispose();
-          _storage.object = null;
+          _storage?.value?.object?.dispose();
+          _storage?.value?.object = null;
         }
 
         _updateObject();
@@ -230,8 +233,8 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
 
     if (oldHook._path != hook._path) {
       developer.log('${oldHook._path} changed to ${hook._path}', name: 'firestore_model');
-      _storage.object?.dispose();
-      _storage.object = null;
+      _storage?.value?.object?.dispose();
+      _storage?.value?.object = null;
       if (hook._path != null) _updateObject();
     }
 
@@ -242,15 +245,14 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
   void dispose() {
     _mounted = false;
     if (!_usingPageStorage) {
-      _storage?.object?.dispose();
-      _storage?.object = null;
+      _storage?.value?.object?.dispose();
+      _storage?.value?.object = null;
     }
     _disposableContext?.dispose();
-    _storage = null; // HACK: Fixes memory leak.
-    _bucket = null;
+    _storage?.dispose();
     super.dispose();
   }
 
   @override
-  T build(BuildContext context) => _storage?.object?.item;
+  T build(BuildContext context) => _storage?.value?.object?.item;
 }
