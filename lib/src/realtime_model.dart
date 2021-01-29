@@ -80,6 +80,10 @@ abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, 
 
   /// Returns true if the last [snapshot.exists] was true.
   /// Observable is null, until the first [DocumentSnapshot].
+  ///
+  /// Snapshot's value is not considered, to keep this closer to Firestore's
+  /// behavior. Instead, if a snapshot was returned with no error, e.g. missing
+  /// permissions, then it exists, even if its value is null.
   @computed
   bool get exists => snapshot != null ? snapshot.value != null : null;
 

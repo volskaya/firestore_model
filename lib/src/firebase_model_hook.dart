@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firebase_model.dart';
@@ -10,6 +8,7 @@ import 'package:firestore_model/src/utils/disposable_hook_context.dart';
 import 'package:firestore_model/src/utils/future_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:log/log.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
 /// Page storage of [FirebaseModelHook].
@@ -129,6 +128,8 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
 }
 
 class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, FirebaseModelHook<T>> {
+  static final _log = Log.named('FirebaseModelHook');
+
   RefreshStorageEntry<_FirebaseModelHookBucket<T>> _storage;
   bool _mounted = false;
   bool _usingPageStorage = false;
@@ -154,7 +155,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
     final object = ReferencedModel.getRef<T>(hook._path);
 
     if (object != null) {
-      developer.log('Instantiated with a synchronous ${hook._path} (${hook._type})', name: 'firestore_model');
+      _log.v('Instantiated with a synchronous ${hook._path} (${hook._type})');
       _storage?.value?.object = FutureItem<T>.of(
         type: hook._type,
         item: object,
@@ -170,7 +171,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
         });
       }
     } else {
-      developer.log('Instantiating asynchronously ${hook._path} (${hook._type})', name: 'firestore_model');
+      _log.v('Instantiating asynchronously ${hook._path} (${hook._type})');
       _storage?.value?.object = FutureItem<T>(
         type: hook._type,
         path: hook._path,
@@ -210,7 +211,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
 
     if (hook._path != null) {
       if (_storage?.value?.object == null || _storage?.value?.object?.path != hook._path) {
-        developer.log('Bucket item null, creating: ${hook._path} (${hook._type})', name: 'firestore_model');
+        _log.v('Bucket item null, creating: ${hook._path} (${hook._type})');
 
         if (_storage.value.object != null) {
           // Path changed, dispose the previous item.
@@ -220,7 +221,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
 
         _updateObject();
       } else {
-        developer.log('Reusing bucket storage: ${hook._path} (${hook._type})', name: 'firestore_model');
+        _log.v('Reusing bucket storage: ${hook._path} (${hook._type})');
       }
     }
   }
@@ -232,7 +233,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
     assert(oldHook._type == hook._type);
 
     if (oldHook._path != hook._path) {
-      developer.log('${oldHook._path} changed to ${hook._path}', name: 'firestore_model');
+      _log.v('${oldHook._path} changed to ${hook._path}');
       _storage?.value?.object?.dispose();
       _storage?.value?.object = null;
       if (hook._path != null) _updateObject();

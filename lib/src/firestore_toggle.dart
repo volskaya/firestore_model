@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firestore_model/firestore_model.dart';
@@ -7,6 +6,7 @@ import 'package:firestore_model/src/models/toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:log/log.dart';
 
 /// Widget builder callback of [FirestoreToggle].
 typedef ToggleBuilder = Widget Function(
@@ -43,6 +43,7 @@ class FirestoreToggle extends StatefulObserverWidget {
     this.countDuplicate = false,
     this.createDuplicate = true,
     this.onToggled,
+    this.onError,
     this.onToggleTransaction,
   })  : assert(mirror == null || mirror.path == toggle.path),
         assert(duplicateMirror == null || duplicateMirror.parent.path == duplicate?.parent?.path),
@@ -96,6 +97,9 @@ class FirestoreToggle extends StatefulObserverWidget {
   /// Callback on toggle change.
   final ValueChanged<bool> onToggled;
 
+  /// Callback on toggle error.
+  final void Function(bool toggled, Object error, StackTrace stacktrace) onError;
+
   /// Operation in the middle of the toggle transaction.
   ///
   /// [shouldToggle] will indicate the new status of the toggle, if the transaction is successful.
@@ -112,6 +116,8 @@ class FirestoreToggle extends StatefulObserverWidget {
 }
 
 class _FirestoreToggleState extends State<FirestoreToggle> {
+  static final _log = Log.named('FirestoreToggle');
+
   Toggle _toggle;
   Toggle _mirror;
 
@@ -134,10 +140,7 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
       if (widget._duplicateMirror != null && widget.createDuplicate) batch.delete(widget._duplicateMirror);
     }
 
-    developer.log(
-      'Toggling ${shouldToggle ? "on" : "off"} ${_toggle.reference.path}',
-      name: 'firestore_collection_toggle',
-    );
+    _log.v('Toggling ${shouldToggle ? "on" : "off"} ${_toggle.reference.path}');
 
     if (shouldToggle) {
       final data = <String, dynamic>{'createTime': FieldValue.serverTimestamp()};
@@ -181,8 +184,13 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
       );
     }
 
-    await batch.commit();
-    widget.onToggled?.call(shouldToggle);
+    try {
+      await batch.commit();
+      widget.onToggled?.call(shouldToggle);
+    } catch (e, t) {
+      widget.onError?.call(_toggle.exists, e, t);
+      rethrow;
+    }
   }
 
   /// Using a transaction won't support instant update on the UI, so this method is only
@@ -207,10 +215,7 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
           if (widget._duplicateMirror != null && widget.createDuplicate) transaction.delete(widget._duplicateMirror);
         }
 
-        developer.log(
-          'Toggling ${shouldToggle ? "on" : "off"} ${_toggle.reference.path}',
-          name: 'firestore_collection_toggle',
-        );
+        _log.v('Toggling ${shouldToggle ? "on" : "off"} ${_toggle.reference.path}');
 
         if (shouldToggle) {
           final data = <String, dynamic>{'createTime': FieldValue.serverTimestamp()};
@@ -258,6 +263,9 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
       });
 
       if (toggled != null) widget.onToggled?.call(toggled);
+    } catch (e, t) {
+      widget.onError?.call(_toggle.exists, e, t);
+      rethrow;
     } finally {
       setState(() => _transactionInProgress = false);
     }

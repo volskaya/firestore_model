@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:developer' as developer;
 
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:log/log.dart';
 import 'package:meta/meta.dart';
 
 /// Reference counting for my firestore models, to prevent redundant
@@ -12,6 +12,7 @@ import 'package:meta/meta.dart';
 ///
 /// Example in [MyUser], don't forget to [ReferenceModel.releaseRef]
 mixin ReferencedModel {
+  static final _log = Log.named('ReferencedModel');
   static final _references = HashMap<String, int>();
   static final _cache = HashMap<String, _Memoizer<FirebaseModel>>();
 
@@ -73,11 +74,8 @@ mixin ReferencedModel {
     _cache[path] = _Memoizer<T>.of(object);
     _references[path] = (_references[path] ?? 0) + 1;
 
-    developer.log(
-      'Referenced ${T.toString()} - $path, '
-      'count - ${_references[path]}',
-      name: 'firestore_model',
-    );
+    _log.v('Referenced ${T.toString()} - $path, '
+        'count - ${_references[path]}');
   }
 
   /// Memoized version of `reference`, which will return [T], if it
@@ -133,10 +131,7 @@ mixin ReferencedModel {
 
     // Object not memoized yet, creating it here.
     assert(!_cache.containsKey(path));
-    developer.log(
-      'No object for ${T.toString()} - $path exists, creating a new one…',
-      name: 'firestore_model',
-    );
+    _log.v('No object for ${T.toString()} - $path exists, creating a new one…');
 
     _cache[path] = _Memoizer<T>(
       future: () async {
@@ -158,11 +153,8 @@ mixin ReferencedModel {
       },
     );
 
-    developer.log(
-      'Referenced ${T.toString()} - $path ($type), '
-      'count - ${_references[path]}',
-      name: 'firestore_model',
-    );
+    _log.v('Referenced ${T.toString()} - $path ($type), '
+        'count - ${_references[path]}');
 
     return _cache[path].future as Future<T>;
   }
@@ -180,19 +172,17 @@ mixin ReferencedModel {
 
     _references[model.path] = (_references[model.path] ?? 1) - 1;
 
-    developer.log(
+    _log.v(
       'Unreferenced ${model.runtimeType.toString()}'
       ' - ${model?.id}, '
       'remaining - ${_references[model.path] ?? 0}',
-      name: 'firestore_model',
     );
 
     // Make sure to remove any negative counters
     if (_references[model.path] <= 0) {
-      developer.log(
+      _log.v(
         'No more referenced remaining for ${model.runtimeType.toString()} - '
         '${model.id}, invalidating…',
-        name: 'firestore_model',
       );
 
       _references.remove(model.path);

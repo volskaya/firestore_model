@@ -163,12 +163,13 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
 
     if (_paginating) return;
     _paginating = true;
-    final loader = LoaderCoordinator.instance.touch();
 
     if (listStatus == FirestoreCollectionStatus.idle) {
       // This is assumed to be the first pagination.
       listStatus = FirestoreCollectionStatus.loading;
     }
+
+    final loader = LoaderCoordinator.instance.touch();
 
     try {
       await _paginate(page);
@@ -176,8 +177,8 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
       // NOTE: Initial pagination could have fetched 2 pages.
       assert(_state?.mounted != true || (page == 1 ? (page == this.page || page + 1 == this.page) : page == this.page));
     } finally {
-      _paginating = false;
       loader.dispose();
+      _paginating = false;
     }
   }
 
@@ -551,9 +552,9 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>, D> extends St
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
+      case AppLifecycleState.inactive:
         _startListening();
         break;
-      case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
         _storage.value.stopSubscription();

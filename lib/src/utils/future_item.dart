@@ -1,7 +1,6 @@
 // ignore_for_file:sort_unnamed_constructors_first
 
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/utils/disposable_hook_context.dart';
@@ -9,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:loader_coordinator/loader_coordinator.dart';
+import 'package:log/log.dart';
 
 /// Allows scheduling a future with [SchedulerBinding.instance.scheduleTask].
 Future<T> scheduleFuture<T>(FutureOr<T> Function() callback, [Priority priority = Priority.touch]) {
@@ -22,8 +22,8 @@ Future<T> scheduleFuture<T>(FutureOr<T> Function() callback, [Priority priority 
       try {
         final value = await callback();
         completer.complete(value);
-      } catch (e) {
-        completer.completeError(e);
+      } catch (e, t) {
+        completer.completeError(e, t);
       }
     },
     priority,
@@ -102,6 +102,7 @@ class FutureItem<D extends FirebaseModel<D>> {
   /// unless the [FutureItem] was constructed synchronously.
   D item;
 
+  static final _log = Log.named('FutureItem');
   bool _disposed = false;
 
   Future<D> _getItem() async {
@@ -116,7 +117,7 @@ class FutureItem<D extends FirebaseModel<D>> {
       // Item is not in the cache so [FirebaseModel.from] is expected to fetch the model from firebase.
       // It's okay to delay/schedule the call here.
       final fetchedItem = await FirebaseModel.from<D>(type, path, subscribe: subscribe);
-      developer.log('Fetched future item: ${fetchedItem.path} ($type)', name: 'firestore_model');
+      _log.v('Fetched future item: $path ($type)');
 
       if (!_disposed) {
         item = fetchedItem;
@@ -126,6 +127,9 @@ class FutureItem<D extends FirebaseModel<D>> {
       }
 
       return fetchedItem;
+    } catch (e, t) {
+      _log.e('Failed to fetch the future item $path ($type)', e, t);
+      rethrow;
     } finally {
       loader.dispose();
     }
@@ -143,7 +147,13 @@ class FutureItem<D extends FirebaseModel<D>> {
     if (scrollAwareContext?.context != null) {
       assert(false);
       final completer = Completer<D>();
-      _defer(scrollAwareContext, () async => completer.complete(await _getItem()));
+      _defer(scrollAwareContext, () async {
+        try {
+          completer.complete(await _getItem());
+        } catch (e, t) {
+          completer.completeError(e, t);
+        }
+      });
       future = completer.future;
     } else {
       future = _getItem();

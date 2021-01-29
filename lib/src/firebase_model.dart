@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firestore_model.dart';
@@ -10,6 +9,11 @@ import 'package:firestore_model/src/referenced_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:log/log.dart';
+
+/// The delay before the [FirebaseModel] attempts to resubscribe, when a subscription
+/// value failed with an error, e.g. a permission error.
+Duration kFirebaseModelResubDelay = const Duration(seconds: 5);
 
 /// FirebaseModel types.
 enum FirebaseModelType {
@@ -159,6 +163,8 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
 }
 
 abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements _FirebaseModelImpl<T> {
+  static final _log = Log.named('FirebaseModel');
+
   final _firstSnapshotCompleter = Completer<void>();
 
   StreamSubscription<dynamic> _streamSubscription; // ignore:cancel_subscriptions
@@ -170,7 +176,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
     assert(snapshot is DocumentSnapshot || snapshot is DataSnapshot);
     final model = FirebaseModel.build<T>(modelType, path, snapshot);
 
-    developer.log('Reacting to changes of ${T.toString()} - $id', name: 'firestore_model');
+    _log.v('Reacting to changes of ${T.toString()} - $id');
     handleSnapshot(model);
     notifyListeners();
 
@@ -187,17 +193,21 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
     // Don't fetch updated document, if already subscribed
     if (_streamSubscription != null) return;
 
-    dynamic snapshot;
-    switch (modelType) {
-      case FirebaseModelType.firestore:
-        snapshot = await FirebaseFirestore.instance.doc(path).get();
-        break;
-      case FirebaseModelType.realtime:
-        snapshot = await FirebaseDatabase.instance.reference().child(path).once();
-        break;
-    }
+    try {
+      dynamic snapshot;
+      switch (modelType) {
+        case FirebaseModelType.firestore:
+          snapshot = await FirebaseFirestore.instance.doc(path).get();
+          break;
+        case FirebaseModelType.realtime:
+          snapshot = await FirebaseDatabase.instance.reference().child(path).once();
+          break;
+      }
 
-    _onData(snapshot, singleUpdate: true);
+      _onData(snapshot, singleUpdate: true);
+    } catch (e, t) {
+      _log.e('Failed to update ${T.toString()} - $id', e, t);
+    }
   }
 
   /// Manually feed the model data, when a redundant snapshot was fetched from a list
@@ -205,6 +215,70 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   void feedData(T model) {
     assert(path == (model as FirebaseModel<T>).path);
     if (_streamSubscription == null) handleSnapshot(model);
+  }
+
+  void _handleRealtimeDatabaseData(Event event) => _onData(event.snapshot);
+
+  void _handleRealtimeDatabaseSubscriptionError(Object e, StackTrace t) {
+    _log.e('Error in RTDB subscription of ${T.toString()} - $id', e, t);
+    if (!_firstSnapshotCompleter.isCompleted) _firstSnapshotCompleter.complete();
+    _scheduleResubscribeAttempt();
+  }
+
+  void _handleFirestoreSubscriptionError(Object e, StackTrace t) {
+    _log.e('Error in Firestore subscription of ${T.toString()} - $id', e, t);
+    if (!_firstSnapshotCompleter.isCompleted) _firstSnapshotCompleter.complete();
+    _scheduleResubscribeAttempt();
+  }
+
+  Timer _resubTimer;
+  void _scheduleResubscribeAttempt() {
+    _log.i('Scheduling resubscribe for ${T.toString()} - $id');
+    _streamSubscription?.cancel();
+    _streamSubscription = null;
+    _resubTimer?.cancel();
+    _resubTimer = Timer(kFirebaseModelResubDelay, () {
+      if (isSubscribed && _streamSubscription == null) {
+        try {
+          _log.i('Attempting to resubscribe to ${T.toString()} - $id');
+          _startSubscription();
+        } catch (_) {
+          _scheduleResubscribeAttempt();
+        }
+      }
+    });
+  }
+
+  void _startSubscription() {
+    assert(_streamSubscription == null);
+
+    try {
+      // Start listening.
+      switch (modelType) {
+        case FirebaseModelType.firestore:
+          _streamSubscription = FirebaseFirestore.instance.doc(path).snapshots().listen(
+                _onData,
+                cancelOnError: false,
+                onError: _handleFirestoreSubscriptionError,
+              );
+          break;
+        case FirebaseModelType.realtime:
+          _streamSubscription = FirebaseDatabase.instance.reference().child(path).onValue.listen(
+                _handleRealtimeDatabaseData,
+                cancelOnError: false,
+                onError: _handleRealtimeDatabaseSubscriptionError,
+              );
+          break;
+      }
+
+      _log.v('Subscribed to ${T.toString()} - $id');
+    } catch (e, t) {
+      // Unblock the completer, in case something is awaiting the completer
+      // and expecting data from first subscription.
+      if (!_firstSnapshotCompleter.isCompleted) _firstSnapshotCompleter.complete();
+      _log.e('Failed to suscribe to ${T.toString()} - $id', e, t);
+      rethrow;
+    }
   }
 
   /// Subscribe to the model for realtime updates from Firestore.
@@ -221,24 +295,17 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
     if (shouldSubscribe) {
       assert(_streamSubscription == null);
 
-      // Start listening.
-      switch (modelType) {
-        case FirebaseModelType.firestore:
-          _streamSubscription = FirebaseFirestore.instance.doc(path).snapshots().listen(_onData);
-          break;
-        case FirebaseModelType.realtime:
-          _streamSubscription =
-              FirebaseDatabase.instance.reference().child(path).onValue.listen((event) => _onData(event.snapshot));
-          break;
+      try {
+        _startSubscription();
+      } catch (_) {
+        _subscribers -= 1;
       }
-
-      developer.log('Subscribed to ${T.toString()} - $id', name: 'firestore_model');
     }
 
     // Future completes when the first snapshot arrives.
     // Only await if the initial future, after constructing
     // the model for the first time.
-    return !_firstSnapshotCompleter.isCompleted ? _firstSnapshotCompleter.future : null;
+    return !_firstSnapshotCompleter.isCompleted ? _firstSnapshotCompleter.future : SynchronousFuture<void>(null);
   }
 
   /// Unsubscribe from the model.
@@ -254,11 +321,10 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
       if (_subscribers > 0) return;
     }
 
-    developer.log('Unsubscribing from ${T.toString()} - $id', name: 'firestore_model');
-    final subscription = _streamSubscription;
+    _log.v('Unsubscribing from ${T.toString()} - $id');
+    _streamSubscription?.cancel();
     _streamSubscription = null;
     _subscribers = 0;
-    subscription?.cancel();
   }
 
   @override
@@ -266,7 +332,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
       model: this as FirebaseModel<T>,
       onDecremented: unsubscribe ? this.unsubscribe : null,
       onInvalidated: () {
-        developer.log('Disposing ${T.toString()} - $id', name: 'firestore_model');
+        _log.v('Disposing ${T.toString()} - $id');
         if (isSubscribed) this.unsubscribe(force: true);
         super.dispose();
       });
