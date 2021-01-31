@@ -134,11 +134,12 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
   bool _mounted = false;
   bool _usingPageStorage = false;
   String _bucket;
+  DisposableHookContext _disposableContext;
 
   Future _scheduleRebuild(FutureItem object) async {
-    assert(object?.synchronous == false);
+    assert(object?.synchronous != true);
 
-    if (object.item != null || object.synchronous) return; // Already built.
+    if (object == null || object.item != null || object.synchronous) return; // Already built.
     await object.future;
     if (_storage?.value?.object?.path == object.path) markMayNeedRebuild();
   }
@@ -178,7 +179,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
         subscribe: hook.subscribe,
         scrollAwareContext: _disposableContext,
       );
-      if (_storage?.value?.object != null) _scheduleRebuild(_storage.value.object);
+      _scheduleRebuild(_storage.value.object);
     }
   }
 
@@ -189,8 +190,6 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
       return null; // Built in an overlay?
     }
   }
-
-  DisposableHookContext _disposableContext;
 
   @override
   void initHook() {
@@ -222,6 +221,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
         _updateObject();
       } else {
         _log.v('Reusing bucket storage: ${hook._path} (${hook._type})');
+        if (_storage?.value?.object?.synchronous != true) _scheduleRebuild(_storage?.value?.object);
       }
     }
   }
