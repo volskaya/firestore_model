@@ -23,7 +23,7 @@ mixin ReferencedModel {
     for (final entry in entries) {
       final path = entry.key;
       final references = entry.value;
-      final subscriptions = _cache[entry.key]?.item?.subscribers ?? 0;
+      final subscriptions = _cache[entry.key]?.value?.subscribers ?? 0;
       print('${references.toString().padLeft(3, ".")} - $path, (${subscriptions}s)');
     }
   }
@@ -47,7 +47,7 @@ mixin ReferencedModel {
     if (_cache[path]?.isCompleted == true) {
       assert(_references[path] > 0);
       _references[path] += 1;
-      return _cache[path].item as T;
+      return _cache[path].value as T;
     }
 
     return null;
@@ -119,8 +119,8 @@ mixin ReferencedModel {
     assert(path.isNotEmpty);
     _references[path] = (_references[path] ?? 0) + 1;
 
-    if (_cache[path]?.item != null) {
-      final object = _cache[path].item;
+    if (_cache[path]?.value != null) {
+      final object = _cache[path].value;
       if (subscribe) await object.subscribe();
       return object as T;
     } else if (_cache[path]?.future != null) {
@@ -202,13 +202,13 @@ mixin ReferencedModel {
 }
 
 class _Memoizer<T> {
-  _Memoizer({
-    @required Future<T> Function() future,
-  }) {
+  /// Instantiate the [_Memoizer] asynchronously.
+  _Memoizer({@required Future<T> Function() future}) {
     _resolveFuture(future);
   }
 
-  _Memoizer.of(this.item);
+  /// Instantiate the [_Memoizer] synchronously.
+  _Memoizer.of(this.value) : _hasResolved = true;
 
   Future _resolveFuture(Future<T> Function() future) async {
     assert(!_invalidated);
@@ -216,31 +216,32 @@ class _Memoizer<T> {
     try {
       final resolvedItem = await future();
       if (_invalidated) return;
-      item = resolvedItem;
+      value = resolvedItem;
       _completer.complete(resolvedItem);
     } catch (e) {
       _completer.completeError(e);
     }
+
+    _hasResolved = true;
   }
 
   Completer<T> _completer = Completer<T>();
+  bool _hasResolved = false;
   bool _invalidated = false;
-  T item;
+  T value;
 
+  bool get isCompleted => _completer.isCompleted || value != null;
+
+  /// If the value is ready, it is returned with a [SynchronousFuture].
   Future<T> get future {
     assert(!_invalidated);
-    // assert(item != null, 'Item should have been accessed synchronously');
-    return _completer.future;
+    return _hasResolved ? SynchronousFuture<T>(value) : _completer.future;
   }
 
-  bool get isCompleted => _completer.isCompleted || item != null;
   void invalidate() {
     _invalidated = true;
-    if (!_completer.isCompleted) {
-      _completer.complete(null);
-    }
-
-    item = null;
+    if (!_completer.isCompleted) _completer.complete(null);
+    value = null;
     _completer = null;
   }
 }
