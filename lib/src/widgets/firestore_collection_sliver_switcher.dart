@@ -19,6 +19,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
     this.contentPadding = EdgeInsets.zero,
     this.fillColor = Colors.transparent,
     this.duration = const Duration(milliseconds: 300),
+    this.addBuilders = true,
   })  : _axis = Axis.vertical,
         super(key: key);
 
@@ -32,6 +33,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
     this.contentPadding = EdgeInsets.zero,
     this.fillColor = Colors.transparent,
     this.duration = const Duration(milliseconds: 300),
+    this.addBuilders = true,
   })  : _axis = Axis.horizontal,
         super(key: key);
 
@@ -56,6 +58,9 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
   /// Switcher's animation duration.
   final Duration duration;
 
+  /// Whether to wrap the child builders in [Builder], to give them a new [BuildContext].
+  final bool addBuilders;
+
   final Axis _axis;
 
   @override
@@ -72,7 +77,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
                 sliver: SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
-                    child: Builder(builder: loadingBuilder),
+                    child: addBuilders ? Builder(builder: loadingBuilder) : loadingBuilder(context),
                   ),
                 ),
               )
@@ -86,7 +91,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
                 sliver: SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
-                    child: Builder(builder: emptyBuilder),
+                    child: addBuilders ? Builder(builder: emptyBuilder) : emptyBuilder(context),
                   ),
                 ),
               )
@@ -95,7 +100,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
       case FirestoreCollectionStatus.ready:
         body = KeyedSubtree(
           key: const ValueKey('ready'),
-          child: Builder(builder: builder),
+          child: addBuilders ? Builder(builder: builder) : builder(context),
         );
         break;
     }

@@ -111,6 +111,7 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
     Key key,
     @required this.collection,
     @required this.childBuilder,
+    this.tailBuilder,
   })  : itemExtent = null,
         super(key: key, name: 'firestore_collection_sliver_list');
 
@@ -120,6 +121,7 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
     @required this.collection,
     @required this.childBuilder,
     @required this.itemExtent,
+    this.tailBuilder,
   }) : super(key: key, name: 'firestore_collection_sliver_list');
 
   /// The collection this builder will observe.
@@ -128,16 +130,18 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
   /// Builder of the list items.
   final IndexedWidgetBuilder childBuilder;
 
+  /// The builder of the lists tail, when the end of [FirestoreCollectionBuilder] is reached.
+  final WidgetBuilder tailBuilder;
+
   /// Item extent.
   final double itemExtent;
 
-  /// Count of the paginated items in the [collection].
-  int get childCount => collection.paginatedItems.length;
-
   SliverChildBuilderDelegate _getDelegate() => SliverChildBuilderDelegate(
-        childBuilder,
+        (context, i) => tailBuilder != null && i == collection.paginatedItems.length
+            ? tailBuilder(context)
+            : childBuilder(context, i),
         addAutomaticKeepAlives: false,
-        childCount: collection.paginatedItems.length,
+        childCount: collection.paginatedItems.length + (tailBuilder != null && collection.isEndReached ? 1 : 0),
       );
 
   @override
