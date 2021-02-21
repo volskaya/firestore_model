@@ -10,6 +10,60 @@ part of 'firestore_collection_builder.dart';
 
 mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
     on _FirestoreCollectionStorageStore<T, D>, Store {
+  final _$paginatedItemsAtom =
+      Atom(name: '_FirestoreCollectionStorageStore.paginatedItems');
+
+  @override
+  IList<T> get paginatedItems {
+    _$paginatedItemsAtom.reportRead();
+    return super.paginatedItems;
+  }
+
+  @override
+  set paginatedItems(IList<T> value) {
+    if (super.paginatedItems != value) {
+      _$paginatedItemsAtom.reportWrite(value, super.paginatedItems, () {
+        super.paginatedItems = value;
+      });
+    }
+  }
+
+  final _$subscribedItemsAtom =
+      Atom(name: '_FirestoreCollectionStorageStore.subscribedItems');
+
+  @override
+  IList<T> get subscribedItems {
+    _$subscribedItemsAtom.reportRead();
+    return super.subscribedItems;
+  }
+
+  @override
+  set subscribedItems(IList<T> value) {
+    if (super.subscribedItems != value) {
+      _$subscribedItemsAtom.reportWrite(value, super.subscribedItems, () {
+        super.subscribedItems = value;
+      });
+    }
+  }
+
+  final _$pendingItemsAtom =
+      Atom(name: '_FirestoreCollectionStorageStore.pendingItems');
+
+  @override
+  IList<T> get pendingItems {
+    _$pendingItemsAtom.reportRead();
+    return super.pendingItems;
+  }
+
+  @override
+  set pendingItems(IList<T> value) {
+    if (super.pendingItems != value) {
+      _$pendingItemsAtom.reportWrite(value, super.pendingItems, () {
+        super.pendingItems = value;
+      });
+    }
+  }
+
   final _$listStatusAtom =
       Atom(name: '_FirestoreCollectionStorageStore.listStatus');
 
@@ -127,6 +181,9 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
   @override
   String toString() {
     return '''
+paginatedItems: ${paginatedItems},
+subscribedItems: ${subscribedItems},
+pendingItems: ${pendingItems},
 listStatus: ${listStatus},
 isEndReached: ${isEndReached}
     ''';
