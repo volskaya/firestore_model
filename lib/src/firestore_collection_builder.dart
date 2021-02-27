@@ -374,7 +374,6 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>, D> extends Statefu
     this.observe = true,
     this.scrollController,
     this.onPendingItemsChanged,
-    this.routeOverride,
     this.storageOverride,
     this.shouldSkip,
     this.allowOfflineItems = false,
@@ -449,9 +448,6 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>, D> extends Statefu
 
   /// Storage override passed to the [RefreshStorage] builder.
   final RefreshStorageState storageOverride;
-
-  /// Route override passed to the [RefreshStorage] builder.
-  final ModalRoute routeOverride;
 
   /// Whether to allow the subscription list to add offline documents to the list.
   final bool allowOfflineItems;
@@ -549,7 +545,6 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>, D> extends St
         ? RefreshStorage.write<_FirestoreCollectionStorage<T, D>>(
             context: context,
             identifier: storageIdentifier,
-            route: widget.routeOverride,
             storage: widget.storageOverride,
             builder: () => _FirestoreCollectionStorage<T, D>(identifier: identifier),
           )
