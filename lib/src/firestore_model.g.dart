@@ -47,12 +47,16 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
 
   final _$createTimeAtom = Atom(name: '_FirestoreModel.createTime');
 
+  @JsonKey()
+  @FirestoreTimestampConverter()
   @override
   Timestamp? get createTime {
     _$createTimeAtom.reportRead();
     return super.createTime;
   }
 
+  @JsonKey()
+  @FirestoreTimestampConverter()
   @override
   set createTime(Timestamp? value) {
     if (super.createTime != value) {
@@ -64,12 +68,16 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
 
   final _$updateTimeAtom = Atom(name: '_FirestoreModel.updateTime');
 
+  @JsonKey()
+  @FirestoreTimestampConverter()
   @override
   Timestamp? get updateTime {
     _$updateTimeAtom.reportRead();
     return super.updateTime;
   }
 
+  @JsonKey()
+  @FirestoreTimestampConverter()
   @override
   set updateTime(Timestamp? value) {
     if (super.updateTime != value) {
