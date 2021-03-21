@@ -34,20 +34,16 @@ mixin ReferencedModel {
     // Until now, the model only has a reference, which it needs to fetch updates.
     // Await a single document update here and return the model.
     await model.update();
-
-    assert(model.id != null);
-    assert(model.path != null);
-
     return model;
   }
 
   /// Returns a synchronously cached, referenced model, and increments
   /// its reference counter.
-  static T getRef<T extends FirebaseModel<T>>(String path) {
+  static T? getRef<T extends FirebaseModel<T>>(String path) {
     if (_cache[path]?.isCompleted == true) {
-      assert(_references[path] > 0);
-      _references[path] += 1;
-      return _cache[path].value as T;
+      assert((_references[path] ?? 0) > 0);
+      _references[path] = (_references[path] ?? 0) + 1;
+      return _cache[path]!.value as T;
     }
 
     return null;
@@ -64,13 +60,12 @@ mixin ReferencedModel {
   ///
   /// After the object is used, its needs to be disposed.
   static void addRef<T extends FirebaseModel<T>>({
-    @required String path,
-    @required T object,
+    required String path,
+    required T object,
   }) {
     assert(!_cache.containsKey(path));
-    assert(object != null);
 
-    // Set path and increment references counter
+    // Set path and increment references counter.
     _cache[path] = _Memoizer<T>.of(object);
     _references[path] = (_references[path] ?? 0) + 1;
 
@@ -93,11 +88,10 @@ mixin ReferencedModel {
     // When the object has reference, return that, instead of creating
     // a new one.
     final object = hasReference ? await ReferencedModel.reference<T>(type, path) : newObject();
-    assert(object != null);
 
     // Object was not referenced, so manually reference the one
     // returned from `serializer`.
-    if (!hasReference && object != null) {
+    if (!hasReference) {
       addRef<T>(path: path, object: object);
     } else {
       // If it was referenced, push the new data as an update.
@@ -120,12 +114,12 @@ mixin ReferencedModel {
     _references[path] = (_references[path] ?? 0) + 1;
 
     if (_cache[path]?.value != null) {
-      final object = _cache[path].value;
+      final object = _cache[path]!.value!;
       if (subscribe) await object.subscribe();
       return object as T;
     } else if (_cache[path]?.future != null) {
       final object = await _cache[path]?.future;
-      if (subscribe) await object.subscribe();
+      if (subscribe) await object?.subscribe();
       return object as T;
     }
 
@@ -143,9 +137,6 @@ mixin ReferencedModel {
 
           // Await first snapshot, to ensure model correctly handles `exists`.
           await item.subscribe();
-          assert(item.id != null);
-          assert(item.path != null);
-
           return item;
         } else {
           return _get<T>(type, path);
@@ -156,30 +147,29 @@ mixin ReferencedModel {
     _log.v('Referenced ${T.toString()} - $path ($type), '
         'count - ${_references[path]}');
 
-    return _cache[path].future as Future<T>;
+    return _cache[path]!.future as Future<T>;
   }
 
   /// Intended to be called from [FirestoreModel.dispose].
   @protected
   void releaseRef({
-    @required covariant FirebaseModel model,
-    @required VoidCallback onInvalidated,
-    VoidCallback onDecremented,
+    required covariant FirebaseModel model,
+    required VoidCallback onInvalidated,
+    VoidCallback? onDecremented,
   }) {
     assert(model.path.isNotEmpty);
-    assert(onInvalidated != null);
     assert(_references[model.path] != null, '${model.path} reference released without it being referenced');
 
     _references[model.path] = (_references[model.path] ?? 1) - 1;
 
     _log.v(
       'Unreferenced ${model.runtimeType.toString()}'
-      ' - ${model?.id}, '
+      ' - ${model.id}, '
       'remaining - ${_references[model.path] ?? 0}',
     );
 
     // Make sure to remove any negative counters
-    if (_references[model.path] <= 0) {
+    if (_references[model.path] != null && _references[model.path]! <= 0) {
       _log.v(
         'No more referenced remaining for ${model.runtimeType.toString()} - '
         '${model.id}, invalidating…',
@@ -188,7 +178,7 @@ mixin ReferencedModel {
       _references.remove(model.path);
       if (_cache.containsKey(model.path)) {
         try {
-          _cache.remove(model.path).invalidate();
+          _cache.remove(model.path)!.invalidate();
           assert(!_cache.containsKey(model.path));
         } finally {
           onInvalidated();
@@ -203,7 +193,7 @@ mixin ReferencedModel {
 
 class _Memoizer<T> {
   /// Instantiate the [_Memoizer] asynchronously.
-  _Memoizer({@required Future<T> Function() future}) {
+  _Memoizer({required Future<T> Function() future}) {
     _resolveFuture(future);
   }
 
@@ -225,23 +215,22 @@ class _Memoizer<T> {
     _hasResolved = true;
   }
 
-  Completer<T> _completer = Completer<T>();
+  final Completer<T?> _completer = Completer<T?>();
   bool _hasResolved = false;
   bool _invalidated = false;
-  T value;
+  T? value;
 
   bool get isCompleted => _completer.isCompleted || value != null;
 
   /// If the value is ready, it is returned with a [SynchronousFuture].
-  Future<T> get future {
+  Future<T?> get future {
     assert(!_invalidated);
-    return _hasResolved ? SynchronousFuture<T>(value) : _completer.future;
+    return _hasResolved ? SynchronousFuture<T?>(value) : _completer.future;
   }
 
   void invalidate() {
     _invalidated = true;
     if (!_completer.isCompleted) _completer.complete(null);
     value = null;
-    _completer = null;
   }
 }

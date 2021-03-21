@@ -6,7 +6,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
 /// -
-typedef FirestoreReferenceBuilderCallback<T extends FirestoreModel<T>> = Widget Function(BuildContext context, T data);
+typedef FirestoreReferenceBuilderCallback<T extends FirestoreModel<T>> = Widget Function(BuildContext context, T? data);
 
 /// Asynchronous widget builder of reference counted [FirestoreModel]s.
 ///
@@ -19,9 +19,9 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatelessWi
   ///
   /// A generic type, that extends [FirestoreModel], must be provided!
   const FirestoreReferenceBuilder({
-    Key key,
-    @required this.reference,
-    @required this.builder,
+    Key? key,
+    required this.reference,
+    required this.builder,
     this.bucket,
     this.subscribe = false,
     this.initialValue,
@@ -31,12 +31,12 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatelessWi
         super(key: key);
 
   /// Firestore reference to build.
-  final DocumentReference reference;
+  final DocumentReference? reference;
 
   /// [RefreshStorage] bucket identifier of this widgets storage.
   ///
   /// If null, [RefreshStorage] won't be used.
-  final String bucket;
+  final String? bucket;
 
   /// Asynchronous widget builder.
   final FirestoreReferenceBuilderCallback<T> builder;
@@ -45,11 +45,11 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatelessWi
   final bool subscribe;
 
   /// Optional value to pass to [builder], while the [reference] is not fetched.
-  final T initialValue;
+  final T? initialValue;
 
   /// Allow overriding context of [MyApp.storage] to support building
   /// within an overlay.
-  final BuildContext storageContext;
+  final BuildContext? storageContext;
 
   /// Whether to automatically wrap the builder in an [Observer].
   final bool observe;

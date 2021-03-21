@@ -20,6 +20,7 @@ abstract class _RealtimeVariable extends RealtimeModel<RealtimeVariable> with St
   @override
   @action
   void onSnapshot(RealtimeVariable x) {
-    value = x.snapshot.value;
+    assert(x.snapshot != null, 'onSnapshot shouldn\'t have been called without a snapshot');
+    value = x.snapshot!.value;
   }
 }

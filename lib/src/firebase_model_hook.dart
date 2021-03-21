@@ -1,5 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore:import_of_legacy_library_into_null_safe
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/realtime_model.dart';
@@ -14,7 +15,7 @@ import 'package:refresh_storage/refresh_storage.dart';
 /// Page storage of [FirebaseModelHook].
 class _FirebaseModelHookBucket<T extends FirebaseModel<T>> extends RefreshStorageItem {
   /// The memoizer of [FirebaseModel]s.
-  FutureItem<T> object;
+  FutureItem<T>? object;
 
   @override
   void dispose([dynamic _]) {
@@ -28,14 +29,14 @@ class _FirebaseModelHookBucket<T extends FirebaseModel<T>> extends RefreshStorag
 ///
 /// If the firestore reference is already fetched, the widget builds
 /// synchronously.
-class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
+class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T?> {
   /// Creates Firestore version of [FirebaseModelHook].
   ///
   /// A generic type, that extends [FirestoreModel], must be provided!
   FirebaseModelHook.firestore({
     /// Firestore reference to build.
-    @required DocumentReference reference,
-    @required this.bucket,
+    required DocumentReference? reference,
+    required this.bucket,
     this.subscribe = false,
     this.storageContext,
     this.update = false,
@@ -48,8 +49,8 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
   /// A generic type, that extends [RealtimeModel], must be provided!
   FirebaseModelHook.realtime({
     /// Realtime Database reference to build.
-    @required DatabaseReference reference,
-    @required this.bucket,
+    required DatabaseReference? reference,
+    required this.bucket,
     this.subscribe = false,
     this.storageContext,
     this.update = false,
@@ -58,19 +59,19 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
         _path = reference?.path;
 
   final FirebaseModelType _type;
-  final String _path;
+  final String? _path;
 
   /// [RefreshStorage] bucket identifier of this widgets storage.
   ///
   /// If null, [RefreshStorage] won't be used.
-  final String bucket;
+  final String? bucket;
 
   /// Subscribe to realtime changes.
   final bool subscribe;
 
   /// Allow overriding context of [MyApp.storage] to support building
   /// within an overlay.
-  final BuildContext storageContext;
+  final BuildContext? storageContext;
 
   /// Request the model to update, when this hook is initialized.
   final bool update;
@@ -82,15 +83,15 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
   /// Creates Firestore version of [FirebaseModelHook].
   ///
   /// A generic type, that extends [FirestoreModel], must be provided!
-  static T useFirestore<T extends FirestoreModel<T>>(
-    DocumentReference reference, {
-    String bucket,
+  static T? useFirestore<T extends FirestoreModel<T>>(
+    DocumentReference? reference, {
+    String? bucket,
     bool subscribe = false,
-    BuildContext storageContext,
+    BuildContext? storageContext,
     bool update = false,
     bool scrollAware = false,
   }) =>
-      use<T>(
+      use<T?>(
         FirebaseModelHook<T>.firestore(
           reference: reference,
           bucket: bucket ?? reference?.path,
@@ -104,15 +105,15 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
   /// Creates Realtime Database version of [FirebaseModelHook].
   ///
   /// A generic type, that extends [RealtimeModel], must be provided!
-  static T useRealtime<T extends RealtimeModel<T>>(
-    DatabaseReference reference, {
-    String bucket,
+  static T? useRealtime<T extends RealtimeModel<T>>(
+    DatabaseReference? reference, {
+    String? bucket,
     bool subscribe = false,
-    BuildContext storageContext,
+    BuildContext? storageContext,
     bool update = false,
     bool scrollAware = false,
   }) =>
-      use<T>(
+      use<T?>(
         FirebaseModelHook<T>.realtime(
           reference: reference,
           bucket: bucket ?? reference?.path,
@@ -127,21 +128,21 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T> {
   _FirebaseModelHookState<T> createState() => _FirebaseModelHookState<T>();
 }
 
-class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, FirebaseModelHook<T>> {
+class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, FirebaseModelHook<T>> {
   static final _log = Log.named('FirebaseModelHook');
 
-  RefreshStorageEntry<_FirebaseModelHookBucket<T>> _storage;
+  late RefreshStorageEntry<_FirebaseModelHookBucket<T>> _storage;
+  late String _bucket; // If `bucket` was not passed, reference path will be used instead.
   bool _mounted = false;
   bool _usingPageStorage = false;
-  String _bucket;
-  DisposableHookContext _disposableContext;
+  DisposableHookContext? _disposableContext;
 
-  Future _scheduleRebuild(FutureItem object) async {
+  Future _scheduleRebuild(FutureItem? object) async {
     assert(object?.synchronous != true);
 
     if (object == null || object.item != null || object.synchronous) return; // Already built.
     await object.future;
-    if (_storage?.value?.object?.path == object.path) markMayNeedRebuild();
+    if (_storage.value?.object?.path == object.path) markMayNeedRebuild();
   }
 
   void _updateObject() {
@@ -153,11 +154,11 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
     // This will increment the reference counter and instantiate the future item
     // as a "synchronous item". When the future item is disposed, this reference
     // will dispose as well.
-    final object = ReferencedModel.getRef<T>(hook._path);
+    final object = ReferencedModel.getRef<T>(hook._path!);
 
     if (object != null) {
       _log.v('Instantiated with a synchronous ${hook._path} (${hook._type})');
-      _storage?.value?.object = FutureItem<T>.of(
+      _storage.value?.object = FutureItem<T>.of(
         type: hook._type,
         item: object,
         subscribe: hook.subscribe,
@@ -167,23 +168,23 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
       // If an empty synchronous item is instantiated with subscription off,
       // it may never get data, so always request 1 update.
       if (hook.update && !hook.subscribe) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_mounted) _storage?.value?.object?.item?.update();
+        WidgetsBinding.instance!.addPostFrameCallback((_) {
+          if (_mounted) _storage.value?.object?.item?.update();
         });
       }
     } else {
       _log.v('Instantiating asynchronously ${hook._path} (${hook._type})');
-      _storage?.value?.object = FutureItem<T>(
+      _storage.value?.object = FutureItem<T>(
         type: hook._type,
-        path: hook._path,
+        path: hook._path!,
         subscribe: hook.subscribe,
         scrollAwareContext: _disposableContext,
       );
-      _scheduleRebuild(_storage.value.object);
+      _scheduleRebuild(_storage.value?.object);
     }
   }
 
-  static RefreshStorageState _getStorage(BuildContext context) {
+  static RefreshStorageState? _getStorage(BuildContext context) {
     try {
       return RefreshStorage.of(context);
     } catch (_) {
@@ -193,10 +194,12 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
 
   @override
   void initHook() {
+    assert(hook.bucket != null, 'If the reference is expected to be null, pass `bucket` manually');
     super.initHook();
+
     final storage = _FirebaseModelHookState._getStorage(hook.storageContext ?? context);
     _disposableContext = hook.scrollAware ? DisposableHookContext(this) : null;
-    _bucket = hook.bucket; // Bucket is not allowed to change.
+    _bucket = hook.bucket!; // Bucket is not allowed to change.
     _mounted = true;
     _usingPageStorage = storage != null;
     _storage = storage != null
@@ -209,19 +212,19 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
         : RefreshStorageEntry(_bucket, _FirebaseModelHookBucket<T>());
 
     if (hook._path != null) {
-      if (_storage?.value?.object == null || _storage?.value?.object?.path != hook._path) {
+      if (_storage.value?.object == null || _storage.value?.object?.path != hook._path) {
         _log.v('Bucket item null, creating: ${hook._path} (${hook._type})');
 
-        if (_storage.value.object != null) {
+        if (_storage.value?.object != null) {
           // Path changed, dispose the previous item.
-          _storage?.value?.object?.dispose();
-          _storage?.value?.object = null;
+          _storage.value!.object?.dispose();
+          _storage.value!.object = null;
         }
 
         _updateObject();
       } else {
         _log.v('Reusing bucket storage: ${hook._path} (${hook._type})');
-        if (_storage?.value?.object?.synchronous != true) _scheduleRebuild(_storage?.value?.object);
+        if (_storage.value?.object?.synchronous != true) _scheduleRebuild(_storage.value?.object);
       }
     }
   }
@@ -234,8 +237,8 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
 
     if (oldHook._path != hook._path) {
       _log.v('${oldHook._path} changed to ${hook._path}');
-      _storage?.value?.object?.dispose();
-      _storage?.value?.object = null;
+      _storage.value?.object?.dispose();
+      _storage.value?.object = null;
       if (hook._path != null) _updateObject();
     }
 
@@ -246,14 +249,14 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T, F
   void dispose() {
     _mounted = false;
     if (!_usingPageStorage) {
-      _storage?.value?.object?.dispose();
-      _storage?.value?.object = null;
+      _storage.value?.object?.dispose();
+      _storage.value?.object = null;
     }
     _disposableContext?.dispose();
-    _storage?.dispose();
+    _storage.dispose();
     super.dispose();
   }
 
   @override
-  T build(BuildContext context) => _storage?.value?.object?.item;
+  T? build(BuildContext context) => _storage.value?.object?.item;
 }

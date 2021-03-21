@@ -1,5 +1,6 @@
 import 'dart:async';
 
+// ignore:import_of_legacy_library_into_null_safe
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
@@ -15,14 +16,14 @@ part 'realtime_model.g.dart';
 /// accordingly
 abstract class RealtimeModel<T> extends _RealtimeModel<T> with _$RealtimeModel<T> {
   /// Build package included models first, then anything else.
-  static D build<D>(DatabaseReference reference, [DataSnapshot snapshot]) =>
+  static D build<D>(DatabaseReference reference, [DataSnapshot? snapshot]) =>
       FirebaseModel.build<D>(FirebaseModelType.realtime, reference.path, snapshot);
 
   /// Returns true, if the reference is cached in [ReferencedModel].
   static bool isReferenced(DatabaseReference reference) => ReferencedModel.isReferenced(reference.path);
 
   /// Returns true, if the reference is cached in [ReferencedModel].
-  static D getReference<D extends FirebaseModel<D>>(DatabaseReference reference) =>
+  static D? getReference<D extends FirebaseModel<D>>(DatabaseReference reference) =>
       ReferencedModel.getRef<D>(reference.path);
 
   /// Shortcut for calling [ReferencedModel.addRef].
@@ -60,15 +61,15 @@ abstract class RealtimeModel<T> extends _RealtimeModel<T> with _$RealtimeModel<T
 
 abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, Store {
   /// Realtime database reference of this model.
-  DatabaseReference reference;
+  late DatabaseReference reference;
 
   /// Realtime database key getter from the [reference].
   @override
-  String get id => reference?.key;
+  String get id => reference.key;
 
   /// Path of the [reference].
   @override
-  String get path => reference?.path;
+  String get path => reference.path;
 
   // Firebase model type.
   @override
@@ -76,7 +77,7 @@ abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, 
 
   /// Last [DocumentSnapshot] that provided data to this model.
   @observable
-  DataSnapshot snapshot;
+  DataSnapshot? snapshot;
 
   /// Returns true if the last [snapshot.exists] was true.
   /// Observable is null, until the first [DocumentSnapshot].
@@ -85,7 +86,7 @@ abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, 
   /// behavior. Instead, if a snapshot was returned with no error, e.g. missing
   /// permissions, then it exists, even if its value is null.
   @computed
-  bool get exists => snapshot != null ? snapshot.value != null : null;
+  bool? get exists => snapshot != null ? snapshot!.value != null : null;
 
   @override
   bool operator ==(dynamic other) => other.path == path;
@@ -102,7 +103,7 @@ abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, 
     onSnapshot(model);
     notifyListeners();
 
-    assert(reference?.path == realtimeModel.reference.path);
+    assert(reference.path == realtimeModel.reference.path);
     assert(realtimeModel.snapshot != null);
     assert(snapshot != null);
     assert(snapshot == realtimeModel.snapshot);

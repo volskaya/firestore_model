@@ -1,5 +1,6 @@
 import 'dart:async';
 
+// ignore:import_of_legacy_library_into_null_safe
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/models/realtime_variable.dart';
@@ -59,30 +60,31 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   /// Must not return null values!
   ///
   /// [FirebaseModelBuilderCallback] must be set in your flutter main().
-  static FirebaseModelBuilderCallback builder;
+  static FirebaseModelBuilderCallback? builder;
 
   /// Print the contents of [_cache].
   static void printReferences() => ReferencedModel.printReferences();
 
   /// Build package included models first, then anything else.
-  static D build<D>(FirebaseModelType type, String path, [dynamic _snapshot]) {
+  static D build<D>(FirebaseModelType type, String path, [dynamic? _snapshot]) {
     assert(path.isNotEmpty);
 
     switch (type) {
       case FirebaseModelType.firestore:
         final reference = FirebaseFirestore.instance.doc(path);
-        final snapshot = _snapshot as DocumentSnapshot;
+        final snapshot = _snapshot as DocumentSnapshot?;
         assert(snapshot == null || snapshot.id == reference.id);
 
         final data = snapshot?.data();
-        D model;
+        D? model;
         switch (D) {
           case Toggle:
             model = (data != null ? Toggle.fromJson(data) : Toggle()) as D;
             break;
           default:
             assert(FirebaseModel.builder != null, '[FirebaseModel.builder] is not defined');
-            model = FirebaseModel.builder?.call<D>(snapshot?.data());
+            final data = snapshot?.data();
+            model = data != null ? FirebaseModel.builder?.call<D>(data) : null;
         }
 
         if (model == null) throw UnimplementedError();
@@ -91,17 +93,17 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
           ..snapshot = snapshot) as D;
       case FirebaseModelType.realtime:
         final reference = FirebaseDatabase.instance.reference().child(path);
-        final snapshot = _snapshot as DataSnapshot;
+        final snapshot = _snapshot as DataSnapshot?;
         assert(snapshot == null || snapshot.key == reference.key);
 
-        D model;
+        D? model;
         switch (D) {
           case RealtimeVariable:
             model = RealtimeVariable.fromJson(snapshot?.value) as D;
             break;
           default:
             assert(FirebaseModel.builder != null, '[FirebaseModel.builder] is not defined');
-            model = FirebaseModel.builder?.call<D>(snapshot?.value as Map);
+            model = snapshot?.value != null ? FirebaseModel.builder?.call<D>(snapshot?.value as Map) : null;
         }
 
         if (model == null) throw UnimplementedError();
@@ -123,7 +125,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   static Future<D> fetch<D extends FirebaseModel<D>>(
     FirebaseModelType type,
     String path, [
-    Transaction transaction,
+    Transaction? transaction,
   ]) async {
     assert(transaction == null || type == FirebaseModelType.firestore, 'Transaction only supports Firestore models');
 
@@ -157,8 +159,11 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
 
   /// Reference by overriding the `builder`, which builds the object,
   /// when there are previous references available
-  static Future<D> referenceWithBuilder<D extends FirebaseModel<D>>(
-          {FirebaseModelType type, String path, D Function() builder}) =>
+  static Future<D> referenceWithBuilder<D extends FirebaseModel<D>>({
+    required FirebaseModelType type,
+    required String path,
+    required D Function() builder,
+  }) =>
       ReferencedModel.referenceWithSnapshot<D>(type, path, builder);
 }
 
@@ -167,7 +172,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
 
   final _firstSnapshotCompleter = Completer<void>();
 
-  StreamSubscription<dynamic> _streamSubscription; // ignore:cancel_subscriptions
+  StreamSubscription<dynamic>? _streamSubscription; // ignore:cancel_subscriptions
   int _subscribers = 0;
   int get subscribers => _subscribers;
   bool get isSubscribed => _subscribers > 0;
@@ -187,9 +192,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   }
 
   /// Gets a single update
-  Future update() async {
-    assert(path != null);
-
+  Future<void> update() async {
     // Don't fetch updated document, if already subscribed
     if (_streamSubscription != null) return;
 
@@ -231,7 +234,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
     _scheduleResubscribeAttempt();
   }
 
-  Timer _resubTimer;
+  Timer? _resubTimer;
   void _scheduleResubscribeAttempt() {
     _log.i('Scheduling resubscribe for ${T.toString()} - $id');
     _streamSubscription?.cancel();
@@ -287,8 +290,6 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   /// are reference counted and if you never unsubscribe, this model will
   /// to listening, while in the background.
   Future<void> subscribe() {
-    assert(path != null);
-
     final shouldSubscribe = _subscribers == 0;
     _subscribers += 1;
 
@@ -313,8 +314,6 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   /// This is a reference counted dispose step and should not be called, if a
   /// widget or an action didn't call [subscribe] to begin with.
   void unsubscribe({bool force = false}) {
-    assert(path != null);
-
     if (!force && !isSubscribed) return;
     if (!force && _subscribers > 0) {
       _subscribers -= 1;

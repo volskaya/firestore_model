@@ -6,7 +6,7 @@ part of 'toggle.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Toggle _$ToggleFromJson(Map<String, dynamic> json) {
+Toggle _$ToggleFromJson(Map json) {
   return Toggle()
     ..createTime =
         const FirestoreTimestampConverter().fromJson(json['createTime'])

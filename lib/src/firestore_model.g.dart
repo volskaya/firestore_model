@@ -9,19 +9,19 @@ part of 'firestore_model.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
 
 mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
-  Computed<bool> _$existsComputed;
+  Computed<bool?>? _$existsComputed;
 
   @override
-  bool get exists => (_$existsComputed ??=
-          Computed<bool>(() => super.exists, name: '_FirestoreModel.exists'))
+  bool? get exists => (_$existsComputed ??=
+          Computed<bool?>(() => super.exists, name: '_FirestoreModel.exists'))
       .value;
-  Computed<bool> _$deletedComputed;
+  Computed<bool>? _$deletedComputed;
 
   @override
   bool get deleted => (_$deletedComputed ??=
           Computed<bool>(() => super.deleted, name: '_FirestoreModel.deleted'))
       .value;
-  Computed<bool> _$isNewComputed;
+  Computed<bool>? _$isNewComputed;
 
   @override
   bool get isNew => (_$isNewComputed ??=
@@ -31,13 +31,13 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   final _$snapshotAtom = Atom(name: '_FirestoreModel.snapshot');
 
   @override
-  DocumentSnapshot get snapshot {
+  DocumentSnapshot? get snapshot {
     _$snapshotAtom.reportRead();
     return super.snapshot;
   }
 
   @override
-  set snapshot(DocumentSnapshot value) {
+  set snapshot(DocumentSnapshot? value) {
     if (super.snapshot != value) {
       _$snapshotAtom.reportWrite(value, super.snapshot, () {
         super.snapshot = value;
@@ -48,17 +48,13 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   final _$createTimeAtom = Atom(name: '_FirestoreModel.createTime');
 
   @override
-  @JsonKey()
-  @FirestoreTimestampConverter()
-  Timestamp get createTime {
+  Timestamp? get createTime {
     _$createTimeAtom.reportRead();
     return super.createTime;
   }
 
   @override
-  @JsonKey()
-  @FirestoreTimestampConverter()
-  set createTime(Timestamp value) {
+  set createTime(Timestamp? value) {
     if (super.createTime != value) {
       _$createTimeAtom.reportWrite(value, super.createTime, () {
         super.createTime = value;
@@ -69,17 +65,13 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   final _$updateTimeAtom = Atom(name: '_FirestoreModel.updateTime');
 
   @override
-  @JsonKey()
-  @FirestoreTimestampConverter()
-  Timestamp get updateTime {
+  Timestamp? get updateTime {
     _$updateTimeAtom.reportRead();
     return super.updateTime;
   }
 
   @override
-  @JsonKey()
-  @FirestoreTimestampConverter()
-  set updateTime(Timestamp value) {
+  set updateTime(Timestamp? value) {
     if (super.updateTime != value) {
       _$updateTimeAtom.reportWrite(value, super.updateTime, () {
         super.updateTime = value;

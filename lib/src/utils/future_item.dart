@@ -14,7 +14,7 @@ import 'package:log/log.dart';
 Future<T> scheduleFuture<T>(FutureOr<T> Function() callback, [Priority priority = Priority.touch]) {
   final completer = Completer<T>();
   final stopwatch = Stopwatch()..start();
-  SchedulerBinding.instance.scheduleTask(
+  SchedulerBinding.instance!.scheduleTask(
     () async {
       stopwatch.stop();
       print('Scheduled firebase model in ${stopwatch.elapsedMilliseconds}ms');
@@ -34,21 +34,21 @@ Future<T> scheduleFuture<T>(FutureOr<T> Function() callback, [Priority priority 
 /// Asynchronous/Synchronous loader of [FirestoreModel]s.
 class FutureItem<D extends FirebaseModel<D>> {
   FutureItem._({
-    @required this.path,
-    @required this.subscribe,
-    @required this.item,
-    @required this.future,
-    @required this.synchronous,
-    @required this.type,
+    required this.path,
+    required this.subscribe,
+    required this.item,
+    required this.future,
+    required this.synchronous,
+    required this.type,
     this.scrollAwareContext,
   });
 
   /// Creates an asynchronous [FutureItem].
   factory FutureItem({
-    @required String path,
-    @required FirebaseModelType type,
+    required String path,
+    required FirebaseModelType type,
     bool subscribe = false,
-    DisposableHookContext scrollAwareContext,
+    DisposableHookContext? scrollAwareContext,
   }) =>
       FutureItem._(
         item: null,
@@ -62,10 +62,10 @@ class FutureItem<D extends FirebaseModel<D>> {
 
   /// Creates a synchronous [FutureItem] with an already ready [item].
   factory FutureItem.of({
-    @required D item,
-    @required FirebaseModelType type,
+    required D item,
+    required FirebaseModelType type,
     bool subscribe = false,
-    DisposableHookContext scrollAwareContext,
+    DisposableHookContext? scrollAwareContext,
   }) =>
       FutureItem._(
         item: (() => subscribe ? (item..subscribe()) : item)(),
@@ -87,7 +87,7 @@ class FutureItem<D extends FirebaseModel<D>> {
   ///
   /// When this is defined, the [FutureItem] will defer the fetch of the model
   /// till the nearest scroll view has slowed down.
-  final DisposableHookContext scrollAwareContext;
+  final DisposableHookContext? scrollAwareContext;
 
   /// True when this [FutureItem] was constructed with an already existing item.
   final bool synchronous;
@@ -96,16 +96,16 @@ class FutureItem<D extends FirebaseModel<D>> {
   final String path;
 
   /// Future that will complete when the [FutureItem] is ready and a model is fetched.
-  Future<D> future;
+  Future<D?>? future;
 
   /// An object that extends [FirestoreModel]. Null until the [future] completes,
   /// unless the [FutureItem] was constructed synchronously.
-  D item;
+  D? item;
 
   static final _log = Log.named('FutureItem');
   bool _disposed = false;
 
-  Future<D> _getItem() async {
+  Future<D?> _getItem() async {
     assert(item == null);
     assert(!synchronous);
     assert(!_disposed);
@@ -136,8 +136,8 @@ class FutureItem<D extends FirebaseModel<D>> {
   }
 
   static void _defer(DisposableHookContext scrollAware, VoidCallback callback) {
-    if (scrollAware?.context != null && Scrollable.recommendDeferredLoadingForContext(scrollAware.context)) {
-      SchedulerBinding.instance.scheduleFrameCallback((_) => _defer(scrollAware, callback));
+    if (scrollAware.context != null && Scrollable.recommendDeferredLoadingForContext(scrollAware.context!)) {
+      SchedulerBinding.instance!.scheduleFrameCallback((_) => _defer(scrollAware, callback));
     } else {
       callback();
     }
@@ -147,7 +147,7 @@ class FutureItem<D extends FirebaseModel<D>> {
     if (scrollAwareContext?.context != null) {
       assert(false);
       final completer = Completer<D>();
-      _defer(scrollAwareContext, () async {
+      _defer(scrollAwareContext!, () async {
         try {
           completer.complete(await _getItem());
         } catch (e, t) {

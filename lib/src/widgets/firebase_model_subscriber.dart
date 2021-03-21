@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 class FirebaseModelSubscriber extends ProxyWidget {
   /// Creates [FirebaseModelSubscriber].
   const FirebaseModelSubscriber({
-    @required this.model,
-    @required Widget child,
+    required this.model,
+    required Widget child,
     this.subscribe = true,
   }) : super(child: child);
 
@@ -25,8 +25,8 @@ class FirebaseModelSubscriber extends ProxyWidget {
 
 class _Element extends ProxyElement {
   _Element({
-    @required ProxyWidget widget,
-    @required this.model,
+    required ProxyWidget widget,
+    required this.model,
     this.subscribe = true,
   }) : super(widget);
 
@@ -42,7 +42,7 @@ class _Element extends ProxyElement {
     _subscribed = false;
   }
 
-  Future _subscribe() async {
+  Future<void> _subscribe() async {
     await model.subscribe();
     _subscribed = true;
     if (!_mounted) _unsubscribe();
@@ -52,7 +52,7 @@ class _Element extends ProxyElement {
   void notifyClients(covariant ProxyWidget oldWidget) {}
 
   @override
-  void mount(Element parent, dynamic newSlot) {
+  void mount(Element? parent, dynamic newSlot) {
     super.mount(parent, newSlot);
     _mounted = true;
     _subscribe();

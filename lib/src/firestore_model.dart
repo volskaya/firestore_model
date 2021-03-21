@@ -16,14 +16,14 @@ part 'firestore_model.g.dart';
 /// accordingly
 abstract class FirestoreModel<T> extends _FirestoreModel<T> with _$FirestoreModel<T> {
   /// Build package included models first, then anything else.
-  static D build<D>(DocumentReference reference, [DocumentSnapshot snapshot]) =>
+  static D build<D>(DocumentReference reference, [DocumentSnapshot? snapshot]) =>
       FirebaseModel.build<D>(FirebaseModelType.firestore, reference.path, snapshot);
 
   /// Returns true, if the reference is cached in [ReferencedModel].
   static bool isReferenced(DocumentReference reference) => ReferencedModel.isReferenced(reference.path);
 
   /// Returns true, if the reference is cached in [ReferencedModel].
-  static D getReference<D extends FirebaseModel<D>>(DocumentReference reference) =>
+  static D? getReference<D extends FirebaseModel<D>>(DocumentReference reference) =>
       ReferencedModel.getRef<D>(reference.path);
 
   /// Shortcut for calling [ReferencedModel.addRef].
@@ -35,7 +35,7 @@ abstract class FirestoreModel<T> extends _FirestoreModel<T> with _$FirestoreMode
   /// Fetches the [DocumentReference] trough a transaction or a regular get and converts it to a model.
   ///
   /// This is not reference counted.
-  static Future<D> fetch<D extends FirestoreModel<D>>(DocumentReference reference, [Transaction transaction]) =>
+  static Future<D> fetch<D extends FirestoreModel<D>>(DocumentReference reference, [Transaction? transaction]) =>
       FirebaseModel.fetch(FirebaseModelType.firestore, reference.path);
 
   /// Retrieve a [FirestoreModel] from this reference, optionally subscribing.
@@ -65,15 +65,15 @@ abstract class FirestoreModel<T> extends _FirestoreModel<T> with _$FirestoreMode
 
 abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel, Store {
   /// Firestore reference of this model.
-  DocumentReference reference;
+  late DocumentReference reference;
 
   /// Firestore document ID getter from the [reference].
   @override
-  String get id => reference?.id;
+  String get id => reference.id;
 
   /// Path of the [reference].
   @override
-  String get path => reference?.path;
+  String get path => reference.path;
 
   // Firebase model type.
   @override
@@ -81,24 +81,24 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
 
   /// Last [DocumentSnapshot] that provided data to this model.
   @observable
-  DocumentSnapshot snapshot;
+  DocumentSnapshot? snapshot;
 
   /// Create timestamp of this model.
   @observable
   @JsonKey()
   @FirestoreTimestampConverter()
-  Timestamp createTime;
+  Timestamp? createTime;
 
   /// Update timestamp of this model
   @observable
   @JsonKey()
   @FirestoreTimestampConverter()
-  Timestamp updateTime;
+  Timestamp? updateTime;
 
   /// Returns true if the last [snapshot.exists] was true.
   /// Observable is null, until first [DocumentSnapshot].
   @computed
-  bool get exists => snapshot?.exists;
+  bool? get exists => snapshot?.exists;
 
   /// Returns true, if the document was deleted since its last data was fetched.
   @computed
@@ -106,7 +106,7 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
 
   /// Returns true, if [createTime] is not older than 1 day.
   @computed
-  bool get isNew => (createTime?.toDate()?.add(const Duration(days: 1)))?.isAfter(DateTime.now()) ?? false;
+  bool get isNew => (createTime?.toDate().add(const Duration(days: 1)))?.isAfter(DateTime.now()) ?? false;
 
   @override
   bool operator ==(dynamic other) => other.path == path;
@@ -125,6 +125,6 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
     onSnapshot(model);
     notifyListeners();
 
-    assert(firestoreModel.snapshot == null || reference?.path == firestoreModel.snapshot.reference.path);
+    assert(firestoreModel.snapshot == null || reference.path == firestoreModel.snapshot?.reference.path);
   }
 }

@@ -25,19 +25,19 @@ class DisposableHookContext {
   /// The [State] must not be null, and [State.mounted] must be true.
   DisposableHookContext(this._state) : assert(_state != null);
 
-  HookState _state;
+  HookState? _state;
 
   /// Provides safe access to the build context.
   ///
   /// If [dispose] has been called, will return null.
   ///
   /// Otherwise, asserts the [_state] is still mounted and returns its context.
-  BuildContext get context {
+  BuildContext? get context {
     assert(_debugValidate());
     if (_state == null) {
       return null;
     }
-    return _state.context; // ignore:invalid_use_of_protected_member
+    return _state?.context; // ignore:invalid_use_of_protected_member
   }
 
   /// Called from asserts or tests to determine whether this object is in a

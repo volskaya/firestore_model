@@ -11,9 +11,9 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
   /// Creates a vertical [FirestoreCollectionSliverSwitcher].
   const FirestoreCollectionSliverSwitcher.vertical({
-    Key key,
-    @required this.collection,
-    @required this.builder,
+    Key? key,
+    required this.collection,
+    required this.builder,
     this.loadingBuilder,
     this.emptyBuilder,
     this.contentPadding = EdgeInsets.zero,
@@ -25,9 +25,9 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
 
   /// Creates a horizontal [FirestoreCollectionSliverSwitcher].
   const FirestoreCollectionSliverSwitcher.horizontal({
-    Key key,
-    @required this.collection,
-    @required this.builder,
+    Key? key,
+    required this.collection,
+    required this.builder,
     this.loadingBuilder,
     this.emptyBuilder,
     this.contentPadding = EdgeInsets.zero,
@@ -44,10 +44,10 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
   final WidgetBuilder builder;
 
   /// Builder for when the list is empty.
-  final WidgetBuilder emptyBuilder;
+  final WidgetBuilder? emptyBuilder;
 
   /// Builder for when the list is first loading.
-  final WidgetBuilder loadingBuilder;
+  final WidgetBuilder? loadingBuilder;
 
   /// Content padding of the [SingleChildScrollView], when status != [FirestoreCollectionStatus.ready].
   final EdgeInsets contentPadding;
@@ -65,7 +65,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget body;
+    Widget? body;
 
     switch (collection.status) {
       case FirestoreCollectionStatus.idle:
@@ -77,7 +77,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
                 sliver: SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
-                    child: addBuilders ? Builder(builder: loadingBuilder) : loadingBuilder(context),
+                    child: addBuilders ? Builder(builder: loadingBuilder!) : loadingBuilder!(context),
                   ),
                 ),
               )
@@ -91,7 +91,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
                 sliver: SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
-                    child: addBuilders ? Builder(builder: emptyBuilder) : emptyBuilder(context),
+                    child: addBuilders ? Builder(builder: emptyBuilder!) : emptyBuilder!(context),
                   ),
                 ),
               )
@@ -121,7 +121,5 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
           sliver: true,
         );
     }
-
-    throw UnimplementedError();
   }
 }

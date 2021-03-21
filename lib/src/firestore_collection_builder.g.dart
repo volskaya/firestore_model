@@ -104,7 +104,7 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
       AsyncAction('_FirestoreCollectionStorageStore.fetchPage');
 
   @override
-  Future<dynamic> fetchPage(int page) {
+  Future<void> fetchPage(int page) {
     return _$fetchPageAsyncAction.run(() => super.fetchPage(page));
   }
 
@@ -112,7 +112,7 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
       AsyncAction('_FirestoreCollectionStorageStore._paginate');
 
   @override
-  Future<dynamic> _paginate(int page) {
+  Future<void> _paginate(int page) {
     return _$_paginateAsyncAction.run(() => super._paginate(page));
   }
 
@@ -120,7 +120,7 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
       AsyncAction('_FirestoreCollectionStorageStore._handleQuerySubscription');
 
   @override
-  Future<dynamic> _handleQuerySubscription(QuerySnapshot snapshot) {
+  Future<void> _handleQuerySubscription(QuerySnapshot snapshot) {
     return _$_handleQuerySubscriptionAsyncAction
         .run(() => super._handleQuerySubscription(snapshot));
   }

@@ -1,3 +1,4 @@
+// ignore:import_of_legacy_library_into_null_safe
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/firebase_model_hook.dart';
@@ -9,7 +10,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
 /// Widget builder of [FirebaseModelBuilder].
-typedef FirebaseModelWidgetBuilderCallback<T extends FirebaseModel<T>> = Widget Function(BuildContext context, T data);
+typedef FirebaseModelWidgetBuilderCallback<T extends FirebaseModel<T>> = Widget Function(BuildContext context, T? data);
 
 /// Asynchronous widget builder of reference counted [FirebaseModel]s.
 ///
@@ -20,12 +21,12 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
   ///
   /// A generic type, that extends [FirestoreModel], must be provided!
   FirebaseModelBuilder.firestore({
-    Key key,
+    Key? key,
 
     /// Firestore reference to build.
-    @required DocumentReference reference,
+    required DocumentReference? reference,
+    required this.builder,
     this.bucket,
-    this.builder,
     this.subscribe = false,
     this.storageContext,
     this.observe = true,
@@ -39,12 +40,12 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
   ///
   /// A generic type, that extends [RealtimeModel], must be provided!
   FirebaseModelBuilder.realtime({
-    Key key,
+    Key? key,
 
     /// Realtime Database reference to build.
-    @required DatabaseReference reference,
+    required DatabaseReference? reference,
+    required this.builder,
     this.bucket,
-    this.builder,
     this.subscribe = false,
     this.storageContext,
     this.observe = true,
@@ -55,12 +56,12 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
         super(key: key);
 
   final FirebaseModelType _type;
-  final String _path;
+  final String? _path;
 
   /// [RefreshStorage] bucket identifier of this widgets storage.
   ///
   /// If null, [RefreshStorage] won't be used.
-  final String bucket;
+  final String? bucket;
 
   /// Asynchronous widget builder.
   final FirebaseModelWidgetBuilderCallback<T> builder;
@@ -70,7 +71,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
 
   /// Allow overriding context of [MyApp.storage] to support building
   /// within an overlay.
-  final BuildContext storageContext;
+  final BuildContext? storageContext;
 
   /// Whether to automatically wrap the builder in an [Observer].
   final bool observe;
@@ -84,13 +85,13 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    T data;
+    T? data;
 
     switch (_type) {
       case FirebaseModelType.firestore:
-        data = use<T>(
+        data = use<T?>(
           FirebaseModelHook<T>.firestore(
-            reference: _path != null ? FirebaseFirestore.instance.doc(_path) : null,
+            reference: _path != null ? FirebaseFirestore.instance.doc(_path!) : null,
             bucket: bucket ?? _path,
             subscribe: subscribe,
             storageContext: storageContext,
@@ -100,9 +101,9 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
         );
         break;
       case FirebaseModelType.realtime:
-        data = use<T>(
+        data = use<T?>(
           FirebaseModelHook<T>.realtime(
-            reference: _path != null ? FirebaseDatabase.instance.reference().child(_path) : null,
+            reference: _path != null ? FirebaseDatabase.instance.reference().child(_path!) : null,
             bucket: bucket ?? _path,
             subscribe: subscribe,
             storageContext: storageContext,

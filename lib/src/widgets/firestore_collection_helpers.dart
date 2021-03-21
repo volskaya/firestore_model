@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:delayed_progress_indicator/delayed_progress_indicator.dart';
 import 'package:fancy_switcher/fancy_switcher.dart';
 import 'package:firestore_model/src/firestore_collection_builder.dart';
@@ -17,9 +15,9 @@ typedef FirestoreCollectionSwitcherBuilder = Widget Function(BuildContext contex
 class FirestoreCollectionSwitcher extends StatelessObserverWidget {
   /// Creates a vertical [FirestoreCollectionSwitcher].
   const FirestoreCollectionSwitcher.vertical({
-    Key key,
-    @required this.collection,
-    @required this.builder,
+    Key? key,
+    required this.collection,
+    required this.builder,
     this.contentPadding,
     this.fillColor = Colors.transparent,
     this.duration = const Duration(milliseconds: 300),
@@ -28,9 +26,9 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
 
   /// Creates a horizontal [FirestoreCollectionSwitcher].
   const FirestoreCollectionSwitcher.horizontal({
-    Key key,
-    @required this.collection,
-    @required this.builder,
+    Key? key,
+    required this.collection,
+    required this.builder,
     this.contentPadding,
     this.fillColor = Colors.transparent,
     this.duration = const Duration(milliseconds: 300),
@@ -44,7 +42,7 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
   final FirestoreCollectionSwitcherBuilder builder;
 
   /// Content padding of the [SingleChildScrollView], when status != [FirestoreCollectionStatus.ready].
-  final EdgeInsets contentPadding;
+  final EdgeInsets? contentPadding;
 
   /// Switcher's background color.
   final Color fillColor;
@@ -108,19 +106,19 @@ class FirestoreCollectionSwitcher extends StatelessObserverWidget {
 class FirestoreCollectionSliverList extends StatelessObserverWidget {
   /// Creates [FirestoreCollectionSliverList].
   const FirestoreCollectionSliverList({
-    Key key,
-    @required this.collection,
-    @required this.childBuilder,
+    Key? key,
+    required this.collection,
+    required this.childBuilder,
     this.tailBuilder,
   })  : itemExtent = null,
         super(key: key, name: 'firestore_collection_sliver_list');
 
   /// Creates fixed extent variation of [FirestoreCollectionSliverList].
   const FirestoreCollectionSliverList.fixedExtent({
-    Key key,
-    @required this.collection,
-    @required this.childBuilder,
-    @required this.itemExtent,
+    Key? key,
+    required this.collection,
+    required this.childBuilder,
+    required this.itemExtent,
     this.tailBuilder,
   }) : super(key: key, name: 'firestore_collection_sliver_list');
 
@@ -131,14 +129,14 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
   final IndexedWidgetBuilder childBuilder;
 
   /// The builder of the lists tail, when the end of [FirestoreCollectionBuilder] is reached.
-  final WidgetBuilder tailBuilder;
+  final WidgetBuilder? tailBuilder;
 
   /// Item extent.
-  final double itemExtent;
+  final double? itemExtent;
 
   SliverChildBuilderDelegate _getDelegate() => SliverChildBuilderDelegate(
         (context, i) => tailBuilder != null && i == collection.paginatedItems.length
-            ? tailBuilder(context)
+            ? tailBuilder!(context)
             : childBuilder(context, i),
         addAutomaticKeepAlives: false,
         childCount: collection.paginatedItems.length + (tailBuilder != null && collection.isEndReached ? 1 : 0),
@@ -146,7 +144,7 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
 
   @override
   Widget build(BuildContext context) => itemExtent != null
-      ? SliverFixedExtentList(key: key, itemExtent: itemExtent, delegate: _getDelegate())
+      ? SliverFixedExtentList(key: key, itemExtent: itemExtent!, delegate: _getDelegate())
       : SliverList(key: key, delegate: _getDelegate());
 }
 
@@ -154,9 +152,9 @@ class FirestoreCollectionSliverList extends StatelessObserverWidget {
 class FirestoreCollectionStatusIndicator extends StatelessWidget {
   /// Creates [FirestoreCollectionStatusIndicator].
   const FirestoreCollectionStatusIndicator({
-    Key key,
-    @required this.status,
-    @required this.emptyLabel,
+    Key? key,
+    required this.status,
+    required this.emptyLabel,
     this.size,
   }) : super(key: key);
 
@@ -169,7 +167,7 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
   /// [Size] of an optional [SizedBox] to wrap the widget with.
   ///
   /// No poin to use this when building inside a fixed extent list.
-  final Size size;
+  final Size? size;
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +192,7 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
             padding: horizontalPadding,
             child: Text(
               emptyLabel,
-              style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
+              style: theme.textTheme.subtitle2!.apply(color: theme.dividerColor),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
               textAlign: TextAlign.center,
@@ -214,8 +212,8 @@ class FirestoreCollectionStatusIndicator extends StatelessWidget {
 class FirestoreCollectionTailBuilder extends StatelessWidget {
   /// Creates [FirestoreCollectionTailBuilder].
   const FirestoreCollectionTailBuilder({
-    Key key,
-    @required this.label,
+    Key? key,
+    required this.label,
     this.size,
   }) : super(key: key);
 
@@ -225,7 +223,7 @@ class FirestoreCollectionTailBuilder extends StatelessWidget {
   /// [Size] of an optional [SizedBox] to wrap the widget with.
   ///
   /// No poin to use this when building inside a fixed extent list.
-  final Size size;
+  final Size? size;
 
   @override
   Widget build(BuildContext context) {
@@ -235,7 +233,7 @@ class FirestoreCollectionTailBuilder extends StatelessWidget {
         padding: MediaQuery.of(context).padding.copyWith(top: 0, bottom: 0),
         child: Text(
           label,
-          style: theme.textTheme.subtitle2.apply(color: theme.dividerColor),
+          style: theme.textTheme.subtitle2!.apply(color: theme.dividerColor),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
           textAlign: TextAlign.center,
