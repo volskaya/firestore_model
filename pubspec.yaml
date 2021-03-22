@@ -3,6 +3,7 @@ description: Reference counted, realtime Firestore model. Firestore reference & 
 version: 0.0.2
 author: Roland Volskaya
 homepage: github.com/volskaya/firestore_model
+publish_to: none
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -34,7 +35,10 @@ dependencies:
     path: /home/projects/packages/flutter_helpers/loader_coordinator
 
 dependency_overrides:
-  # Conditionally checks if an observable should update.
+  freezed_annotation:
+    path: /home/projects/forks/freezed/packages/freezed_annotation
+  freezed:
+    path: /home/projects/forks/freezed/packages/freezed
   mobx_codegen:
     path: /home/projects/forks/mobx.dart/mobx_codegen
 
