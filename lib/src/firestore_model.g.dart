@@ -48,7 +48,7 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   final _$createTimeAtom = Atom(name: '_FirestoreModel.createTime');
 
   @JsonKey()
-  @FirestoreTimestampConverter()
+  @FirestoreTimestampConverterNullable()
   @override
   Timestamp? get createTime {
     _$createTimeAtom.reportRead();
@@ -56,7 +56,7 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   }
 
   @JsonKey()
-  @FirestoreTimestampConverter()
+  @FirestoreTimestampConverterNullable()
   @override
   set createTime(Timestamp? value) {
     if (super.createTime != value) {
@@ -69,7 +69,7 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   final _$updateTimeAtom = Atom(name: '_FirestoreModel.updateTime');
 
   @JsonKey()
-  @FirestoreTimestampConverter()
+  @FirestoreTimestampConverterNullable()
   @override
   Timestamp? get updateTime {
     _$updateTimeAtom.reportRead();
@@ -77,7 +77,7 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   }
 
   @JsonKey()
-  @FirestoreTimestampConverter()
+  @FirestoreTimestampConverterNullable()
   @override
   set updateTime(Timestamp? value) {
     if (super.updateTime != value) {

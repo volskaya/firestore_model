@@ -9,16 +9,16 @@ part of 'toggle.dart';
 Toggle _$ToggleFromJson(Map json) {
   return Toggle()
     ..createTime =
-        const FirestoreTimestampConverter().fromJson(json['createTime'])
-    ..updateTime =
-        const FirestoreTimestampConverter().fromJson(json['updateTime']);
+        const FirestoreTimestampConverterNullable().fromJson(json['createTime'])
+    ..updateTime = const FirestoreTimestampConverterNullable()
+        .fromJson(json['updateTime']);
 }
 
 Map<String, dynamic> _$ToggleToJson(Toggle instance) => <String, dynamic>{
-      'createTime':
-          const FirestoreTimestampConverter().toJson(instance.createTime),
-      'updateTime':
-          const FirestoreTimestampConverter().toJson(instance.updateTime),
+      'createTime': const FirestoreTimestampConverterNullable()
+          .toJson(instance.createTime),
+      'updateTime': const FirestoreTimestampConverterNullable()
+          .toJson(instance.updateTime),
     };
 
 // **************************************************************************

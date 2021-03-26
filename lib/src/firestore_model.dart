@@ -86,13 +86,13 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
   /// Create timestamp of this model.
   @observable
   @JsonKey()
-  @FirestoreTimestampConverter()
+  @FirestoreTimestampConverterNullable()
   Timestamp? createTime;
 
   /// Update timestamp of this model
   @observable
   @JsonKey()
-  @FirestoreTimestampConverter()
+  @FirestoreTimestampConverterNullable()
   Timestamp? updateTime;
 
   /// Returns true if the last [snapshot.exists] was true.

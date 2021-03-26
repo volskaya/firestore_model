@@ -27,7 +27,7 @@ enum FirebaseModelType {
 
 /// Builder for both Firestore and Realtime Database models.
 /// Json map could be null.
-typedef FirebaseModelBuilderCallback = T Function<T>([Map data]);
+typedef FirebaseModelBuilderCallback = T Function<T>([Map? data]);
 
 abstract class _FirebaseModelImpl<T> {
   /// Document path getter from the documents reference. Either [DocumentReference] or [DatabaseReference].
@@ -83,8 +83,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
             break;
           default:
             assert(FirebaseModel.builder != null, '[FirebaseModel.builder] is not defined');
-            final data = snapshot?.data();
-            model = data != null ? FirebaseModel.builder?.call<D>(data) : null;
+            model = FirebaseModel.builder?.call<D>(snapshot?.data());
         }
 
         if (model == null) throw UnimplementedError();
@@ -103,7 +102,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
             break;
           default:
             assert(FirebaseModel.builder != null, '[FirebaseModel.builder] is not defined');
-            model = snapshot?.value != null ? FirebaseModel.builder?.call<D>(snapshot?.value as Map) : null;
+            model = FirebaseModel.builder?.call<D>(snapshot?.value as Map?);
         }
 
         if (model == null) throw UnimplementedError();
@@ -111,7 +110,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
           ..reference = reference
           ..snapshot = snapshot) as D;
       default:
-        throw UnimplementedError();
+        throw UnimplementedError('Type: $type, ${D.toString()}');
     }
   }
 
