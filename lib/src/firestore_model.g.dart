@@ -15,18 +15,6 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   bool? get exists => (_$existsComputed ??=
           Computed<bool?>(() => super.exists, name: '_FirestoreModel.exists'))
       .value;
-  Computed<bool>? _$deletedComputed;
-
-  @override
-  bool get deleted => (_$deletedComputed ??=
-          Computed<bool>(() => super.deleted, name: '_FirestoreModel.deleted'))
-      .value;
-  Computed<bool>? _$isNewComputed;
-
-  @override
-  bool get isNew => (_$isNewComputed ??=
-          Computed<bool>(() => super.isNew, name: '_FirestoreModel.isNew'))
-      .value;
 
   final _$snapshotAtom = Atom(name: '_FirestoreModel.snapshot');
 
@@ -41,48 +29,6 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
     if (super.snapshot != value) {
       _$snapshotAtom.reportWrite(value, super.snapshot, () {
         super.snapshot = value;
-      });
-    }
-  }
-
-  final _$createTimeAtom = Atom(name: '_FirestoreModel.createTime');
-
-  @JsonKey()
-  @FirestoreTimestampConverterNullable()
-  @override
-  Timestamp? get createTime {
-    _$createTimeAtom.reportRead();
-    return super.createTime;
-  }
-
-  @JsonKey()
-  @FirestoreTimestampConverterNullable()
-  @override
-  set createTime(Timestamp? value) {
-    if (super.createTime != value) {
-      _$createTimeAtom.reportWrite(value, super.createTime, () {
-        super.createTime = value;
-      });
-    }
-  }
-
-  final _$updateTimeAtom = Atom(name: '_FirestoreModel.updateTime');
-
-  @JsonKey()
-  @FirestoreTimestampConverterNullable()
-  @override
-  Timestamp? get updateTime {
-    _$updateTimeAtom.reportRead();
-    return super.updateTime;
-  }
-
-  @JsonKey()
-  @FirestoreTimestampConverterNullable()
-  @override
-  set updateTime(Timestamp? value) {
-    if (super.updateTime != value) {
-      _$updateTimeAtom.reportWrite(value, super.updateTime, () {
-        super.updateTime = value;
       });
     }
   }
@@ -105,11 +51,7 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   String toString() {
     return '''
 snapshot: ${snapshot},
-createTime: ${createTime},
-updateTime: ${updateTime},
-exists: ${exists},
-deleted: ${deleted},
-isNew: ${isNew}
+exists: ${exists}
     ''';
   }
 }

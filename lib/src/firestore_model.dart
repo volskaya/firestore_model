@@ -1,11 +1,9 @@
 import 'dart:async';
 
-import 'package:firestore_model/src/converters.dart';
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:json_annotation/json_annotation.dart';
 import 'package:mobx/mobx.dart';
 
 part 'firestore_model.g.dart';
@@ -83,30 +81,10 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
   @observable
   DocumentSnapshot? snapshot;
 
-  /// Create timestamp of this model.
-  @observable
-  @JsonKey()
-  @FirestoreTimestampConverterNullable()
-  Timestamp? createTime;
-
-  /// Update timestamp of this model
-  @observable
-  @JsonKey()
-  @FirestoreTimestampConverterNullable()
-  Timestamp? updateTime;
-
   /// Returns true if the last [snapshot.exists] was true.
   /// Observable is null, until first [DocumentSnapshot].
   @computed
   bool? get exists => snapshot?.exists;
-
-  /// Returns true, if the document was deleted since its last data was fetched.
-  @computed
-  bool get deleted => createTime != null && exists == false;
-
-  /// Returns true, if [createTime] is not older than 1 day.
-  @computed
-  bool get isNew => (createTime?.toDate().add(const Duration(days: 1)))?.isAfter(DateTime.now()) ?? false;
 
   @override
   bool operator ==(dynamic other) => other.path == path;
@@ -120,8 +98,6 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
     final firestoreModel = model as FirestoreModel<T>;
 
     snapshot = firestoreModel.snapshot;
-    if (createTime != firestoreModel.createTime) createTime = firestoreModel.createTime;
-    if (updateTime != firestoreModel.updateTime) updateTime = firestoreModel.updateTime;
     onSnapshot(model);
     notifyListeners();
 

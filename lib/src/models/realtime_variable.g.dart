@@ -20,7 +20,7 @@ mixin _$RealtimeVariable on _RealtimeVariable, Store {
   @override
   set value(dynamic value) {
     if (super.value != value) {
-      _$valueAtom.reportWrite<dynamic>(value, super.value, () {
+      _$valueAtom.reportWrite(value, super.value, () {
         super.value = value;
       });
     }

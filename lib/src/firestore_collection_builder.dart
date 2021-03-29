@@ -122,16 +122,6 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
     assert(_state != null);
     assert(_state!.widget.subscribe);
 
-    // Check if server timestamp is ready.
-    // If a subscribed item was added to a list without a serverside [FieldValue],
-    // maybe the subscription hasn't skipped resubbing on an offline document.
-    assert((() {
-      for (final item in [...pendingItems, ...subscribedItems, ...paginatedItems]) {
-        if (item.createTime == null) return false;
-      }
-      return true;
-    })(), 'Spotted a subscribed item with no timestamp');
-
     if (_state!.widget.subscriptionQuery != null) {
       return _state!.widget.subscriptionQuery!(_state!, _state!.widget.collection);
     } else {
