@@ -86,7 +86,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
             model = FirebaseModel.builder?.call<D>(snapshot?.data());
         }
 
-        if (model == null) throw UnimplementedError();
+        if (model == null) throw UnimplementedError('Model builder for ${D.toString()} is not defined');
         return ((model as FirestoreModel<D>)
           ..reference = reference
           ..snapshot = snapshot) as D;
@@ -105,7 +105,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
             model = FirebaseModel.builder?.call<D>(snapshot?.value as Map?);
         }
 
-        if (model == null) throw UnimplementedError();
+        if (model == null) throw UnimplementedError('Model builder for ${D.toString()} is not defined');
         return ((model as RealtimeModel<D>)
           ..reference = reference
           ..snapshot = snapshot) as D;
