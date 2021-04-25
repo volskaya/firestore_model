@@ -152,8 +152,8 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   ///
   /// If the reference already exists, passed `snapshot` is ignored and the
   /// old reference data is reused instead.
-  static Future<D> withReference<D extends FirebaseModel<D>>(
-          FirebaseModelType type, String path, DocumentSnapshot snapshot) =>
+  static Future<D> withReference<D extends FirebaseModel<D>>(FirebaseModelType type, String path,
+          DocumentSnapshot snapshot) =>
       ReferencedModel.referenceWithSnapshot<D>(type, path, () => FirebaseModel.build<D>(type, path, snapshot));
 
   /// Reference by overriding the `builder`, which builds the object,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:await_route/await_route.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,16 +32,16 @@ enum FirestoreCollectionStatus {
 }
 
 /// Either a subscription or pagination query builder.
-typedef FirestoreCollectionQueryBuilder<T extends FirestoreModel<T>, D> = Query Function(
-    FirestoreCollectionBuilderState<T, D> state, Query collection);
+typedef FirestoreCollectionQueryBuilder<T extends FirestoreModel<T>, D> = Query
+    Function(FirestoreCollectionBuilderState<T, D> state, Query collection);
 
 /// Child builder of [FirestoreCollectionBuilder].
-typedef FirestoreCollectionChildBuilder<T extends FirestoreModel<T>, D> = Widget Function(
-    BuildContext context, FirestoreCollectionBuilderState<T, D> state);
+typedef FirestoreCollectionChildBuilder<T extends FirestoreModel<T>, D> = Widget
+    Function(BuildContext context, FirestoreCollectionBuilderState<T, D> state);
 
 /// Event callback of [FirestoreCollectionBuilder]
-typedef FirestoreCollectionEvent<T extends FirestoreModel<T>, D> = void Function(
-    FirestoreCollectionBuilderState<T, D> state);
+typedef FirestoreCollectionEvent<T extends FirestoreModel<T>, D> = void
+    Function(FirestoreCollectionBuilderState<T, D> state);
 
 /// All [FirestoreCollectionBuilder] cargo objects must extend this to
 /// allow the collection to call its dispose.
@@ -69,20 +70,15 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
   bool get isSubscribed => _streamSubscription != null;
   FirestoreCollectionBuilderState<T, D>? get _state => _states.isNotEmpty ? _states.last : null;
 
-  @observable
-  IList<T> paginatedItems = IList<T>();
+  @observable IList<T> paginatedItems = IList<T>();
 
-  @observable
-  IList<T> subscribedItems = IList<T>();
+  @observable IList<T> subscribedItems = IList<T>();
 
-  @observable
-  IList<T> pendingItems = IList<T>();
+  @observable IList<T> pendingItems = IList<T>();
 
-  @observable
-  FirestoreCollectionStatus listStatus = FirestoreCollectionStatus.idle;
+  @observable FirestoreCollectionStatus listStatus = FirestoreCollectionStatus.idle;
 
-  @observable
-  bool isEndReached = false;
+  @observable bool isEndReached = false;
 
   Future<MapEntry<T, D?>> _getModelAndCargo(DocumentSnapshot doc) async {
     final model = await FirestoreModel.withReference<T>(doc.reference, doc);
@@ -208,6 +204,10 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
     _log.i('$identifier pagination got ${items.length} new items');
 
     if (isFirstPage) {
+      if (_state?.widget.awaitRoute == true && _state?.mounted == true) {
+        await AwaitRoute.of(_state!.context);
+      }
+
       final now = DateTime.now();
       if ((_state?.widget.delay ?? Duration.zero) > Duration.zero &&
           now.isBefore(_createTime!.add(_state!.widget.delay))) {
@@ -315,8 +315,7 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
     }
   }
 
-  @action
-  @override
+  @action @override
   void dispose([dynamic _]) {
     super.dispose(_);
     pendingItems.followedBy(subscribedItems).followedBy(paginatedItems).forEach((item) => item.dispose());
@@ -377,6 +376,7 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>, D> extends Statefu
     this.prepareSecondPage = true,
     this.onInitState,
     this.onFirstPagePaginated,
+    this.awaitRoute = false,
   }) : super(key: key);
 
   /// Get [FirestoreCollectionBuilderState] from [BuildContext].
@@ -459,6 +459,9 @@ class FirestoreCollectionBuilder<T extends FirestoreModel<T>, D> extends Statefu
 
   /// Called after the first page has paginated.
   final FirestoreCollectionEvent<T, D>? onFirstPagePaginated;
+
+  /// Whether to await route before updating observables.
+  final bool awaitRoute;
 
   @override
   FirestoreCollectionBuilderState<T, D> createState() => FirestoreCollectionBuilderState<T, D>();
