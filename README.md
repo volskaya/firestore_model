@@ -1,5 +1,3 @@
-# Firestore model plugin
-
 Provides an abstract class for creating observable Firestore models. This model is best extended with [Mobx.](https://pub.dev/packages/mobx)
 
 Also includes widgets for building these models by their Firestore reference and Firestore collection subscribable list builders.
