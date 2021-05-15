@@ -21,29 +21,17 @@ All of these code sippets are taken from the [Flutter Firestore](https://github.
 class User extends _User with _$User {
   static final collection = FirebaseFirestore.instance.collection('users');
 
-  /// Create [User] from json
   static User fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
-
-  /// Convert [User] to json
   Map<String, dynamic> toJson() => _$UserToJson(this);
 }
 
 abstract class _User extends FirestorePhotoModel<User> with Store {
-  @observable
-  @JsonKey()
-  String name;
-  @observable
-  @JsonKey()
-  @StringWithLineBreaksConverter()
-  String description;
-  @observable
-  @JsonKey(defaultValue: 0)
-  int views = 0;
-  @observable
-  @JsonKey(defaultValue: 0)
-  int followers = 0;
+  @o @JsonKey() String name;
+  @o @JsonKey() String description;
+  @o @JsonKey(defaultValue: 0) int views = 0;
+  @o @JsonKey(defaultValue: 0) int followers = 0;
 
-  @override
+  @override @a
   void onSnapshot(User x) {
     super.onSnapshot(x);
     name = x.name;
@@ -57,7 +45,7 @@ abstract class _User extends FirestorePhotoModel<User> with Store {
 ###### Reference builder
 
 ```dart
-FirestoreReferenceBuilder<Album>(
+FirebaseModelBuilder.firestore<Album>(
   bucket: 'overview_preview_$i',
   reference: widget.references[i],
   subscribe: true,
@@ -93,7 +81,7 @@ class _AlbumList extends StatelessWidget {
 
   final User user;
 
-  Widget _buildSubscribedList(FirestoreCollectionBuilderState<Album> collection) => SliverList(
+  Widget _buildSubscribedList(FirestoreCollectionBuilderState<Album, dynamic> collection) => SliverList(
         delegate: SliverChildBuilderDelegate(
           (_, i) {
             final index = collection.subscribedItems.length - (i + 1);
@@ -115,7 +103,7 @@ class _AlbumList extends StatelessWidget {
         ),
       );
 
-  Widget _buildPaginatedList(FirestoreCollectionBuilderState<Album> collection) => SliverList(
+  Widget _buildPaginatedList(FirestoreCollectionBuilderState<Album, dynamic> collection) => SliverList(
         delegate: SliverChildBuilderDelegate(
           (_, i) {
             final item = collection.paginatedItems[i];
@@ -141,7 +129,7 @@ class _AlbumList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FirestoreCollectionBuilder<Album>(
+    return FirestoreCollectionBuilder<Album, dynamic>(
       bucket: 'photo_list_${user.reference.path}',
       collection: Album.collection.where('owner', isEqualTo: user.id),
       subscribe: true,

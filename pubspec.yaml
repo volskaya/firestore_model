@@ -33,6 +33,8 @@ dependencies:
     path: /home/projects/packages/flutter_helpers/delayed_progress_indicator
   loader_coordinator:
     path: /home/projects/packages/flutter_helpers/loader_coordinator
+  await_route:
+    path: /home/projects/packages/flutter_helpers/await_route
 
 dependency_overrides:
   freezed_annotation:

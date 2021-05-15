@@ -78,24 +78,22 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
   FirebaseModelType get modelType => FirebaseModelType.firestore;
 
   /// Last [DocumentSnapshot] that provided data to this model.
-  @observable
-  DocumentSnapshot? snapshot;
+  @o DocumentSnapshot? snapshot;
 
   /// Returns true if the last [snapshot.exists] was true.
   /// Observable is null, until first [DocumentSnapshot].
-  @computed
-  bool? get exists => snapshot?.exists;
+  @c bool? get exists => snapshot?.exists;
 
   @override
   bool operator ==(dynamic other) => other.path == path;
   @override
   int get hashCode => path.hashCode;
 
-  @override
-  @protected
-  @action
+  @override @protected @a
   void handleSnapshot(T model) {
     final firestoreModel = model as FirestoreModel<T>;
+
+    print('Handling snapshot ${model.id} - snapshot: ${model.snapshot}');
 
     snapshot = firestoreModel.snapshot;
     onSnapshot(model);

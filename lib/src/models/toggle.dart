@@ -16,10 +16,7 @@ class Toggle extends _Toggle with _$Toggle {
 }
 
 abstract class _Toggle extends FirestoreModel<Toggle> with Store {
-  @observable
-  @JsonKey()
-  @FirestoreTimestampConverterNullable()
-  Timestamp? createTime;
+  @o @JsonKey() @FirestoreTimestampConverterNullable() Timestamp? createTime;
 
   @override
   void onSnapshot(Toggle x) {

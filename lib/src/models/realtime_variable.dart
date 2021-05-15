@@ -14,11 +14,9 @@ class RealtimeVariable extends _RealtimeVariable with _$RealtimeVariable {
 }
 
 abstract class _RealtimeVariable extends RealtimeModel<RealtimeVariable> with Store {
-  @observable
-  dynamic value;
+  @o dynamic value;
 
-  @override
-  @action
+  @override @a
   void onSnapshot(RealtimeVariable x) {
     assert(x.snapshot != null, 'onSnapshot shouldn\'t have been called without a snapshot');
     value = x.snapshot!.value;

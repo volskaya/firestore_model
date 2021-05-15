@@ -37,7 +37,7 @@ packages:
     source: hosted
     version: "2.5.0"
   await_route:
-    dependency: transitive
+    dependency: "direct main"
     description:
       path: "/home/projects/packages/flutter_helpers/await_route"
       relative: false
@@ -498,7 +498,7 @@ packages:
       name: sliver_tools
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.0"
+    version: "0.2.2"
   sliver_transform:
     dependency: transitive
     description:

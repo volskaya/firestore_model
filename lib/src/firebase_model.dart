@@ -219,6 +219,16 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
     if (_streamSubscription == null) handleSnapshot(model);
   }
 
+  /// Call [onSnapshot] if there's no active subscription.
+  ///
+  /// The [model] is allowed to ignore `reference` and `snapshot` fields.
+  void feedFields(T model) {
+    if (_streamSubscription == null) {
+      onSnapshot(model);
+      notifyListeners();
+    }
+  }
+
   void _handleRealtimeDatabaseData(Event event) => _onData(event.snapshot);
 
   void _handleRealtimeDatabaseSubscriptionError(Object e, StackTrace t) {

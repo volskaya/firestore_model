@@ -20,30 +20,26 @@ class FirebaseModelSubscriber extends ProxyWidget {
   final bool subscribe;
 
   @override
-  Element createElement() => _Element(model: model, widget: this);
+  Element createElement() => _Element(this);
 }
 
 class _Element extends ProxyElement {
-  _Element({
-    required ProxyWidget widget,
-    required this.model,
-    this.subscribe = true,
-  }) : super(widget);
+  _Element(FirebaseModelSubscriber widget) : super(widget);
 
-  final FirebaseModel model;
-  final bool subscribe;
+  @override
+  FirebaseModelSubscriber get widget => super.widget as FirebaseModelSubscriber;
 
   bool _mounted = false;
   bool _subscribed = false;
 
   void _unsubscribe() {
     assert(_subscribed);
-    model.unsubscribe();
+    widget.model.unsubscribe();
     _subscribed = false;
   }
 
   Future<void> _subscribe() async {
-    await model.subscribe();
+    await widget.model.subscribe();
     _subscribed = true;
     if (!_mounted) _unsubscribe();
   }

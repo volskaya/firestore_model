@@ -54,8 +54,8 @@ abstract class RealtimeModel<T> extends _RealtimeModel<T> with _$RealtimeModel<T
 
   /// Reference by overriding the `builder`, which builds the object,
   /// when there are previous references available
-  static Future<D> referenceWithBuilder<D extends FirebaseModel<D>>(
-          DatabaseReference reference, D Function() builder) =>
+  static Future<D> referenceWithBuilder<D extends FirebaseModel<D>>(DatabaseReference reference,
+          D Function() builder) =>
       ReferencedModel.referenceWithSnapshot<D>(FirebaseModelType.realtime, reference.path, builder);
 }
 
@@ -76,8 +76,7 @@ abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, 
   FirebaseModelType get modelType => FirebaseModelType.realtime;
 
   /// Last [DocumentSnapshot] that provided data to this model.
-  @observable
-  DataSnapshot? snapshot;
+  @o DataSnapshot? snapshot;
 
   /// Returns true if the last [snapshot.exists] was true.
   /// Observable is null, until the first [DocumentSnapshot].
@@ -85,17 +84,15 @@ abstract class _RealtimeModel<T> extends FirebaseModel<T> with ReferencedModel, 
   /// Snapshot's value is not considered, to keep this closer to Firestore's
   /// behavior. Instead, if a snapshot was returned with no error, e.g. missing
   /// permissions, then it exists, even if its value is null.
-  @computed
-  bool? get exists => snapshot != null ? snapshot!.value != null : null;
+  @c bool? get exists => snapshot != null ? snapshot!.value != null : null;
 
   @override
   bool operator ==(dynamic other) => other.path == path;
+
   @override
   int get hashCode => path.hashCode;
 
-  @override
-  @protected
-  @action
+  @override @protected @a
   void handleSnapshot(T model) {
     final realtimeModel = model as RealtimeModel<T>;
 
