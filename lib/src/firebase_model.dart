@@ -66,13 +66,13 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   static void printReferences() => ReferencedModel.printReferences();
 
   /// Build package included models first, then anything else.
-  static D build<D>(FirebaseModelType type, String path, [dynamic? _snapshot]) {
+  static D build<D>(FirebaseModelType type, String path, [dynamic _snapshot]) {
     assert(path.isNotEmpty);
 
     switch (type) {
       case FirebaseModelType.firestore:
         final reference = FirebaseFirestore.instance.doc(path);
-        final snapshot = _snapshot as DocumentSnapshot?;
+        final snapshot = _snapshot as DocumentSnapshot<Map<String, dynamic>>?;
         assert(snapshot == null || snapshot.id == reference.id);
 
         final data = snapshot?.data();

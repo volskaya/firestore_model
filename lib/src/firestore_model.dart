@@ -93,8 +93,6 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
   void handleSnapshot(T model) {
     final firestoreModel = model as FirestoreModel<T>;
 
-    print('Handling snapshot ${model.id} - snapshot: ${model.snapshot}');
-
     snapshot = firestoreModel.snapshot;
     onSnapshot(model);
     notifyListeners();

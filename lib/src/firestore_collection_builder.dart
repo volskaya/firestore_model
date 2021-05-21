@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:collection/collection.dart';
 import 'package:await_route/await_route.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:firestore_model/src/firestore_model.dart';
@@ -71,13 +72,9 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
   FirestoreCollectionBuilderState<T, D>? get _state => _states.isNotEmpty ? _states.last : null;
 
   @observable IList<T> paginatedItems = IList<T>();
-
   @observable IList<T> subscribedItems = IList<T>();
-
   @observable IList<T> pendingItems = IList<T>();
-
   @observable FirestoreCollectionStatus listStatus = FirestoreCollectionStatus.idle;
-
   @observable bool isEndReached = false;
 
   Future<MapEntry<T, D?>> _getModelAndCargo(DocumentSnapshot doc) async {
@@ -125,7 +122,7 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
       final cursor = pendingItems.reversed
           .followedBy(subscribedItems.reversed)
           .followedBy(paginatedItems)
-          .firstWhereOrNull((x) => x.exists == true, orElse: () => null);
+          .firstWhereOrNull((x) => x.exists == true);
 
       /// A snapshot could already be deleted, by the time it's used to subscribe.
       /// Iterate over pending -> subscribed -> paginated items to find the newest existing snapshot.
