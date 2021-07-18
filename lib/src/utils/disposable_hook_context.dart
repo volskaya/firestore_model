@@ -32,28 +32,7 @@ class DisposableHookContext {
   /// If [dispose] has been called, will return null.
   ///
   /// Otherwise, asserts the [_state] is still mounted and returns its context.
-  BuildContext? get context {
-    assert(_debugValidate());
-    if (_state == null) {
-      return null;
-    }
-    return _state?.context; // ignore:invalid_use_of_protected_member
-  }
-
-  /// Called from asserts or tests to determine whether this object is in a
-  /// valid state.
-  ///
-  /// Always returns true, but will assert if [dispose] has not been called
-  /// but the state this is tracking is unmounted.
-  bool _debugValidate() {
-    assert(
-      _state == null,
-      'A DisposableHookContext tried to access the BuildContext of a disposed '
-      'State object. This can happen when the creator of this '
-      'DisposableHookContext fails to call dispose when it is disposed.',
-    );
-    return true;
-  }
+  BuildContext? get context => _state == null ? null : _state?.context; // ignore:invalid_use_of_protected_member
 
   /// Marks the [BuildContext] as disposed.
   ///

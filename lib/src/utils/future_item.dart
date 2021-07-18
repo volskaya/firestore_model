@@ -13,12 +13,9 @@ import 'package:log/log.dart';
 /// Allows scheduling a future with [SchedulerBinding.instance.scheduleTask].
 Future<T> scheduleFuture<T>(FutureOr<T> Function() callback, [Priority priority = Priority.touch]) {
   final completer = Completer<T>();
-  final stopwatch = Stopwatch()..start();
+
   SchedulerBinding.instance!.scheduleTask(
     () async {
-      stopwatch.stop();
-      print('Scheduled firebase model in ${stopwatch.elapsedMilliseconds}ms');
-
       try {
         final value = await callback();
         completer.complete(value);
@@ -28,16 +25,16 @@ Future<T> scheduleFuture<T>(FutureOr<T> Function() callback, [Priority priority 
     },
     priority,
   );
+
   return completer.future;
 }
 
-/// Asynchronous/Synchronous loader of [FirestoreModel]s.
+/// Asynchronous / Synchronous loader of [FirestoreModel]s.
 class FutureItem<D extends FirebaseModel<D>> {
   FutureItem._({
     required this.path,
     required this.subscribe,
     required this.item,
-    required this.future,
     required this.synchronous,
     required this.type,
     this.scrollAwareContext,
@@ -52,7 +49,6 @@ class FutureItem<D extends FirebaseModel<D>> {
   }) =>
       FutureItem._(
         item: null,
-        future: null,
         path: path,
         subscribe: subscribe,
         scrollAwareContext: scrollAwareContext,
@@ -69,7 +65,6 @@ class FutureItem<D extends FirebaseModel<D>> {
   }) =>
       FutureItem._(
         item: (() => subscribe ? (item..subscribe()) : item)(),
-        future: Future.value(item),
         path: item.path,
         subscribe: subscribe,
         scrollAwareContext: scrollAwareContext,
@@ -96,7 +91,17 @@ class FutureItem<D extends FirebaseModel<D>> {
   final String path;
 
   /// Future that will complete when the [FutureItem] is ready and a model is fetched.
-  Future<D?>? future;
+  Future<D?>? get future {
+    if (_future != null) return _future;
+
+    // Lazily created [Future] for synchronous item, if something ever uses it.
+    if (item != null) {
+      assert(synchronous);
+      _future = Future.value(item);
+    }
+
+    return _future;
+  }
 
   /// An object that extends [FirestoreModel]. Null until the [future] completes,
   /// unless the [FutureItem] was constructed synchronously.
@@ -104,6 +109,7 @@ class FutureItem<D extends FirebaseModel<D>> {
 
   static final _log = Log.named('FutureItem');
   bool _disposed = false;
+  Future<D?>? _future;
 
   Future<D?> _getItem() async {
     assert(item == null);
@@ -154,9 +160,9 @@ class FutureItem<D extends FirebaseModel<D>> {
           completer.completeError(e, t);
         }
       });
-      future = completer.future;
+      _future = completer.future;
     } else {
-      future = _getItem();
+      _future = _getItem();
     }
   }
 
@@ -167,7 +173,7 @@ class FutureItem<D extends FirebaseModel<D>> {
     if (shouldDispose) {
       item?.dispose(unsubscribe: subscribe);
       item = null;
-      future = null;
+      _future = null;
     }
     assert(shouldDispose, 'Disposing the same [FutureItem] twice might indicate a mistake in code. Path: $path');
   }

@@ -25,9 +25,11 @@ enum FirebaseModelType {
   realtime,
 }
 
-/// Builder for both Firestore and Realtime Database models.
-/// Json map could be null.
+/// Builder for both Firestore and Realtime Database models. Json map could be null.
 typedef FirebaseModelBuilderCallback = T Function<T>([Map? data]);
+
+/// Test builder for both Firestore and Realtime Database models. Json map could be null.
+typedef FirebaseModelTestBuilderCallback = T Function<T>(FirebaseModelType type, String path);
 
 abstract class _FirebaseModelImpl<T> {
   /// Document path getter from the documents reference. Either [DocumentReference] or [DatabaseReference].
@@ -62,12 +64,26 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   /// [FirebaseModelBuilderCallback] must be set in your flutter main().
   static FirebaseModelBuilderCallback? builder;
 
+  /// A builder for tests  to intercept a getter callback and return a model
+  /// without calling Firebase.
+  @visibleForTesting
+  static FirebaseModelTestBuilderCallback? testBuilder;
+
+  /// Will avoid touching Firebase, when a subscription should be established,
+  /// but the subscription counters and other behavior will still continue to work.
+  @visibleForTesting
+  static bool emptySubscriptions = false;
+
   /// Print the contents of [_cache].
   static void printReferences() => ReferencedModel.printReferences();
 
   /// Build package included models first, then anything else.
   static D build<D>(FirebaseModelType type, String path, [dynamic _snapshot]) {
     assert(path.isNotEmpty);
+
+    // Prioritize the test builder or passtrough, if it didn't build anything.
+    final testModel = FirebaseModel.testBuilder?.call<D>(type, path);
+    if (testModel != null) return testModel;
 
     switch (type) {
       case FirebaseModelType.firestore:
@@ -145,15 +161,18 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
 
   /// Retrieve a [FirebaseModel] from this reference, optionally subscribing.
   static Future<D> from<D extends FirebaseModel<D>>(FirebaseModelType type, String path, {bool subscribe = false}) =>
-      ReferencedModel.reference<D>(type, path, subscribe: subscribe);
+      // If it's already referenced, the other call with return the correct model.
+      FirebaseModel.testBuilder != null && !ReferencedModel.isReferenced(path)
+          ? ReferencedModel.referenceWithSnapshot<D>(type, path, () => FirebaseModel.testBuilder!<D>(type, path))
+          : ReferencedModel.reference<D>(type, path, subscribe: subscribe);
 
   /// Deserialize and reference a [FirebaseModel] with an already fetched
   /// snapshot, like from a list query.
   ///
   /// If the reference already exists, passed `snapshot` is ignored and the
   /// old reference data is reused instead.
-  static Future<D> withReference<D extends FirebaseModel<D>>(FirebaseModelType type, String path,
-          DocumentSnapshot snapshot) =>
+  static Future<D> withReference<D extends FirebaseModel<D>>(
+          FirebaseModelType type, String path, DocumentSnapshot snapshot) =>
       ReferencedModel.referenceWithSnapshot<D>(type, path, () => FirebaseModel.build<D>(type, path, snapshot));
 
   /// Reference by overriding the `builder`, which builds the object,
@@ -265,22 +284,27 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
     assert(_streamSubscription == null);
 
     try {
-      // Start listening.
-      switch (modelType) {
-        case FirebaseModelType.firestore:
-          _streamSubscription = FirebaseFirestore.instance.doc(path).snapshots().listen(
-                _onData,
-                cancelOnError: false,
-                onError: _handleFirestoreSubscriptionError,
-              );
-          break;
-        case FirebaseModelType.realtime:
-          _streamSubscription = FirebaseDatabase.instance.reference().child(path).onValue.listen(
-                _handleRealtimeDatabaseData,
-                cancelOnError: false,
-                onError: _handleRealtimeDatabaseSubscriptionError,
-              );
-          break;
+      if (!FirebaseModel.emptySubscriptions) {
+        // Start listening.
+        switch (modelType) {
+          case FirebaseModelType.firestore:
+            _streamSubscription = FirebaseFirestore.instance.doc(path).snapshots().listen(
+                  _onData,
+                  cancelOnError: false,
+                  onError: _handleFirestoreSubscriptionError,
+                );
+            break;
+          case FirebaseModelType.realtime:
+            _streamSubscription = FirebaseDatabase.instance.reference().child(path).onValue.listen(
+                  _handleRealtimeDatabaseData,
+                  cancelOnError: false,
+                  onError: _handleRealtimeDatabaseSubscriptionError,
+                );
+            break;
+        }
+      } else {
+        // Subscribe with an empty "test" subscription.
+        _streamSubscription = Stream.value(null).listen((_) {});
       }
 
       _log.v('Subscribed to ${T.toString()} - $id');
@@ -315,7 +339,9 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
     // Future completes when the first snapshot arrives.
     // Only await if the initial future, after constructing
     // the model for the first time.
-    return !_firstSnapshotCompleter.isCompleted ? _firstSnapshotCompleter.future : SynchronousFuture<void>(null);
+    return !_firstSnapshotCompleter.isCompleted && !FirebaseModel.emptySubscriptions
+        ? _firstSnapshotCompleter.future
+        : SynchronousFuture<void>(null);
   }
 
   /// Unsubscribe from the model.

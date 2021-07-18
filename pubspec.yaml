@@ -46,7 +46,11 @@ dependency_overrides:
     path: /home/projects/forks/mobx.dart/mobx_codegen
 
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
   build_runner:
   json_serializable:
+  mocktail: ^0.1.4
 
 flutter:
