@@ -3,20 +3,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-// Shorter names for the converters, for an analyzer forks that don't new line annotations.
-class TimestampC = FirestoreTimestampConverter with JsonConverter<Timestamp, dynamic>;
-class TimestampCN = FirestoreTimestampConverterNullable with JsonConverter<Timestamp?, dynamic>;
-class DurationC = FirestoreDurationConverter with JsonConverter<Duration, dynamic>;
-class DurationCN = FirestoreDurationConverter with JsonConverter<Duration, dynamic>;
-class LineBreaksC = StringWithLineBreaksConverter with JsonConverter<String, String>;
-class LineBreaksCN = StringWithLineBreaksConverterNullable with JsonConverter<String?, String?>;
-class NoRedundantLinesC = StringWithNoRedundantLinesConverter with JsonConverter<String, String>;
-class NoRedundantLinesCN = StringWithNoRedundantLinesConverterNullable with JsonConverter<String?, String?>;
-
 /// Convert Firestore's [Timestamp] to json.
-class FirestoreTimestampConverter implements JsonConverter<Timestamp, dynamic> {
-  /// Creates [FirestoreTimestampConverter].
-  const FirestoreTimestampConverter();
+class TimestampC implements JsonConverter<Timestamp, dynamic> {
+  /// Creates [TimestampC].
+  const TimestampC();
 
   /// Convert json to firestore [Timestamp].
   @override
@@ -41,9 +31,9 @@ class FirestoreTimestampConverter implements JsonConverter<Timestamp, dynamic> {
 }
 
 /// Convert Firestore's [Timestamp] to json.
-class FirestoreTimestampConverterNullable implements JsonConverter<Timestamp?, dynamic> {
-  /// Creates [FirestoreTimestampConverterNullable].
-  const FirestoreTimestampConverterNullable();
+class TimestampCN implements JsonConverter<Timestamp?, dynamic> {
+  /// Creates [TimestampCN].
+  const TimestampCN();
 
   /// Convert json to firestore [Timestamp].
   @override
@@ -58,7 +48,9 @@ class FirestoreTimestampConverterNullable implements JsonConverter<Timestamp?, d
       final seconds = json['_seconds'] as int?;
       final nanoseconds = json['_nanoseconds'] as int?;
 
-      return seconds != null || nanoseconds != null ? Timestamp(seconds ?? 0, nanoseconds ?? 0) : null;
+      return seconds != null || nanoseconds != null
+          ? Timestamp(seconds ?? 0, nanoseconds ?? 0)
+          : null;
     }
 
     return null;
@@ -70,31 +62,33 @@ class FirestoreTimestampConverterNullable implements JsonConverter<Timestamp?, d
 }
 
 /// Convert Flutter's [Duration] to an int in milliseconds.
-class FirestoreDurationConverter implements JsonConverter<Duration, dynamic> {
-  /// Creates [FirestoreDurationConverter].
-  const FirestoreDurationConverter();
+class DurationC implements JsonConverter<Duration, dynamic> {
+  /// Creates [DurationC].
+  const DurationC();
 
   @override
-  Duration fromJson(dynamic json) => json is int ? Duration(milliseconds: json) : Duration.zero;
+  Duration fromJson(dynamic json) =>
+      json is int ? Duration(milliseconds: json) : Duration.zero;
   @override
   dynamic toJson(Duration object) => object.inMilliseconds;
 }
 
 /// Convert Flutter's [Duration] to an int in milliseconds.
-class FirestoreDurationConverterNullable implements JsonConverter<Duration?, dynamic> {
-  /// Creates [FirestoreDurationConverterNullable].
-  const FirestoreDurationConverterNullable();
+class DurationCN implements JsonConverter<Duration?, dynamic> {
+  /// Creates [DurationCN].
+  const DurationCN();
 
   @override
-  Duration? fromJson(dynamic json) => json != null && json is int ? Duration(milliseconds: json) : null;
+  Duration? fromJson(dynamic json) =>
+      json != null && json is int ? Duration(milliseconds: json) : null;
   @override
   dynamic toJson(Duration? object) => object?.inMilliseconds;
 }
 
 /// Serializes new lines in Firebase strings.
-class StringWithLineBreaksConverter implements JsonConverter<String, String> {
-  /// Creates [StringWithLineBreaksConverter].
-  const StringWithLineBreaksConverter();
+class LineBreaksC implements JsonConverter<String, String> {
+  /// Creates [LineBreaksC].
+  const LineBreaksC();
 
   @override
   String fromJson(String json) => json.replaceAll('\\n', '\n');
@@ -103,9 +97,9 @@ class StringWithLineBreaksConverter implements JsonConverter<String, String> {
 }
 
 /// Serializes new lines in Firebase strings.
-class StringWithLineBreaksConverterNullable implements JsonConverter<String?, String?> {
-  /// Creates [StringWithLineBreaksConverterNullable].
-  const StringWithLineBreaksConverterNullable();
+class LineBreaksCN implements JsonConverter<String?, String?> {
+  /// Creates [LineBreaksCN].
+  const LineBreaksCN();
 
   @override
   String? fromJson(String? json) => json?.replaceAll('\\n', '\n');
@@ -116,14 +110,15 @@ class StringWithLineBreaksConverterNullable implements JsonConverter<String?, St
 /// Uses [RegExp] to remove redundant lines from the string.
 ///
 /// This only affects `fromJson` - `toJson` will not change the string.
-class StringWithNoRedundantLinesConverter implements JsonConverter<String, String> {
-  /// Creates [StringWithNoRedundantLinesConverter].
-  const StringWithNoRedundantLinesConverter();
+class NoRedundantLinesC implements JsonConverter<String, String> {
+  /// Creates [NoRedundantLinesC].
+  const NoRedundantLinesC();
 
   static final _redundantNewLineRegExp = RegExp(r'\n+');
 
   @override
-  String fromJson(String json) => json.replaceAll(_redundantNewLineRegExp, '\n');
+  String fromJson(String json) =>
+      json.replaceAll(_redundantNewLineRegExp, '\n');
   @override
   String toJson(String object) => object;
 }
@@ -131,14 +126,15 @@ class StringWithNoRedundantLinesConverter implements JsonConverter<String, Strin
 /// Uses [RegExp] to remove redundant lines from the string.
 ///
 /// This only affects `fromJson` - `toJson` will not change the string.
-class StringWithNoRedundantLinesConverterNullable implements JsonConverter<String?, String?> {
-  /// Creates [StringWithNoRedundantLinesConverterNullable].
-  const StringWithNoRedundantLinesConverterNullable();
+class NoRedundantLinesCN implements JsonConverter<String?, String?> {
+  /// Creates [NoRedundantLinesCN].
+  const NoRedundantLinesCN();
 
   static final _redundantNewLineRegExp = RegExp(r'\n+');
 
   @override
-  String? fromJson(String? json) => json?.replaceAll(_redundantNewLineRegExp, '\n');
+  String? fromJson(String? json) =>
+      json?.replaceAll(_redundantNewLineRegExp, '\n');
   @override
   String? toJson(String? object) => object;
 }

@@ -120,7 +120,7 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
       AsyncAction('_FirestoreCollectionStorageStore._handleQuerySubscription');
 
   @override
-  Future<void> _handleQuerySubscription(QuerySnapshot snapshot) {
+  Future<void> _handleQuerySubscription(QuerySnapshot<Object?> snapshot) {
     return _$_handleQuerySubscriptionAsyncAction
         .run(() => super._handleQuerySubscription(snapshot));
   }

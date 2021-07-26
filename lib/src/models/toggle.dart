@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firestore_model/firestore_model.dart';
-import 'package:mobx/mobx.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mobx/mobx.dart';
 
 part 'toggle.g.dart';
 
@@ -16,7 +16,7 @@ class Toggle extends _Toggle with _$Toggle {
 }
 
 abstract class _Toggle extends FirestoreModel<Toggle> with Store {
-  @o @JsonKey() @FirestoreTimestampConverterNullable() Timestamp? createTime;
+  @o @JsonKey() @TimestampCN() Timestamp? createTime;
 
   @override
   void onSnapshot(Toggle x) {

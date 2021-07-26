@@ -19,13 +19,13 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   final _$snapshotAtom = Atom(name: '_FirestoreModel.snapshot');
 
   @override
-  DocumentSnapshot? get snapshot {
+  DocumentSnapshot<Object?>? get snapshot {
     _$snapshotAtom.reportRead();
     return super.snapshot;
   }
 
   @override
-  set snapshot(DocumentSnapshot? value) {
+  set snapshot(DocumentSnapshot<Object?>? value) {
     if (super.snapshot != value) {
       _$snapshotAtom.reportWrite(value, super.snapshot, () {
         super.snapshot = value;
