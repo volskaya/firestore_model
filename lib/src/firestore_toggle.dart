@@ -132,7 +132,7 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
 
     final shouldToggle = _toggle?.exists == false;
     final decrementMirror = shouldToggle && widget._mirror != null ? _mirror?.exists == true : false;
-    final batch = FirebaseFirestore.instance.batch();
+    final batch = FirebaseModel.store.batch();
 
     // Untoggle the mirror document.
     if (decrementMirror) {
@@ -202,7 +202,7 @@ class _FirestoreToggleState extends State<FirestoreToggle> {
     setState(() => _transactionInProgress = true);
 
     try {
-      final toggled = await FirebaseFirestore.instance.runTransaction<bool?>((transaction) async {
+      final toggled = await FirebaseModel.store.runTransaction<bool?>((transaction) async {
         final toggle = await transaction.get(widget._toggle);
         final shouldToggle = !toggle.exists;
         final decrementMirror = shouldToggle && widget._mirror != null ? _mirror?.exists == true : false;

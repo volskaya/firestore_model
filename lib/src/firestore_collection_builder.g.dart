@@ -21,11 +21,9 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
 
   @override
   set paginatedItems(IList<T> value) {
-    if (super.paginatedItems != value) {
       _$paginatedItemsAtom.reportWrite(value, super.paginatedItems, () {
         super.paginatedItems = value;
       });
-    }
   }
 
   final _$subscribedItemsAtom =
@@ -39,11 +37,9 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
 
   @override
   set subscribedItems(IList<T> value) {
-    if (super.subscribedItems != value) {
       _$subscribedItemsAtom.reportWrite(value, super.subscribedItems, () {
         super.subscribedItems = value;
       });
-    }
   }
 
   final _$pendingItemsAtom =
@@ -57,11 +53,9 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
 
   @override
   set pendingItems(IList<T> value) {
-    if (super.pendingItems != value) {
       _$pendingItemsAtom.reportWrite(value, super.pendingItems, () {
         super.pendingItems = value;
       });
-    }
   }
 
   final _$listStatusAtom =

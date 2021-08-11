@@ -91,7 +91,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
       case FirebaseModelType.firestore:
         data = use<T?>(
           FirebaseModelHook<T>.firestore(
-            reference: _path != null ? FirebaseFirestore.instance.doc(_path!) : null,
+            reference: _path != null ? FirebaseModel.store.doc(_path!) : null,
             bucket: bucket ?? _path,
             subscribe: subscribe,
             storageContext: storageContext,
@@ -103,7 +103,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
       case FirebaseModelType.realtime:
         data = use<T?>(
           FirebaseModelHook<T>.realtime(
-            reference: _path != null ? FirebaseDatabase.instance.reference().child(_path!) : null,
+            reference: _path != null ? FirebaseModel.database.reference().child(_path!) : null,
             bucket: bucket ?? _path,
             subscribe: subscribe,
             storageContext: storageContext,

@@ -55,6 +55,12 @@ abstract class _FirebaseModelImpl<T> {
 /// accordingly. If the model is subscribed to, it needs to be unsubscribed,
 /// or else there will be unwanted reads in the background.
 abstract class FirebaseModel<T> extends _FirebaseModel<T> {
+  /// Override for the default [FirebaseFirestore] used by this package.
+  static FirebaseFirestore store = FirebaseFirestore.instance;
+
+  /// Override for the default [FirebaseDatabase] used by this package.
+  static FirebaseDatabase database = FirebaseDatabase.instance;
+
   /// Model builder callback to register all your different models,
   /// that extend [FirestoreModel] or [RealtimeModel].
   ///
@@ -66,13 +72,11 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
 
   /// A builder for tests  to intercept a getter callback and return a model
   /// without calling Firebase.
-  @visibleForTesting
-  static FirebaseModelTestBuilderCallback? testBuilder;
+  @visibleForTesting static FirebaseModelTestBuilderCallback? testBuilder;
 
   /// Will avoid touching Firebase, when a subscription should be established,
   /// but the subscription counters and other behavior will still continue to work.
-  @visibleForTesting
-  static bool emptySubscriptions = false;
+  @visibleForTesting static bool emptySubscriptions = false;
 
   /// Print the contents of [_cache].
   static void printReferences() => ReferencedModel.printReferences();
@@ -87,7 +91,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
 
     switch (type) {
       case FirebaseModelType.firestore:
-        final reference = FirebaseFirestore.instance.doc(path);
+        final reference = FirebaseModel.store.doc(path);
         final snapshot = _snapshot as DocumentSnapshot<Map<String, dynamic>>?;
         assert(snapshot == null || snapshot.id == reference.id);
 
@@ -107,7 +111,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
           ..reference = reference
           ..snapshot = snapshot) as D;
       case FirebaseModelType.realtime:
-        final reference = FirebaseDatabase.instance.reference().child(path);
+        final reference = FirebaseModel.database.reference().child(path);
         final snapshot = _snapshot as DataSnapshot?;
         assert(snapshot == null || snapshot.key == reference.key);
 
@@ -147,11 +151,11 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
     dynamic snapshot;
     switch (type) {
       case FirebaseModelType.firestore:
-        final reference = FirebaseFirestore.instance.doc(path);
+        final reference = FirebaseModel.store.doc(path);
         snapshot = await (transaction?.get(reference) ?? reference.get());
         break;
       case FirebaseModelType.realtime:
-        final reference = FirebaseDatabase.instance.reference().child(path);
+        final reference = FirebaseModel.database.reference().child(path);
         snapshot = await reference.once();
         break;
     }
@@ -171,8 +175,8 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   ///
   /// If the reference already exists, passed `snapshot` is ignored and the
   /// old reference data is reused instead.
-  static Future<D> withReference<D extends FirebaseModel<D>>(
-          FirebaseModelType type, String path, DocumentSnapshot snapshot) =>
+  static Future<D> withReference<D extends FirebaseModel<D>>(FirebaseModelType type, String path,
+          DocumentSnapshot snapshot) =>
       ReferencedModel.referenceWithSnapshot<D>(type, path, () => FirebaseModel.build<D>(type, path, snapshot));
 
   /// Reference by overriding the `builder`, which builds the object,
@@ -218,10 +222,10 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
       dynamic snapshot;
       switch (modelType) {
         case FirebaseModelType.firestore:
-          snapshot = await FirebaseFirestore.instance.doc(path).get();
+          snapshot = await FirebaseModel.store.doc(path).get();
           break;
         case FirebaseModelType.realtime:
-          snapshot = await FirebaseDatabase.instance.reference().child(path).once();
+          snapshot = await FirebaseModel.database.reference().child(path).once();
           break;
       }
 
@@ -288,14 +292,14 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
         // Start listening.
         switch (modelType) {
           case FirebaseModelType.firestore:
-            _streamSubscription = FirebaseFirestore.instance.doc(path).snapshots().listen(
+            _streamSubscription = FirebaseModel.store.doc(path).snapshots().listen(
                   _onData,
                   cancelOnError: false,
                   onError: _handleFirestoreSubscriptionError,
                 );
             break;
           case FirebaseModelType.realtime:
-            _streamSubscription = FirebaseDatabase.instance.reference().child(path).onValue.listen(
+            _streamSubscription = FirebaseModel.database.reference().child(path).onValue.listen(
                   _handleRealtimeDatabaseData,
                   cancelOnError: false,
                   onError: _handleRealtimeDatabaseSubscriptionError,
