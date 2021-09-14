@@ -1,8 +1,8 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mobx/mobx.dart';
 
@@ -63,29 +63,34 @@ abstract class FirestoreModel<T> extends _FirestoreModel<T> with _$FirestoreMode
 
 abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel, Store {
   /// Firestore reference of this model.
-  late DocumentReference reference;
+  DocumentReference get reference => FirebaseModel.store.doc(path);
+
+  late Map<String, dynamic> snapshotData;
 
   /// Firestore document ID getter from the [reference].
-  @override
-  String get id => reference.id;
+  @override late String id;
 
   /// Path of the [reference].
-  @override
-  String get path => reference.path;
+  @override late String path;
 
   // Firebase model type.
   @override
   FirebaseModelType get modelType => FirebaseModelType.firestore;
 
   /// Last [DocumentSnapshot] that provided data to this model.
-  @o DocumentSnapshot? snapshot;
+  // @o DocumentSnapshot? snapshot;
 
   /// Returns true if the last [snapshot.exists] was true.
   /// Observable is null, until first [DocumentSnapshot].
-  @c bool? get exists => snapshot?.exists;
+  @o bool? exists;
+
+  /// Returns true if the last [snapshot.exists] was true.
+  /// Observable is null, until first [DocumentSnapshot].
+  // @c bool? get exists => snapshot?.exists;
 
   @override
   bool operator ==(dynamic other) => other.path == path;
+
   @override
   int get hashCode => path.hashCode;
 
@@ -93,10 +98,11 @@ abstract class _FirestoreModel<T> extends FirebaseModel<T> with ReferencedModel,
   void handleSnapshot(T model) {
     final firestoreModel = model as FirestoreModel<T>;
 
-    snapshot = firestoreModel.snapshot;
+    // snapshot = firestoreModel.snapshot;
+    exists = firestoreModel.exists;
     onSnapshot(model);
     notifyListeners();
 
-    assert(firestoreModel.snapshot == null || reference.path == firestoreModel.snapshot?.reference.path);
+    // assert(firestoreModel.snapshot == null || reference.path == firestoreModel.snapshot?.reference.path);
   }
 }

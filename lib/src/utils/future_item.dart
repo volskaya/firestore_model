@@ -1,11 +1,9 @@
-// ignore_for_file:sort_unnamed_constructors_first
-
 import 'dart:async';
 
 import 'package:firestore_model/src/firebase_model.dart';
+import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/utils/disposable_hook_context.dart';
 import 'package:flutter/material.dart';
-import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:loader_coordinator/loader_coordinator.dart';
 import 'package:log/log.dart';
@@ -31,15 +29,6 @@ Future<T> scheduleFuture<T>(FutureOr<T> Function() callback, [Priority priority 
 
 /// Asynchronous / Synchronous loader of [FirestoreModel]s.
 class FutureItem<D extends FirebaseModel<D>> {
-  FutureItem._({
-    required this.path,
-    required this.subscribe,
-    required this.item,
-    required this.synchronous,
-    required this.type,
-    this.scrollAwareContext,
-  });
-
   /// Creates an asynchronous [FutureItem].
   factory FutureItem({
     required String path,
@@ -71,6 +60,15 @@ class FutureItem<D extends FirebaseModel<D>> {
         synchronous: true,
         type: type,
       );
+
+  FutureItem._({
+    required this.path,
+    required this.subscribe,
+    required this.item,
+    required this.synchronous,
+    required this.type,
+    this.scrollAwareContext,
+  });
 
   /// Firebase model type.
   final FirebaseModelType type;
@@ -123,7 +121,7 @@ class FutureItem<D extends FirebaseModel<D>> {
       // Item is not in the cache so [FirebaseModel.from] is expected to fetch the model from firebase.
       // It's okay to delay/schedule the call here.
       final fetchedItem = await FirebaseModel.from<D>(type, path, subscribe: subscribe);
-      _log.v('Fetched future item: $path ($type)');
+      // _log.v('Fetched future item: $path ($type)');
 
       if (!_disposed) {
         item = fetchedItem;

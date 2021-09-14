@@ -1,6 +1,7 @@
 import 'package:delayed_progress_indicator/delayed_progress_indicator.dart';
 import 'package:fancy_switcher/fancy_switcher.dart';
 import 'package:firestore_model/src/firestore_collection_builder.dart';
+import 'package:firestore_model/src/firestore_collection_pod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 

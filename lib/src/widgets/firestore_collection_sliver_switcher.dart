@@ -1,5 +1,5 @@
 import 'package:fancy_switcher/fancy_switcher.dart';
-import 'package:firestore_model/src/firestore_collection_builder.dart';
+import 'package:firestore_model/src/firestore_collection_pod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 
@@ -12,7 +12,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
   /// Creates a vertical [FirestoreCollectionSliverSwitcher].
   const FirestoreCollectionSliverSwitcher.vertical({
     Key? key,
-    required this.collection,
+    required this.status,
     required this.builder,
     this.loadingBuilder,
     this.emptyBuilder,
@@ -26,7 +26,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
   /// Creates a horizontal [FirestoreCollectionSliverSwitcher].
   const FirestoreCollectionSliverSwitcher.horizontal({
     Key? key,
-    required this.collection,
+    required this.status,
     required this.builder,
     this.loadingBuilder,
     this.emptyBuilder,
@@ -37,8 +37,8 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
   })  : _axis = Axis.horizontal,
         super(key: key);
 
-  /// The collection this builder will observe.
-  final FirestoreCollectionBuilderState collection;
+  /// The status by which to build the switcher.
+  final FirestoreCollectionStatus status;
 
   /// Main list body builder.
   final WidgetBuilder builder;
@@ -67,7 +67,7 @@ class FirestoreCollectionSliverSwitcher extends StatelessObserverWidget {
   Widget build(BuildContext context) {
     Widget? body;
 
-    switch (collection.status) {
+    switch (status) {
       case FirestoreCollectionStatus.idle:
       case FirestoreCollectionStatus.loading:
         body = loadingBuilder != null

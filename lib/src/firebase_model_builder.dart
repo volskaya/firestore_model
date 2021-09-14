@@ -1,10 +1,9 @@
-// ignore:import_of_legacy_library_into_null_safe
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/firebase_model_hook.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:firestore_model/src/firestore_model.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
@@ -28,7 +27,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
     required this.builder,
     this.bucket,
     this.subscribe = false,
-    this.storageContext,
+    this.storage,
     this.observe = true,
     this.update = false,
     this.scrollAware = false,
@@ -47,7 +46,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
     required this.builder,
     this.bucket,
     this.subscribe = false,
-    this.storageContext,
+    this.storage,
     this.observe = true,
     this.update = false,
     this.scrollAware = false,
@@ -71,7 +70,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
 
   /// Allow overriding context of [MyApp.storage] to support building
   /// within an overlay.
-  final BuildContext? storageContext;
+  final RefreshStoragePod? storage;
 
   /// Whether to automatically wrap the builder in an [Observer].
   final bool observe;
@@ -94,7 +93,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
             reference: _path != null ? FirebaseModel.store.doc(_path!) : null,
             bucket: bucket ?? _path,
             subscribe: subscribe,
-            storageContext: storageContext,
+            storage: storage,
             update: update,
             scrollAware: scrollAware,
           ),
@@ -106,7 +105,7 @@ class FirebaseModelBuilder<T extends FirebaseModel<T>> extends HookWidget {
             reference: _path != null ? FirebaseModel.database.reference().child(_path!) : null,
             bucket: bucket ?? _path,
             subscribe: subscribe,
-            storageContext: storageContext,
+            storage: storage,
             update: update,
             scrollAware: scrollAware,
           ),

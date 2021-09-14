@@ -1,13 +1,12 @@
 import 'dart:async';
 
-// ignore:import_of_legacy_library_into_null_safe
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/models/realtime_variable.dart';
 import 'package:firestore_model/src/models/toggle.dart';
 import 'package:firestore_model/src/realtime_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:log/log.dart';
@@ -68,7 +67,7 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   /// Must not return null values!
   ///
   /// [FirebaseModelBuilderCallback] must be set in your flutter main().
-  static FirebaseModelBuilderCallback? builder;
+  static late FirebaseModelBuilderCallback builder;
 
   /// A builder for tests  to intercept a getter callback and return a model
   /// without calling Firebase.
@@ -96,36 +95,33 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
         assert(snapshot == null || snapshot.id == reference.id);
 
         final data = snapshot?.data();
-        D? model;
+        late D model;
         switch (D) {
           case Toggle:
             model = (data != null ? Toggle.fromJson(data) : Toggle()) as D;
             break;
           default:
-            assert(FirebaseModel.builder != null, '[FirebaseModel.builder] is not defined');
-            model = FirebaseModel.builder?.call<D>(snapshot?.data());
+            model = FirebaseModel.builder.call<D>(snapshot?.data());
         }
 
-        if (model == null) throw UnimplementedError('Model builder for ${D.toString()} is not defined');
         return ((model as FirestoreModel<D>)
-          ..reference = reference
-          ..snapshot = snapshot) as D;
+          ..path = reference.path
+          ..id = reference.id
+          ..exists = snapshot?.exists) as D;
       case FirebaseModelType.realtime:
         final reference = FirebaseModel.database.reference().child(path);
         final snapshot = _snapshot as DataSnapshot?;
         assert(snapshot == null || snapshot.key == reference.key);
 
-        D? model;
+        final D model;
         switch (D) {
           case RealtimeVariable:
             model = RealtimeVariable.fromJson(snapshot?.value) as D;
             break;
           default:
-            assert(FirebaseModel.builder != null, '[FirebaseModel.builder] is not defined');
-            model = FirebaseModel.builder?.call<D>(snapshot?.value as Map?);
+            model = FirebaseModel.builder.call<D>(snapshot?.value as Map?);
         }
 
-        if (model == null) throw UnimplementedError('Model builder for ${D.toString()} is not defined');
         return ((model as RealtimeModel<D>)
           ..reference = reference
           ..snapshot = snapshot) as D;
@@ -203,7 +199,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
     assert(snapshot is DocumentSnapshot || snapshot is DataSnapshot);
     final model = FirebaseModel.build<T>(modelType, path, snapshot);
 
-    _log.v('Reacting to changes of ${T.toString()} - $id');
+    // _log.v('Reacting to changes of ${T.toString()} - $id');
     handleSnapshot(model);
     notifyListeners();
 
@@ -255,27 +251,27 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   void _handleRealtimeDatabaseData(Event event) => _onData(event.snapshot);
 
   void _handleRealtimeDatabaseSubscriptionError(Object e, StackTrace t) {
-    _log.e('Error in RTDB subscription of ${T.toString()} - $id', e, t);
+    // _log.e('Error in RTDB subscription of ${T.toString()} - $id', e, t);
     if (!_firstSnapshotCompleter.isCompleted) _firstSnapshotCompleter.complete();
     _scheduleResubscribeAttempt();
   }
 
   void _handleFirestoreSubscriptionError(Object e, StackTrace t) {
-    _log.e('Error in Firestore subscription of ${T.toString()} - $id', e, t);
+    // _log.e('Error in Firestore subscription of ${T.toString()} - $id', e, t);
     if (!_firstSnapshotCompleter.isCompleted) _firstSnapshotCompleter.complete();
     _scheduleResubscribeAttempt();
   }
 
   Timer? _resubTimer;
   void _scheduleResubscribeAttempt() {
-    _log.i('Scheduling resubscribe for ${T.toString()} - $id');
+    // _log.i('Scheduling resubscribe for ${T.toString()} - $id');
     _streamSubscription?.cancel();
     _streamSubscription = null;
     _resubTimer?.cancel();
     _resubTimer = Timer(kFirebaseModelResubDelay, () {
       if (isSubscribed && _streamSubscription == null) {
         try {
-          _log.i('Attempting to resubscribe to ${T.toString()} - $id');
+          // _log.i('Attempting to resubscribe to ${T.toString()} - $id');
           _startSubscription();
         } catch (_) {
           _scheduleResubscribeAttempt();
@@ -311,7 +307,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
         _streamSubscription = Stream.value(null).listen((_) {});
       }
 
-      _log.v('Subscribed to ${T.toString()} - $id');
+      // _log.v('Subscribed to ${T.toString()} - $id');
     } catch (e, t) {
       // Unblock the completer, in case something is awaiting the completer
       // and expecting data from first subscription.
@@ -359,7 +355,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
       if (_subscribers > 0) return;
     }
 
-    _log.v('Unsubscribing from ${T.toString()} - $id');
+    // _log.v('Unsubscribing from ${T.toString()} - $id');
     _streamSubscription?.cancel();
     _streamSubscription = null;
     _subscribers = 0;
@@ -370,7 +366,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
       model: this as FirebaseModel<T>,
       onDecremented: unsubscribe ? this.unsubscribe : null,
       onInvalidated: () {
-        _log.v('Disposing ${T.toString()} - $id');
+        // _log.v('Disposing ${T.toString()} - $id');
         if (isSubscribed) this.unsubscribe(force: true);
         super.dispose();
       });

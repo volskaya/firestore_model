@@ -1,10 +1,9 @@
 import 'dart:async';
 
-// ignore:import_of_legacy_library_into_null_safe
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mobx/mobx.dart';
 

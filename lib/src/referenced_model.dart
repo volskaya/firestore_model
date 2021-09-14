@@ -4,8 +4,10 @@ import 'dart:collection';
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:log/log.dart';
 import 'package:meta/meta.dart';
+import 'package:utils/utils.dart';
 
 /// Reference counting for my firestore models, to prevent redundant
 /// subscriptions and fetches
@@ -15,12 +17,10 @@ mixin ReferencedModel {
   static final _log = Log.named('ReferencedModel');
 
   /// Hash map of reference counters keyed by the document paths.
-  @visibleForTesting
-  static final references = HashMap<String, int>();
+  @visibleForTesting static final references = HashMap<String, int>();
 
   /// Hash map of object memoizers keyed by the document paths.
-  @visibleForTesting
-  static final cache = HashMap<String, ReferencedModelMemoizer<FirebaseModel>>();
+  @visibleForTesting static final cache = HashMap<String, Memoizer<FirebaseModel>>();
 
   /// Print the [references] counters.
   static void printReferences() {
@@ -32,6 +32,8 @@ mixin ReferencedModel {
       final subscriptions = cache[entry.key]?.value?.subscribers ?? 0;
       print('${references.toString().padLeft(3, ".")} - $path, (${subscriptions}s)');
     }
+
+    assert(entries.length == cache.entries.length);
   }
 
   static Future<T> _get<T extends FirebaseModel<T>>(FirebaseModelType type, String path) async {
@@ -48,6 +50,7 @@ mixin ReferencedModel {
   static T? getRef<T extends FirebaseModel<T>>(String path) {
     if (cache[path]?.isCompleted == true) {
       assert((references[path] ?? 0) > 0);
+      assert(isReferenced(path));
       references[path] = (references[path] ?? 0) + 1;
       return cache[path]!.value as T;
     }
@@ -76,9 +79,9 @@ mixin ReferencedModel {
     assert(!cache.containsKey(path));
 
     // Set path and increment references counter.
-    cache[path] = ReferencedModelMemoizer<T>.of(object);
+    cache[path] = Memoizer<T>.of(object);
     references[path] = (references[path] ?? 0) + 1;
-    _log.v('Referenced ${T.toString()} - $path, count - ${references[path]}');
+    // _log.v('Referenced ${T.toString()} - $path, count - ${references[path]}');
 
     return object;
   }
@@ -95,18 +98,34 @@ mixin ReferencedModel {
     assert(path.isNotEmpty);
     final hasReference = ReferencedModel.isReferenced(path);
 
-    // When the object has reference, return that, instead of creating
-    // a new one.
-    final object = hasReference ? await ReferencedModel.reference<T>(type, path) : newObject();
+    if (hasReference) {
+      final object = await ReferencedModel.reference<T>(type, path);
+      SchedulerBinding.instance!.scheduleTask(() => object.feedData(newObject()), Priority.touch);
 
-    // Object was not referenced, so manually reference the one returned from `serializer`.
-    if (!hasReference) {
-      addRef<T>(path: path, object: object);
+      return object;
     } else {
-      object.feedData(newObject()); // If it was referenced, push the new data as an update.
+      assert(!cache.containsKey(path));
+      final memoizer = Memoizer<T>(future: () => SchedulerBinding.instance!.scheduleTask(newObject, Priority.touch));
+
+      cache[path] = memoizer;
+      references[path] = (references[path] ?? 0) + 1;
+      // _log.v('Referenced ${T.toString()} - $path, count - ${references[path]}');
+
+      return (await memoizer.future)!;
     }
 
-    return object;
+    // // When the object has reference, return that, instead of creating
+    // // a new one.
+    // final object = hasReference ? await ReferencedModel.reference<T>(type, path) : newObject();
+
+    // // Object was not referenced, so manually reference the one returned from `serializer`.
+    // if (!hasReference) {
+    //   addRef<T>(path: path, object: object);
+    // } else {
+    //   object.feedData(newObject()); // If it was referenced, push the new data as an update.
+    // }
+
+    // return object;
   }
 
   /// If subscribe == true, returns a model created with a subscription.
@@ -133,9 +152,9 @@ mixin ReferencedModel {
 
     // Object not memoized yet, creating it here.
     assert(!cache.containsKey(path));
-    _log.v('No object for ${T.toString()} - $path exists, creating a new one…');
+    // _log.v('No object for ${T.toString()} - $path exists, creating a new one…');
 
-    cache[path] = ReferencedModelMemoizer<T>(
+    cache[path] = Memoizer<T>(
       future: () async {
         if (subscribe) {
           // No snapshot data means an empty model with a reference.
@@ -152,8 +171,8 @@ mixin ReferencedModel {
       },
     );
 
-    _log.v('Referenced ${T.toString()} - $path ($type), '
-        'count - ${references[path]}');
+    // _log.v('Referenced ${T.toString()} - $path ($type), '
+    //     'count - ${references[path]}');
 
     return cache[path]!.future as Future<T>;
   }
@@ -177,18 +196,18 @@ mixin ReferencedModel {
 
     references[model.path] = (references[model.path] ?? 1) - 1;
 
-    _log.v(
-      'Unreferenced ${model.runtimeType.toString()}'
-      ' - ${model.id}, '
-      'remaining - ${references[model.path] ?? 0}',
-    );
+    // _log.v(
+    //   'Unreferenced ${model.runtimeType.toString()}'
+    //   ' - ${model.id}, '
+    //   'remaining - ${references[model.path] ?? 0}',
+    // );
 
     // Make sure to remove any negative counters
     if (references[model.path] != null && references[model.path]! <= 0) {
-      _log.v(
-        'No more referenced remaining for ${model.runtimeType.toString()} - '
-        '${model.id}, invalidating…',
-      );
+      // _log.v(
+      //   'No more referenced remaining for ${model.runtimeType.toString()} - '
+      //   '${model.id}, invalidating…',
+      // );
 
       references.remove(model.path);
       if (cache.containsKey(model.path)) {
@@ -203,54 +222,5 @@ mixin ReferencedModel {
       assert(cache.containsKey(model.path));
       onDecremented?.call();
     }
-  }
-}
-
-/// Memoizer of cached items in [ReferencedModel].
-class ReferencedModelMemoizer<T> {
-  /// Instantiate the [ReferencedModelMemoizer] asynchronously.
-  ReferencedModelMemoizer({required Future<T> Function() future}) {
-    _resolveFuture(future);
-  }
-
-  /// Instantiate the [ReferencedModelMemoizer] synchronously.
-  ReferencedModelMemoizer.of(this.value) : _hasResolved = true;
-
-  Future _resolveFuture(Future<T> Function() future) async {
-    assert(!_invalidated);
-
-    try {
-      final resolvedItem = await future();
-      if (_invalidated) return;
-      value = resolvedItem;
-      _completer.complete(resolvedItem);
-    } catch (e) {
-      _completer.completeError(e);
-    }
-
-    _hasResolved = true;
-  }
-
-  final Completer<T?> _completer = Completer<T?>();
-  bool _hasResolved = false;
-  bool _invalidated = false;
-
-  /// Resolved value, if any.
-  T? value;
-
-  /// Whether the memoizer has resolved its future.
-  bool get isCompleted => _completer.isCompleted || value != null;
-
-  /// If the value is ready, it is returned with a [SynchronousFuture].
-  Future<T?> get future {
-    assert(!_invalidated);
-    return _hasResolved ? SynchronousFuture<T?>(value) : _completer.future;
-  }
-
-  /// Unreferences the value and resolves the future with null, if it's not resolved yet.
-  void invalidate() {
-    _invalidated = true;
-    if (!_completer.isCompleted) _completer.complete(null);
-    value = null;
   }
 }

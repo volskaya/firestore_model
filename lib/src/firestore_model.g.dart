@@ -9,26 +9,19 @@ part of 'firestore_model.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
 
 mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
-  Computed<bool?>? _$existsComputed;
+  final _$existsAtom = Atom(name: '_FirestoreModel.exists');
 
   @override
-  bool? get exists => (_$existsComputed ??=
-          Computed<bool?>(() => super.exists, name: '_FirestoreModel.exists'))
-      .value;
-
-  final _$snapshotAtom = Atom(name: '_FirestoreModel.snapshot');
-
-  @override
-  DocumentSnapshot<Object?>? get snapshot {
-    _$snapshotAtom.reportRead();
-    return super.snapshot;
+  bool? get exists {
+    _$existsAtom.reportRead();
+    return super.exists;
   }
 
   @override
-  set snapshot(DocumentSnapshot<Object?>? value) {
-    if (super.snapshot != value) {
-      _$snapshotAtom.reportWrite(value, super.snapshot, () {
-        super.snapshot = value;
+  set exists(bool? value) {
+    if (super.exists != value) {
+      _$existsAtom.reportWrite(value, super.exists, () {
+        super.exists = value;
       });
     }
   }
@@ -50,7 +43,6 @@ mixin _$FirestoreModel<T> on _FirestoreModel<T>, Store {
   @override
   String toString() {
     return '''
-snapshot: ${snapshot},
 exists: ${exists}
     ''';
   }

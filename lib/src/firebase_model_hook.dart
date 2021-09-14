@@ -1,6 +1,5 @@
-// ignore:import_of_legacy_library_into_null_safe
-import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firestore_model/src/firebase_model.dart';
 import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/realtime_model.dart';
@@ -9,7 +8,6 @@ import 'package:firestore_model/src/utils/disposable_hook_context.dart';
 import 'package:firestore_model/src/utils/future_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:log/log.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
 /// Page storage of [FirebaseModelHook].
@@ -38,7 +36,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T?> {
     required DocumentReference? reference,
     required this.bucket,
     this.subscribe = false,
-    this.storageContext,
+    this.storage,
     this.update = false,
     this.scrollAware = false,
   })  : _type = FirebaseModelType.firestore,
@@ -52,7 +50,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T?> {
     required DatabaseReference? reference,
     required this.bucket,
     this.subscribe = false,
-    this.storageContext,
+    this.storage,
     this.update = false,
     this.scrollAware = false,
   })  : _type = FirebaseModelType.realtime,
@@ -71,7 +69,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T?> {
 
   /// Allow overriding context of [MyApp.storage] to support building
   /// within an overlay.
-  final BuildContext? storageContext;
+  final RefreshStoragePod? storage;
 
   /// Request the model to update, when this hook is initialized.
   final bool update;
@@ -87,7 +85,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T?> {
     DocumentReference? reference, {
     String? bucket,
     bool subscribe = false,
-    BuildContext? storageContext,
+    RefreshStoragePod? storage,
     bool update = false,
     bool scrollAware = false,
   }) =>
@@ -96,7 +94,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T?> {
           reference: reference,
           bucket: bucket ?? reference?.path,
           subscribe: subscribe,
-          storageContext: storageContext,
+          storage: storage,
           update: update,
           scrollAware: scrollAware,
         ),
@@ -109,7 +107,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T?> {
     DatabaseReference? reference, {
     String? bucket,
     bool subscribe = false,
-    BuildContext? storageContext,
+    RefreshStoragePod? storage,
     bool update = false,
     bool scrollAware = false,
   }) =>
@@ -118,7 +116,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T?> {
           reference: reference,
           bucket: bucket ?? reference?.path,
           subscribe: subscribe,
-          storageContext: storageContext,
+          storage: storage,
           update: update,
           scrollAware: scrollAware,
         ),
@@ -129,7 +127,7 @@ class FirebaseModelHook<T extends FirebaseModel<T>> extends Hook<T?> {
 }
 
 class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, FirebaseModelHook<T>> {
-  static final _log = Log.named('FirebaseModelHook');
+  // static final _log = Log.named('FirebaseModelHook');
 
   late RefreshStorageEntry<_FirebaseModelHookBucket<T>> _storage;
   late String _bucket; // If `bucket` was not passed, reference path will be used instead.
@@ -157,7 +155,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, 
     final object = ReferencedModel.getRef<T>(hook._path!);
 
     if (object != null) {
-      _log.v('Instantiated with a synchronous ${hook._path} (${hook._type})');
+      // _log.v('Instantiated with a synchronous ${hook._path} (${hook._type})');
       _storage.value?.object = FutureItem<T>.of(
         type: hook._type,
         item: object,
@@ -173,7 +171,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, 
         });
       }
     } else {
-      _log.v('Instantiating asynchronously ${hook._path} (${hook._type})');
+      // _log.v('Instantiating asynchronously ${hook._path} (${hook._type})');
       _storage.value?.object = FutureItem<T>(
         type: hook._type,
         path: hook._path!,
@@ -184,9 +182,9 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, 
     }
   }
 
-  static RefreshStorageState? _getStorage(BuildContext context) {
+  RefreshStoragePod? _getStorage() {
     try {
-      return RefreshStorage.of(context);
+      return hook.storage ?? RefreshStorage.notifierOf(context);
     } catch (_) {
       return null; // Built in an overlay?
     }
@@ -197,7 +195,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, 
     assert(hook.bucket != null, 'If the reference is expected to be null, pass `bucket` manually');
     super.initHook();
 
-    final storage = _FirebaseModelHookState._getStorage(hook.storageContext ?? context);
+    final storage = _getStorage();
     _disposableContext = hook.scrollAware ? DisposableHookContext(this) : null;
     _bucket = hook.bucket!; // Bucket is not allowed to change.
     _mounted = true;
@@ -205,7 +203,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, 
     _storage = storage != null
         ? RefreshStorage.write(
             storage: storage,
-            context: hook.storageContext ?? context,
+            context: context,
             identifier: _bucket,
             builder: () => _FirebaseModelHookBucket<T>(),
           )
@@ -213,7 +211,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, 
 
     if (hook._path != null) {
       if (_storage.value?.object == null || _storage.value?.object?.path != hook._path) {
-        _log.v('Bucket item null, creating: ${hook._path} (${hook._type})');
+        // _log.v('Bucket item null, creating: ${hook._path} (${hook._type})');
 
         if (_storage.value?.object != null) {
           // Path changed, dispose the previous item.
@@ -223,7 +221,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, 
 
         _updateObject();
       } else {
-        _log.v('Reusing bucket storage: ${hook._path} (${hook._type})');
+        // _log.v('Reusing bucket storage: ${hook._path} (${hook._type})');
         if (_storage.value?.object?.synchronous != true) _scheduleRebuild(_storage.value?.object);
       }
     }
@@ -236,7 +234,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, 
     assert(oldHook._type == hook._type);
 
     if (oldHook._path != hook._path) {
-      _log.v('${oldHook._path} changed to ${hook._path}');
+      // _log.v('${oldHook._path} changed to ${hook._path}');
       _storage.value?.object?.dispose();
       _storage.value?.object = null;
       if (hook._path != null) _updateObject();

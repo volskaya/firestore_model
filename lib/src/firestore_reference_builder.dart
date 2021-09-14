@@ -1,7 +1,7 @@
-import 'package:firestore_model/src/firebase_model_builder.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:firestore_model/src/firebase_model_builder.dart';
 import 'package:firestore_model/src/firestore_model.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 
@@ -25,7 +25,7 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatelessWi
     this.bucket,
     this.subscribe = false,
     this.initialValue,
-    this.storageContext,
+    this.storage,
     this.observe = true,
   })  : assert(initialValue == null || reference != null),
         super(key: key);
@@ -49,7 +49,7 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatelessWi
 
   /// Allow overriding context of [MyApp.storage] to support building
   /// within an overlay.
-  final BuildContext? storageContext;
+  final RefreshStoragePod? storage;
 
   /// Whether to automatically wrap the builder in an [Observer].
   final bool observe;
@@ -59,7 +59,7 @@ class FirestoreReferenceBuilder<T extends FirestoreModel<T>> extends StatelessWi
         reference: reference,
         bucket: bucket,
         subscribe: subscribe,
-        storageContext: storageContext,
+        storage: storage,
         observe: observe,
         builder: (context, model) => builder(context, model ?? initialValue),
       );

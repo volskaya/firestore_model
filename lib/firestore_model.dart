@@ -1,10 +1,13 @@
 library firestore_model;
 
 export 'src/converters.dart';
+export 'src/firebase_isolate.dart';
 export 'src/firebase_model.dart';
 export 'src/firebase_model_builder.dart';
 export 'src/firebase_model_hook.dart';
 export 'src/firestore_collection_builder.dart';
+export 'src/firestore_collection_cargo.dart';
+export 'src/firestore_collection_pod.dart';
 export 'src/firestore_model.dart';
 export 'src/firestore_reference_builder.dart';
 export 'src/firestore_toggle.dart';
