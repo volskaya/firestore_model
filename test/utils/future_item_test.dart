@@ -2,12 +2,14 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firestore_model/src/firebase_model.dart';
+import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/models/toggle.dart';
 import 'package:firestore_model/src/referenced_model.dart';
 import 'package:firestore_model/src/utils/future_item.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+// ignore: subtype_of_sealed_class
 class MockReference extends Mock implements DocumentReference {}
 
 const kDocumentPath = 'toggle/test';
@@ -19,10 +21,19 @@ MockReference _getMockReference(String path) {
   return mockReference;
 }
 
+extension on FirestoreModel {
+  void applyMockReference(String _path) => applyReference(_getMockReference(_path));
+  void applyReference(DocumentReference reference) {
+    path = reference.path;
+    id = reference.id;
+  }
+}
+
 void main() {
   setUp(() {
-    T testBuilder<T>(FirebaseModelType type, String path) => (Toggle()..reference = _getMockReference(path)) as T;
+    T testBuilder<T>(FirebaseModelType type, String path) => (Toggle()..applyMockReference(path)) as T;
     FirebaseModel.testBuilder = testBuilder;
+    ReferencedModel.scheduleTasks = false;
   });
 
   test('Asynchronous FutureItem instantiates with no item', () {
@@ -50,7 +61,7 @@ void main() {
   });
 
   test('Synchronous FutureItem has the item available immediately', () async {
-    final toggle = Toggle()..reference = _getMockReference(kDocumentPath);
+    final toggle = Toggle()..applyMockReference(kDocumentPath);
     final futureToggle = FutureItem<Toggle>.of(item: toggle, type: FirebaseModelType.firestore);
 
     // A reference should not exist at this point and since the item is created manually,
@@ -73,7 +84,7 @@ void main() {
   });
 
   test('The item and future is unreferenced, when the FutureItem is disposed', () {
-    final toggle = Toggle()..reference = _getMockReference(kDocumentPath);
+    final toggle = Toggle()..applyMockReference(kDocumentPath);
     final futureToggle = FutureItem<Toggle>.of(item: toggle, type: FirebaseModelType.firestore);
 
     // A reference should not exist at this point and since the item is created manually,

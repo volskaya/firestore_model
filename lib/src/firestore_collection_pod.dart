@@ -67,6 +67,7 @@ class FirestoreCollectionProps<T extends FirestoreModel<T>, D> {
     this.onFirstPagePaginated,
     this.cargoBuilder,
     this.delayedFuture,
+    this.ads = false,
   });
 
   /// Bucket identifier of [RefreshStorage] used by [FirestoreCollectionBuilder].
@@ -127,6 +128,9 @@ class FirestoreCollectionProps<T extends FirestoreModel<T>, D> {
 
   /// A delayed future to await before the first paginated items are updated.
   final Future Function()? delayedFuture;
+
+  /// A convenience toggle to memoize ads toggle status for the pod.
+  final bool ads;
 
   // Prop equality is tied only to the bucket.
   @override
@@ -539,12 +543,6 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     if (props.subscribe && mounted && !isSubscribed) startSubscription();
   }
 
-  // @override
-  // void dispose() {
-  //   _log.wtf('Collection disposed');
-  //   super.dispose();
-  // }
-
   bool mounted = false;
 
   @override
@@ -555,7 +553,6 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
 
   @override
   void didStopListening() {
-    dispose();
     mounted = false;
   }
 }

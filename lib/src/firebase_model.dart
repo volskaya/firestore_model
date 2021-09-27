@@ -77,6 +77,9 @@ abstract class FirebaseModel<T> extends _FirebaseModel<T> {
   /// but the subscription counters and other behavior will still continue to work.
   @visibleForTesting static bool emptySubscriptions = false;
 
+  /// Will avoid touching Firebase, when an object should be updated.
+  @visibleForTesting static bool emptyData = false;
+
   /// Print the contents of [_cache].
   static void printReferences() => ReferencedModel.printReferences();
 
@@ -212,7 +215,7 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   /// Gets a single update
   Future<void> update() async {
     // Don't fetch updated document, if already subscribed
-    if (_streamSubscription != null) return;
+    if (_streamSubscription != null || FirebaseModel.emptyData) return;
 
     try {
       dynamic snapshot;
@@ -323,17 +326,15 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   /// are reference counted and if you never unsubscribe, this model will
   /// to listening, while in the background.
   Future<void> subscribe() {
-    final shouldSubscribe = _subscribers == 0;
     _subscribers += 1;
+    final shouldSubscribe = _subscribers > 0 && _streamSubscription == null;
 
     if (shouldSubscribe) {
       assert(_streamSubscription == null);
 
       try {
         _startSubscription();
-      } catch (_) {
-        _subscribers -= 1;
-      }
+      } catch (_) {}
     }
 
     // Future completes when the first snapshot arrives.
@@ -349,16 +350,12 @@ abstract class _FirebaseModel<T> with ReferencedModel, ChangeNotifier implements
   /// This is a reference counted dispose step and should not be called, if a
   /// widget or an action didn't call [subscribe] to begin with.
   void unsubscribe({bool force = false}) {
-    if (!force && !isSubscribed) return;
-    if (!force && _subscribers > 0) {
-      _subscribers -= 1;
-      if (_subscribers > 0) return;
+    // Allow the `_subscribers` coun't to decrement under 0.
+    _subscribers -= 1;
+    if (_subscribers <= 0 || force) {
+      _streamSubscription?.cancel();
+      _streamSubscription = null;
     }
-
-    // _log.v('Unsubscribing from ${T.toString()} - $id');
-    _streamSubscription?.cancel();
-    _streamSubscription = null;
-    _subscribers = 0;
   }
 
   @override

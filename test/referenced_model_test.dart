@@ -2,13 +2,16 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firestore_model/src/firebase_model.dart';
+import 'package:firestore_model/src/firestore_model.dart';
 import 'package:firestore_model/src/models/toggle.dart';
 import 'package:firestore_model/src/referenced_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:utils/utils.dart';
 
 class ObjectWithNoEquality {}
 
+// ignore: subtype_of_sealed_class
 class MockReference extends Mock implements DocumentReference {}
 
 const kDocumentPath = 'toggle/test';
@@ -20,18 +23,28 @@ MockReference _getMockReference(String path) {
   return mockReference;
 }
 
+extension on FirestoreModel {
+  void applyMockReference(String _path) => applyReference(_getMockReference(_path));
+  void applyReference(DocumentReference reference) {
+    path = reference.path;
+    id = reference.id;
+  }
+}
+
 void main() {
   group('ReferencedModel', () {
     setUp(() async {
-      T testBuilder<T>(FirebaseModelType type, String path) => (Toggle()..reference = _getMockReference(path)) as T;
+      T testBuilder<T>(FirebaseModelType type, String path) => (Toggle()..applyMockReference(path)) as T;
       FirebaseModel.testBuilder = testBuilder;
       FirebaseModel.emptySubscriptions = true;
+      FirebaseModel.emptyData = true;
+      ReferencedModel.scheduleTasks = false;
     });
 
     test('`addRef` caches the new object', () async {
       expect(ReferencedModel.isReferenced(kDocumentPath), isFalse);
 
-      final toggle = Toggle()..reference = _getMockReference(kDocumentPath);
+      final toggle = Toggle()..applyMockReference(kDocumentPath);
       ReferencedModel.addRef(path: kDocumentPath, object: toggle);
 
       expect(ReferencedModel.isReferenced(kDocumentPath), isTrue);
@@ -46,7 +59,7 @@ void main() {
     test('`referenceWithSnapshot` caches a new object', () async {
       expect(ReferencedModel.isReferenced(kDocumentPath), isFalse);
 
-      final toggle = Toggle()..reference = _getMockReference(kDocumentPath);
+      final toggle = Toggle()..applyMockReference(kDocumentPath);
       final cachedObject = await ReferencedModel.referenceWithSnapshot(toggle.modelType, toggle.path, () => toggle);
 
       expect(ReferencedModel.isReferenced(kDocumentPath), isTrue);
@@ -58,8 +71,8 @@ void main() {
     test('`referenceWithSnapshot` returns a previously cached object', () async {
       expect(ReferencedModel.isReferenced(kDocumentPath), isFalse);
 
-      final toggle = Toggle()..reference = _getMockReference(kDocumentPath);
-      final anotherToggle = Toggle()..reference = _getMockReference(kDocumentPath);
+      final toggle = Toggle()..applyMockReference(kDocumentPath);
+      final anotherToggle = Toggle()..applyMockReference(kDocumentPath);
       final cachedObject = await ReferencedModel.referenceWithSnapshot(toggle.modelType, toggle.path, () => toggle);
       final anotherCachedObject =
           await ReferencedModel.referenceWithSnapshot(toggle.modelType, toggle.path, () => anotherToggle);
@@ -87,7 +100,7 @@ void main() {
       expect(ReferencedModel.isReferenced(kDocumentPath), isFalse);
 
       final ref = _getMockReference(kDocumentPath);
-      final toggle = ReferencedModel.addRef(path: ref.path, object: Toggle()..reference = ref);
+      final toggle = ReferencedModel.addRef(path: ref.path, object: Toggle()..applyReference(ref));
       final cachedObject = await ReferencedModel.reference<Toggle>(FirebaseModelType.firestore, ref.path);
 
       expect(ReferencedModel.isReferenced(kDocumentPath), isTrue);
@@ -124,7 +137,7 @@ void main() {
           (_) => ReferencedModel.referenceWithSnapshot<Toggle>(
             FirebaseModelType.firestore,
             kDocumentPath,
-            () => Toggle()..reference = _getMockReference(kDocumentPath),
+            () => Toggle()..applyMockReference(kDocumentPath),
           ),
         ),
       );
@@ -195,7 +208,8 @@ void main() {
     });
   });
 
-  group('ReferencedModelMemoizer', () {
+  // NOTE: The memoizer is not even used anymore and it was moved to the utils package. Move these tests as well.
+  group('Memoizer', () {
     late ObjectWithNoEquality flag;
 
     setUp(() {
@@ -203,7 +217,7 @@ void main() {
     });
 
     test('Multiple calls to the future return the same value', () async {
-      final memoizer = ReferencedModelMemoizer(future: () => Future.value(flag));
+      final memoizer = Memoizer(future: () => Future.value(flag));
       final values = await Future.wait(List.generate(5, (_) => memoizer.future));
 
       expect(memoizer.value, equals(flag));
@@ -212,27 +226,45 @@ void main() {
       memoizer.invalidate();
     });
 
+    test('Value is resolved', () async {
+      final memoizerA = Memoizer(future: () => Future.value(flag));
+      final memoizerB = Memoizer(future: () => Future.sync(() => flag));
+
+      expect(memoizerA.value, isNull);
+      expect(memoizerB.value, isNull);
+      await pumpEventQueue(times: 1);
+
+      expect(memoizerA.value, equals(flag));
+      expect(memoizerB.value, equals(flag));
+
+      memoizerA.invalidate();
+      memoizerB.invalidate();
+
+      expect(memoizerA.value, isNull);
+      expect(memoizerB.value, isNull);
+    });
+
     test('Value is ignored, if invalidated early', () async {
-      final memoizer = ReferencedModelMemoizer(future: () => Future.value(flag));
+      final memoizer = Memoizer(future: () => Future.delayed(const Duration(milliseconds: 5), () => flag));
       expect(memoizer.value, isNull);
 
       memoizer.invalidate();
-      await Future<void>.value();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(memoizer.value, isNull);
     });
 
     test('Async value is unreferenced, when invalidated', () async {
-      final memoizer = ReferencedModelMemoizer(future: () => Future.value(flag));
-      await Future<void>.value();
-      expect(memoizer.value, equals(flag));
+      final memoizer = Memoizer(future: () => Future.value(flag));
+      expect(memoizer.value, isNull);
 
+      await pumpEventQueue(times: 1);
       memoizer.invalidate();
       expect(memoizer.value, isNull);
     });
 
     test('Completer is completed, when invalidated', () async {
-      final memoizer = ReferencedModelMemoizer(future: () => Future.value(flag));
+      final memoizer = Memoizer(future: () => Future.value(flag));
       expect(memoizer.isCompleted, isFalse);
 
       memoizer.invalidate();
@@ -240,7 +272,7 @@ void main() {
     });
 
     test('Instantiating with a sync value, has a future', () async {
-      final memoizer = ReferencedModelMemoizer.of(flag);
+      final memoizer = Memoizer.of(flag);
       expect(memoizer.isCompleted, isTrue);
 
       final futureValue = await memoizer.future;
