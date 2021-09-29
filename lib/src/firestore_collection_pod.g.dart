@@ -8,7 +8,8 @@ part of 'firestore_collection_pod.dart';
 
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
 
-mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D> on _FirestoreCollectionPod<T, D>, Store {
+mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
+    on _FirestoreCollectionPod<T, D>, Store {
   final _$paginatedAtom = Atom(name: '_FirestoreCollectionPod.paginated');
 
   @override
@@ -19,9 +20,11 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D> on _FirestoreColl
 
   @override
   set paginated(List<T> value) {
-    _$paginatedAtom.reportWrite(value, super.paginated, () {
-      super.paginated = value;
-    });
+    if (super.paginated != value) {
+      _$paginatedAtom.reportWrite(value, super.paginated, () {
+        super.paginated = value;
+      });
+    }
   }
 
   final _$subscribedAtom = Atom(name: '_FirestoreCollectionPod.subscribed');
@@ -34,9 +37,11 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D> on _FirestoreColl
 
   @override
   set subscribed(List<T> value) {
-    _$subscribedAtom.reportWrite(value, super.subscribed, () {
-      super.subscribed = value;
-    });
+    if (super.subscribed != value) {
+      _$subscribedAtom.reportWrite(value, super.subscribed, () {
+        super.subscribed = value;
+      });
+    }
   }
 
   final _$pendingAtom = Atom(name: '_FirestoreCollectionPod.pending');
@@ -49,9 +54,11 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D> on _FirestoreColl
 
   @override
   set pending(List<T> value) {
-    _$pendingAtom.reportWrite(value, super.pending, () {
-      super.pending = value;
-    });
+    if (super.pending != value) {
+      _$pendingAtom.reportWrite(value, super.pending, () {
+        super.pending = value;
+      });
+    }
   }
 
   final _$cargoAtom = Atom(name: '_FirestoreCollectionPod.cargo');
@@ -64,9 +71,11 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D> on _FirestoreColl
 
   @override
   set cargo(HashMap<String, D> value) {
-    _$cargoAtom.reportWrite(value, super.cargo, () {
-      super.cargo = value;
-    });
+    if (super.cargo != value) {
+      _$cargoAtom.reportWrite(value, super.cargo, () {
+        super.cargo = value;
+      });
+    }
   }
 
   final _$statusAtom = Atom(name: '_FirestoreCollectionPod.status');
@@ -120,33 +129,38 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D> on _FirestoreColl
     }
   }
 
-  final _$fetchPageAsyncAction = AsyncAction('_FirestoreCollectionPod.fetchPage');
+  final _$fetchPageAsyncAction =
+      AsyncAction('_FirestoreCollectionPod.fetchPage');
 
   @override
   Future<void> fetchPage(int page) {
     return _$fetchPageAsyncAction.run(() => super.fetchPage(page));
   }
 
-  final _$_paginateAsyncAction = AsyncAction('_FirestoreCollectionPod._paginate');
+  final _$_paginateAsyncAction =
+      AsyncAction('_FirestoreCollectionPod._paginate');
 
   @override
   Future<void> _paginate(int page) {
     return _$_paginateAsyncAction.run(() => super._paginate(page));
   }
 
-  final _$_handleQuerySubscriptionAsyncAction = AsyncAction('_FirestoreCollectionPod._handleQuerySubscription');
+  final _$_handleQuerySubscriptionAsyncAction =
+      AsyncAction('_FirestoreCollectionPod._handleQuerySubscription');
 
   @override
   Future<void> _handleQuerySubscription(QuerySnapshot<Object?> snapshot) {
-    return _$_handleQuerySubscriptionAsyncAction.run(() => super._handleQuerySubscription(snapshot));
+    return _$_handleQuerySubscriptionAsyncAction
+        .run(() => super._handleQuerySubscription(snapshot));
   }
 
-  final _$_FirestoreCollectionPodActionController = ActionController(name: '_FirestoreCollectionPod');
+  final _$_FirestoreCollectionPodActionController =
+      ActionController(name: '_FirestoreCollectionPod');
 
   @override
   void _checkStatus() {
-    final _$actionInfo =
-        _$_FirestoreCollectionPodActionController.startAction(name: '_FirestoreCollectionPod._checkStatus');
+    final _$actionInfo = _$_FirestoreCollectionPodActionController.startAction(
+        name: '_FirestoreCollectionPod._checkStatus');
     try {
       return super._checkStatus();
     } finally {

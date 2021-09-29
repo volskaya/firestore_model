@@ -23,7 +23,8 @@ class _$FirestoreCollectionValueTearOff {
       required Map<String, D> cargo,
       required DateTime createTime,
       FirestoreCollectionStatus status = FirestoreCollectionStatus.idle,
-      bool ended = false}) {
+      bool ended = false,
+      GenerativeWidgetCoordinator? widgetCoordinator}) {
     return _FirestoreCollectionValue<T, D>(
       paginated: paginated,
       subscribed: subscribed,
@@ -32,6 +33,7 @@ class _$FirestoreCollectionValueTearOff {
       createTime: createTime,
       status: status,
       ended: ended,
+      widgetCoordinator: widgetCoordinator,
     );
   }
 }
@@ -48,6 +50,8 @@ mixin _$FirestoreCollectionValue<T extends FirestoreModel<T>, D> {
   DateTime get createTime => throw _privateConstructorUsedError;
   FirestoreCollectionStatus get status => throw _privateConstructorUsedError;
   bool get ended => throw _privateConstructorUsedError;
+  GenerativeWidgetCoordinator? get widgetCoordinator =>
+      throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $FirestoreCollectionValueCopyWith<T, D, FirestoreCollectionValue<T, D>>
@@ -68,7 +72,8 @@ abstract class $FirestoreCollectionValueCopyWith<T extends FirestoreModel<T>, D,
       Map<String, D> cargo,
       DateTime createTime,
       FirestoreCollectionStatus status,
-      bool ended});
+      bool ended,
+      GenerativeWidgetCoordinator? widgetCoordinator});
 }
 
 /// @nodoc
@@ -89,6 +94,7 @@ class _$FirestoreCollectionValueCopyWithImpl<T extends FirestoreModel<T>, D,
     Object? createTime = freezed,
     Object? status = freezed,
     Object? ended = freezed,
+    Object? widgetCoordinator = freezed,
   }) {
     return _then(_value.copyWith(
       paginated: paginated == freezed
@@ -119,6 +125,10 @@ class _$FirestoreCollectionValueCopyWithImpl<T extends FirestoreModel<T>, D,
           ? _value.ended
           : ended // ignore: cast_nullable_to_non_nullable
               as bool,
+      widgetCoordinator: widgetCoordinator == freezed
+          ? _value.widgetCoordinator
+          : widgetCoordinator // ignore: cast_nullable_to_non_nullable
+              as GenerativeWidgetCoordinator?,
     ));
   }
 }
@@ -138,7 +148,8 @@ abstract class _$FirestoreCollectionValueCopyWith<T extends FirestoreModel<T>,
       Map<String, D> cargo,
       DateTime createTime,
       FirestoreCollectionStatus status,
-      bool ended});
+      bool ended,
+      GenerativeWidgetCoordinator? widgetCoordinator});
 }
 
 /// @nodoc
@@ -163,6 +174,7 @@ class __$FirestoreCollectionValueCopyWithImpl<T extends FirestoreModel<T>, D,
     Object? createTime = freezed,
     Object? status = freezed,
     Object? ended = freezed,
+    Object? widgetCoordinator = freezed,
   }) {
     return _then(_FirestoreCollectionValue<T, D>(
       paginated: paginated == freezed
@@ -193,6 +205,10 @@ class __$FirestoreCollectionValueCopyWithImpl<T extends FirestoreModel<T>, D,
           ? _value.ended
           : ended // ignore: cast_nullable_to_non_nullable
               as bool,
+      widgetCoordinator: widgetCoordinator == freezed
+          ? _value.widgetCoordinator
+          : widgetCoordinator // ignore: cast_nullable_to_non_nullable
+              as GenerativeWidgetCoordinator?,
     ));
   }
 }
@@ -208,7 +224,8 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
       required this.cargo,
       required this.createTime,
       this.status = FirestoreCollectionStatus.idle,
-      this.ended = false})
+      this.ended = false,
+      this.widgetCoordinator})
       : super._();
 
   @override
@@ -227,10 +244,12 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
   @JsonKey(defaultValue: false)
   @override
   final bool ended;
+  @override
+  final GenerativeWidgetCoordinator? widgetCoordinator;
 
   @override
   String toString() {
-    return 'FirestoreCollectionValue<$T, $D>(paginated: $paginated, subscribed: $subscribed, pending: $pending, cargo: $cargo, createTime: $createTime, status: $status, ended: $ended)';
+    return 'FirestoreCollectionValue<$T, $D>(paginated: $paginated, subscribed: $subscribed, pending: $pending, cargo: $cargo, createTime: $createTime, status: $status, ended: $ended, widgetCoordinator: $widgetCoordinator)';
   }
 
   @override
@@ -254,7 +273,10 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
             (identical(other.status, status) ||
                 const DeepCollectionEquality().equals(other.status, status)) &&
             (identical(other.ended, ended) ||
-                const DeepCollectionEquality().equals(other.ended, ended)));
+                const DeepCollectionEquality().equals(other.ended, ended)) &&
+            (identical(other.widgetCoordinator, widgetCoordinator) ||
+                const DeepCollectionEquality()
+                    .equals(other.widgetCoordinator, widgetCoordinator)));
   }
 
   @override
@@ -266,7 +288,8 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
       const DeepCollectionEquality().hash(cargo) ^
       const DeepCollectionEquality().hash(createTime) ^
       const DeepCollectionEquality().hash(status) ^
-      const DeepCollectionEquality().hash(ended);
+      const DeepCollectionEquality().hash(ended) ^
+      const DeepCollectionEquality().hash(widgetCoordinator);
 
   @JsonKey(ignore: true)
   @override
@@ -278,13 +301,15 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
 abstract class _FirestoreCollectionValue<T extends FirestoreModel<T>, D>
     extends FirestoreCollectionValue<T, D> {
   const factory _FirestoreCollectionValue(
-      {required List<T> paginated,
-      required List<T> subscribed,
-      required List<T> pending,
-      required Map<String, D> cargo,
-      required DateTime createTime,
-      FirestoreCollectionStatus status,
-      bool ended}) = _$_FirestoreCollectionValue<T, D>;
+          {required List<T> paginated,
+          required List<T> subscribed,
+          required List<T> pending,
+          required Map<String, D> cargo,
+          required DateTime createTime,
+          FirestoreCollectionStatus status,
+          bool ended,
+          GenerativeWidgetCoordinator? widgetCoordinator}) =
+      _$_FirestoreCollectionValue<T, D>;
   const _FirestoreCollectionValue._() : super._();
 
   @override
@@ -301,6 +326,9 @@ abstract class _FirestoreCollectionValue<T extends FirestoreModel<T>, D>
   FirestoreCollectionStatus get status => throw _privateConstructorUsedError;
   @override
   bool get ended => throw _privateConstructorUsedError;
+  @override
+  GenerativeWidgetCoordinator? get widgetCoordinator =>
+      throw _privateConstructorUsedError;
   @override
   @JsonKey(ignore: true)
   _$FirestoreCollectionValueCopyWith<T, D, _FirestoreCollectionValue<T, D>>

@@ -14,6 +14,7 @@ import 'package:log/log.dart';
 import 'package:mobx/mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:utils/utils.dart';
 
 part 'firestore_collection_pod.freezed.dart';
 part 'firestore_collection_pod.g.dart';
@@ -47,6 +48,9 @@ typedef FirestoreCollectionPodEvent<T extends FirestoreModel<T>, D> = void
 /// Cargo builder for items in [FirestoreCollection].
 typedef FirestoreCollectionPodCargoBuilder<T extends FirestoreModel<T>, D> = FutureOr<D> Function(T item);
 
+typedef FirestoreCollectionPodWidgetBuilder<T extends FirestoreModel<T>, D> = Widget
+    Function(int index, FirestoreCollectionPod<T, D> collection, T item, D? cargo, bool subscribed);
+
 /// [FirestoreCollectionProps] targets the [bucket] & [timestampField] as family values.
 ///
 /// Lists, within the app, should use unique bucket names.
@@ -68,6 +72,7 @@ class FirestoreCollectionProps<T extends FirestoreModel<T>, D> {
     this.cargoBuilder,
     this.delayedFuture,
     this.ads = false,
+    this.widgets,
   });
 
   /// Bucket identifier of [RefreshStorage] used by [FirestoreCollectionBuilder].
@@ -132,6 +137,9 @@ class FirestoreCollectionProps<T extends FirestoreModel<T>, D> {
   /// A convenience toggle to memoize ads toggle status for the pod.
   final bool ads;
 
+  /// Widget builders for the [GenerativeWidgetCoordinator].
+  final GenerativeWidgetCoordinatorBuilders Function(FirestoreCollectionPod<T, D> collection)? widgets;
+
   // Prop equality is tied only to the bucket.
   @override
   bool operator ==(dynamic other) =>
@@ -154,6 +162,7 @@ class FirestoreCollectionValue<T extends FirestoreModel<T>, D>
     required DateTime createTime,
     @Default(FirestoreCollectionStatus.idle) FirestoreCollectionStatus status,
     @Default(false) bool ended,
+    GenerativeWidgetCoordinator? widgetCoordinator,
   }) = _FirestoreCollectionValue;
 
   const FirestoreCollectionValue._();
@@ -170,6 +179,7 @@ class FirestoreCollectionValue<T extends FirestoreModel<T>, D>
         paginated: paginated..insertAll(0, pending.reversed.followedBy(subscribed.reversed)),
         pending: <T>[],
         subscribed: <T>[],
+        widgetCoordinator: widgetCoordinator?..moveSubscribedWidgetsToPaginated(),
       );
 }
 
@@ -222,6 +232,7 @@ class FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends _FirestoreC
         createTime: collection.createTime,
         status: collection.status,
         ended: collection.ended,
+        widgetCoordinator: collection._widgetCoordinator,
       );
 
       storage.add(props.bucket, value, refresh);
@@ -250,7 +261,12 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
                 ...initialValue.subscribed.reversed,
                 ...initialValue.paginated,
               ]
-            : <T>[];
+            : <T>[] {
+    _widgetCoordinator = initialValue?.widgetCoordinator ??
+        (props.widgets != null
+            ? GenerativeWidgetCoordinator(builders: props.widgets!(this as FirestoreCollectionPod<T, D>))
+            : null);
+  }
 
   static final _log = Log.named('FirestoreCollection');
 
@@ -259,7 +275,11 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
   final FirestoreCollectionProps<T, D> props;
   final DateTime createTime;
 
-  final _seenItems = <String>{}; // Seen document IDs to filter redundant items.
+  late final GenerativeWidgetCoordinator? _widgetCoordinator;
+  int get paginatedWidgetLength => _widgetCoordinator?.paginatedWidgets.length ?? 0;
+  Widget? getPaginatedWidget(BuildContext _, int i) => _widgetCoordinator?.paginatedWidgets[i];
+
+  final _seenItems = HashSet<String>(); // Seen document IDs to filter redundant items.
 
   @o List<T> paginated = <T>[];
   @o List<T> subscribed = <T>[];
@@ -272,12 +292,21 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
   StreamSubscription<QuerySnapshot>? _streamSubscription;
   bool _paginating = false;
   bool get isSubscribed => _streamSubscription != null;
-  bool get isScrolled => false; // TODO(volskaya): Implement something for htis.
+  bool get isScrolled => false; // TODO(volskaya): Implement something for this.
 
   Future<MapEntry<T, D?>> _getModelAndCargo(DocumentSnapshot doc) async {
     final model = await FirestoreModel.withReference<T>(doc.reference, doc);
     final cargo = await props.cargoBuilder?.call(model);
     return MapEntry(model, cargo);
+  }
+
+  void _maybePrepareWidget(int position, T item, D? cargo, bool subscribed) {
+    assert(_widgetCoordinator != null);
+    try {
+      _widgetCoordinator?.preparePaginatedWidget(position);
+    } catch (e, t) {
+      _log.w('Failed to cache a widget for ${item.id}', e, t);
+    }
   }
 
   Future<List<MapEntry<T, D?>>> _deserializeQuerySnapshot(
@@ -292,7 +321,7 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
             return false;
           }
           return true;
-        }).map((doc) {
+        }).mapIndexed((i, doc) {
           _seenItems.add(doc.id);
           return _getModelAndCargo(doc);
         }),
@@ -390,7 +419,7 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     // Initially fetch 2 pages, since the first items will try to paginate right away anyway.
     final isFirstPage = page == 1;
     final prepareSecondPage = isFirstPage && props.prepareSecondPage;
-    final itemCount = props.prepareSecondPage ? props.itemsPerPage * 2 : props.itemsPerPage;
+    final itemCount = prepareSecondPage ? props.itemsPerPage * 2 : props.itemsPerPage;
     final snapshots = await _pageQuery?.limit(itemCount).get();
 
     if (!mounted) {
@@ -417,7 +446,6 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     }
 
     final items = await _deserializeQuerySnapshot(snapshots.docs);
-    // final items = await _deserializeIsolateSnapshots(snapshots);
 
     if (mounted) {
       if (items.length < itemCount) ended = true;
@@ -425,6 +453,9 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
       for (final entry in items) {
         paginated.add(entry.key);
         if (entry.value != null) cargo[entry.key.id] = entry.value!;
+        if (_widgetCoordinator != null) {
+          _maybePrepareWidget(paginated.length - 1, entry.key, entry.value, false);
+        }
       }
 
       // HACK: Make sure the observables notify an update.
