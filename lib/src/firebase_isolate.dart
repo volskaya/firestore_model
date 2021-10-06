@@ -5,6 +5,8 @@ import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firedart/firedart.dart';
+import 'package:firedart/firestore/firestore_gateway.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isolate_handler/isolate_handler.dart';
@@ -102,7 +104,22 @@ class QueryValues with _$QueryValues {
 
     return map(
       startAfter: (v) => values.isNotEmpty ? query.startAfter(values) : query,
-      startBefore: (v) => values.isNotEmpty ? query.startAfter(values) : query,
+      startBefore: (v) => values.isNotEmpty ? query.startAt(values) : query,
+      none: (_) => query,
+    );
+  }
+
+  QueryReference applyTo(QueryReference query) {
+    final values = map(
+      startAfter: (v) => v.values.map((e) => e.effectiveValue).toList(growable: false),
+      startBefore: (v) => v.values.map((e) => e.effectiveValue).toList(growable: false),
+      none: (_) => const <dynamic>[],
+    );
+
+    return map(
+      startAfter: (v) => values.isNotEmpty ? query.startAfter(values) : query,
+      // startBefore: (v) => values.isNotEmpty ? query.startAt(values) : query,
+      startBefore: (v) => throw UnimplementedError(),
       none: (_) => query,
     );
   }
@@ -141,6 +158,21 @@ class QueryField with _$QueryField {
         whereNotIn: (v) => query.where(field, whereNotIn: v.value),
         isNull: (v) => query.where(field, isNull: v.value),
       );
+
+  QueryReference applyTo(QueryReference query) => maybeMap(
+        isEqualTo: (v) => query.where(field, isEqualTo: v.value),
+        // isNotEqualTo: (v) => query.where(field, isNotEqualTo: v.value),
+        isLessThan: (v) => query.where(field, isLessThan: v.value),
+        isLessThanOrEqualTo: (v) => query.where(field, isLessThanOrEqualTo: v.value),
+        isGreaterThan: (v) => query.where(field, isGreaterThan: v.value),
+        isGreaterThanOrEqualTo: (v) => query.where(field, isGreaterThanOrEqualTo: v.value),
+        arrayContains: (v) => query.where(field, arrayContains: v.value),
+        arrayContainsAny: (v) => query.where(field, arrayContainsAny: v.value),
+        whereIn: (v) => query.where(field, whereIn: v.value),
+        // whereNotIn: (v) => query.where(field, whereNotIn: v.value),
+        isNull: (v) => query.where(field, isNull: v.value),
+        orElse: () => throw UnimplementedError(),
+      );
 }
 
 @freezed
@@ -156,6 +188,12 @@ class FirebaseIsolateBaseQuery with _$FirebaseIsolateBaseQuery {
   Query apply(Query _query) {
     Query query = FirebaseFirestore.instance.collection(collectionPath);
     for (final field in fields) query = field.apply(query);
+    return query;
+  }
+
+  QueryReference applyTo(QueryReference _query) {
+    QueryReference query = _query;
+    for (final field in fields) query = field.applyTo(query);
     return query;
   }
 }
@@ -174,27 +212,26 @@ class FirebaseIsolateQuery with _$FirebaseIsolateQuery {
 
   Query construct() {
     Query query = FirebaseFirestore.instance.collection(base.collectionPath);
+
     query = base.apply(query);
-
-    for (final order in orders) {
-      order.map(
-        (v) => query = query.orderBy(v.name, descending: v.descending),
-        userId: (v) => query = query.orderBy(FieldPath.documentId, descending: true),
-        fieldPath: (v) {
-          final Object path;
-          switch (v.path) {
-            case QueryFieldPath.documentId:
-              path = FieldPath.documentId;
-              break;
-          }
-          return query = query.orderBy(path, descending: v.descending);
-        },
-      );
-    }
-
+    query = orders.apply(query);
     query = values.apply(query);
-    if (limit != null) query = query.limit(limit!);
 
+    if (limit != null) query = query.limit(limit!);
+    return query;
+  }
+
+  QueryReference build() {
+    // final token = await firebase.FirebaseAuth.instance.currentUser?.getIdToken();
+    // final projectId = Firestore.instance.gateway.projectId;
+    final gateway = FirestoreGateway('napy-app');
+    QueryReference query = QueryReference(gateway, base.collectionPath);
+
+    query = base.applyTo(query);
+    query = orders.applyTo(query);
+    query = values.applyTo(query);
+
+    if (limit != null) query = query.limit(limit!);
     return query;
   }
 
@@ -417,5 +454,44 @@ class FirebaseIsolate {
     }
 
     return completer.future;
+  }
+}
+
+extension _QueryOrderList on List<QueryOrder> {
+  Query apply(Query query) {
+    Query _query = query;
+    for (final order in this) {
+      order.map(
+        (v) => _query = _query.orderBy(v.name, descending: v.descending),
+        userId: (v) => _query = _query.orderBy(FieldPath.documentId, descending: true),
+        fieldPath: (v) {
+          final Object path;
+          switch (v.path) {
+            case QueryFieldPath.documentId:
+              path = FieldPath.documentId;
+              break;
+          }
+          return _query = _query.orderBy(path, descending: v.descending);
+        },
+      );
+    }
+    return _query;
+  }
+
+  QueryReference applyTo(QueryReference query) {
+    QueryReference _query = query;
+    for (final order in this) {
+      order.map(
+        (v) => _query = _query.orderBy(v.name, descending: v.descending),
+        userId: (v) => _query = _query.orderBy('__name__', descending: true),
+        fieldPath: (v) {
+          switch (v.path) {
+            case QueryFieldPath.documentId:
+              return _query = _query.orderBy('__name__', descending: v.descending);
+          }
+        },
+      );
+    }
+    return _query;
   }
 }

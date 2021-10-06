@@ -13,13 +13,13 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
   final _$paginatedAtom = Atom(name: '_FirestoreCollectionPod.paginated');
 
   @override
-  List<T> get paginated {
+  List<FirestoreCollectionEntry<T, D>> get paginated {
     _$paginatedAtom.reportRead();
     return super.paginated;
   }
 
   @override
-  set paginated(List<T> value) {
+  set paginated(List<FirestoreCollectionEntry<T, D>> value) {
     if (super.paginated != value) {
       _$paginatedAtom.reportWrite(value, super.paginated, () {
         super.paginated = value;
@@ -30,13 +30,13 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
   final _$subscribedAtom = Atom(name: '_FirestoreCollectionPod.subscribed');
 
   @override
-  List<T> get subscribed {
+  List<FirestoreCollectionEntry<T, D>> get subscribed {
     _$subscribedAtom.reportRead();
     return super.subscribed;
   }
 
   @override
-  set subscribed(List<T> value) {
+  set subscribed(List<FirestoreCollectionEntry<T, D>> value) {
     if (super.subscribed != value) {
       _$subscribedAtom.reportWrite(value, super.subscribed, () {
         super.subscribed = value;
@@ -47,33 +47,16 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
   final _$pendingAtom = Atom(name: '_FirestoreCollectionPod.pending');
 
   @override
-  List<T> get pending {
+  List<FirestoreCollectionEntry<T, D>> get pending {
     _$pendingAtom.reportRead();
     return super.pending;
   }
 
   @override
-  set pending(List<T> value) {
+  set pending(List<FirestoreCollectionEntry<T, D>> value) {
     if (super.pending != value) {
       _$pendingAtom.reportWrite(value, super.pending, () {
         super.pending = value;
-      });
-    }
-  }
-
-  final _$cargoAtom = Atom(name: '_FirestoreCollectionPod.cargo');
-
-  @override
-  HashMap<String, D> get cargo {
-    _$cargoAtom.reportRead();
-    return super.cargo;
-  }
-
-  @override
-  set cargo(HashMap<String, D> value) {
-    if (super.cargo != value) {
-      _$cargoAtom.reportWrite(value, super.cargo, () {
-        super.cargo = value;
       });
     }
   }
@@ -185,7 +168,6 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
 paginated: ${paginated},
 subscribed: ${subscribed},
 pending: ${pending},
-cargo: ${cargo},
 status: ${status},
 ended: ${ended},
 page: ${page}

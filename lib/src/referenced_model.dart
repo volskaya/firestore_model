@@ -23,7 +23,7 @@ mixin ReferencedModel {
   @visibleForTesting static final cache = MemoizedMapCache<String, FirebaseModel>();
 
   /// Disable this during testinng to avoid scheduling tasks.
-  @visibleForTesting static bool scheduleTasks = true;
+  @visibleForTesting static bool scheduleTasks = false;
 
   /// Print the [references] counters.
   static void printReferences() {
@@ -33,7 +33,7 @@ mixin ReferencedModel {
       final path = entry.key;
       final references = entry.value;
       final subscriptions = cache.getValue(entry.key)?.subscribers ?? 0;
-      print('${references.toString().padLeft(3, ".")} - $path, (${subscriptions}s)');
+      _log.i('${references.toString().padLeft(3, ".")} - $path, (${subscriptions}s)');
     }
   }
 

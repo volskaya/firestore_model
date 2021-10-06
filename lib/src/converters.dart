@@ -20,6 +20,10 @@ class TimestampC implements JsonConverter<Timestamp, dynamic> {
       final nanoseconds = json['_nanoseconds'] as int?;
 
       return Timestamp(seconds ?? 0, nanoseconds ?? 0);
+    } else if (json is String) {
+      return Timestamp.fromDate(DateTime.parse(json));
+    } else if (json is DateTime) {
+      return Timestamp.fromDate(json);
     }
 
     return Timestamp(0, 0);
@@ -48,9 +52,11 @@ class TimestampCN implements JsonConverter<Timestamp?, dynamic> {
       final seconds = json['_seconds'] as int?;
       final nanoseconds = json['_nanoseconds'] as int?;
 
-      return seconds != null || nanoseconds != null
-          ? Timestamp(seconds ?? 0, nanoseconds ?? 0)
-          : null;
+      return seconds != null || nanoseconds != null ? Timestamp(seconds ?? 0, nanoseconds ?? 0) : null;
+    } else if (json is String) {
+      return Timestamp.fromDate(DateTime.parse(json));
+    } else if (json is DateTime) {
+      return Timestamp.fromDate(json);
     }
 
     return null;
@@ -67,8 +73,7 @@ class DurationC implements JsonConverter<Duration, dynamic> {
   const DurationC();
 
   @override
-  Duration fromJson(dynamic json) =>
-      json is int ? Duration(milliseconds: json) : Duration.zero;
+  Duration fromJson(dynamic json) => json is int ? Duration(milliseconds: json) : Duration.zero;
   @override
   dynamic toJson(Duration object) => object.inMilliseconds;
 }
@@ -79,8 +84,7 @@ class DurationCN implements JsonConverter<Duration?, dynamic> {
   const DurationCN();
 
   @override
-  Duration? fromJson(dynamic json) =>
-      json != null && json is int ? Duration(milliseconds: json) : null;
+  Duration? fromJson(dynamic json) => json != null && json is int ? Duration(milliseconds: json) : null;
   @override
   dynamic toJson(Duration? object) => object?.inMilliseconds;
 }
@@ -117,8 +121,7 @@ class NoRedundantLinesC implements JsonConverter<String, String> {
   static final _redundantNewLineRegExp = RegExp(r'\n+');
 
   @override
-  String fromJson(String json) =>
-      json.replaceAll(_redundantNewLineRegExp, '\n');
+  String fromJson(String json) => json.replaceAll(_redundantNewLineRegExp, '\n');
   @override
   String toJson(String object) => object;
 }
@@ -133,8 +136,7 @@ class NoRedundantLinesCN implements JsonConverter<String?, String?> {
   static final _redundantNewLineRegExp = RegExp(r'\n+');
 
   @override
-  String? fromJson(String? json) =>
-      json?.replaceAll(_redundantNewLineRegExp, '\n');
+  String? fromJson(String? json) => json?.replaceAll(_redundantNewLineRegExp, '\n');
   @override
   String? toJson(String? object) => object;
 }

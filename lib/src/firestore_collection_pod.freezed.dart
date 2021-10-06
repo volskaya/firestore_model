@@ -1,3 +1,4 @@
+// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target
 
@@ -13,14 +14,196 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more informations: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
 
 /// @nodoc
+class _$FirestoreCollectionEntryTearOff {
+  const _$FirestoreCollectionEntryTearOff();
+
+  _FirestoreCollectionEntry<T, D> call<T extends FirestoreModel<T>, D>(
+      {required T item, D? cargo, Widget? widget}) {
+    return _FirestoreCollectionEntry<T, D>(
+      item: item,
+      cargo: cargo,
+      widget: widget,
+    );
+  }
+}
+
+/// @nodoc
+const $FirestoreCollectionEntry = _$FirestoreCollectionEntryTearOff();
+
+/// @nodoc
+mixin _$FirestoreCollectionEntry<T extends FirestoreModel<T>, D> {
+  T get item => throw _privateConstructorUsedError;
+  D? get cargo => throw _privateConstructorUsedError;
+  Widget? get widget => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $FirestoreCollectionEntryCopyWith<T, D, FirestoreCollectionEntry<T, D>>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $FirestoreCollectionEntryCopyWith<T extends FirestoreModel<T>, D,
+    $Res> {
+  factory $FirestoreCollectionEntryCopyWith(
+          FirestoreCollectionEntry<T, D> value,
+          $Res Function(FirestoreCollectionEntry<T, D>) then) =
+      _$FirestoreCollectionEntryCopyWithImpl<T, D, $Res>;
+  $Res call({T item, D? cargo, Widget? widget});
+}
+
+/// @nodoc
+class _$FirestoreCollectionEntryCopyWithImpl<T extends FirestoreModel<T>, D,
+    $Res> implements $FirestoreCollectionEntryCopyWith<T, D, $Res> {
+  _$FirestoreCollectionEntryCopyWithImpl(this._value, this._then);
+
+  final FirestoreCollectionEntry<T, D> _value;
+  // ignore: unused_field
+  final $Res Function(FirestoreCollectionEntry<T, D>) _then;
+
+  @override
+  $Res call({
+    Object? item = freezed,
+    Object? cargo = freezed,
+    Object? widget = freezed,
+  }) {
+    return _then(_value.copyWith(
+      item: item == freezed
+          ? _value.item
+          : item // ignore: cast_nullable_to_non_nullable
+              as T,
+      cargo: cargo == freezed
+          ? _value.cargo
+          : cargo // ignore: cast_nullable_to_non_nullable
+              as D?,
+      widget: widget == freezed
+          ? _value.widget
+          : widget // ignore: cast_nullable_to_non_nullable
+              as Widget?,
+    ));
+  }
+}
+
+/// @nodoc
+abstract class _$FirestoreCollectionEntryCopyWith<T extends FirestoreModel<T>,
+    D, $Res> implements $FirestoreCollectionEntryCopyWith<T, D, $Res> {
+  factory _$FirestoreCollectionEntryCopyWith(
+          _FirestoreCollectionEntry<T, D> value,
+          $Res Function(_FirestoreCollectionEntry<T, D>) then) =
+      __$FirestoreCollectionEntryCopyWithImpl<T, D, $Res>;
+  @override
+  $Res call({T item, D? cargo, Widget? widget});
+}
+
+/// @nodoc
+class __$FirestoreCollectionEntryCopyWithImpl<T extends FirestoreModel<T>, D,
+        $Res> extends _$FirestoreCollectionEntryCopyWithImpl<T, D, $Res>
+    implements _$FirestoreCollectionEntryCopyWith<T, D, $Res> {
+  __$FirestoreCollectionEntryCopyWithImpl(
+      _FirestoreCollectionEntry<T, D> _value,
+      $Res Function(_FirestoreCollectionEntry<T, D>) _then)
+      : super(_value, (v) => _then(v as _FirestoreCollectionEntry<T, D>));
+
+  @override
+  _FirestoreCollectionEntry<T, D> get _value =>
+      super._value as _FirestoreCollectionEntry<T, D>;
+
+  @override
+  $Res call({
+    Object? item = freezed,
+    Object? cargo = freezed,
+    Object? widget = freezed,
+  }) {
+    return _then(_FirestoreCollectionEntry<T, D>(
+      item: item == freezed
+          ? _value.item
+          : item // ignore: cast_nullable_to_non_nullable
+              as T,
+      cargo: cargo == freezed
+          ? _value.cargo
+          : cargo // ignore: cast_nullable_to_non_nullable
+              as D?,
+      widget: widget == freezed
+          ? _value.widget
+          : widget // ignore: cast_nullable_to_non_nullable
+              as Widget?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$_FirestoreCollectionEntry<T extends FirestoreModel<T>, D>
+    extends _FirestoreCollectionEntry<T, D> {
+  const _$_FirestoreCollectionEntry(
+      {required this.item, this.cargo, this.widget})
+      : super._();
+
+  @override
+  final T item;
+  @override
+  final D? cargo;
+  @override
+  final Widget? widget;
+
+  @override
+  String toString() {
+    return 'FirestoreCollectionEntry<$T, $D>(item: $item, cargo: $cargo, widget: $widget)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other is _FirestoreCollectionEntry<T, D> &&
+            (identical(other.item, item) ||
+                const DeepCollectionEquality().equals(other.item, item)) &&
+            (identical(other.cargo, cargo) ||
+                const DeepCollectionEquality().equals(other.cargo, cargo)) &&
+            (identical(other.widget, widget) ||
+                const DeepCollectionEquality().equals(other.widget, widget)));
+  }
+
+  @override
+  int get hashCode =>
+      runtimeType.hashCode ^
+      const DeepCollectionEquality().hash(item) ^
+      const DeepCollectionEquality().hash(cargo) ^
+      const DeepCollectionEquality().hash(widget);
+
+  @JsonKey(ignore: true)
+  @override
+  _$FirestoreCollectionEntryCopyWith<T, D, _FirestoreCollectionEntry<T, D>>
+      get copyWith => __$FirestoreCollectionEntryCopyWithImpl<T, D,
+          _FirestoreCollectionEntry<T, D>>(this, _$identity);
+}
+
+abstract class _FirestoreCollectionEntry<T extends FirestoreModel<T>, D>
+    extends FirestoreCollectionEntry<T, D> {
+  const factory _FirestoreCollectionEntry(
+      {required T item,
+      D? cargo,
+      Widget? widget}) = _$_FirestoreCollectionEntry<T, D>;
+  const _FirestoreCollectionEntry._() : super._();
+
+  @override
+  T get item => throw _privateConstructorUsedError;
+  @override
+  D? get cargo => throw _privateConstructorUsedError;
+  @override
+  Widget? get widget => throw _privateConstructorUsedError;
+  @override
+  @JsonKey(ignore: true)
+  _$FirestoreCollectionEntryCopyWith<T, D, _FirestoreCollectionEntry<T, D>>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 class _$FirestoreCollectionValueTearOff {
   const _$FirestoreCollectionValueTearOff();
 
   _FirestoreCollectionValue<T, D> call<T extends FirestoreModel<T>, D>(
-      {required List<T> paginated,
-      required List<T> subscribed,
-      required List<T> pending,
-      required Map<String, D> cargo,
+      {required List<FirestoreCollectionEntry<T, D>> paginated,
+      required List<FirestoreCollectionEntry<T, D>> subscribed,
+      required List<FirestoreCollectionEntry<T, D>> pending,
       required DateTime createTime,
       FirestoreCollectionStatus status = FirestoreCollectionStatus.idle,
       bool ended = false,
@@ -29,7 +212,6 @@ class _$FirestoreCollectionValueTearOff {
       paginated: paginated,
       subscribed: subscribed,
       pending: pending,
-      cargo: cargo,
       createTime: createTime,
       status: status,
       ended: ended,
@@ -43,10 +225,12 @@ const $FirestoreCollectionValue = _$FirestoreCollectionValueTearOff();
 
 /// @nodoc
 mixin _$FirestoreCollectionValue<T extends FirestoreModel<T>, D> {
-  List<T> get paginated => throw _privateConstructorUsedError;
-  List<T> get subscribed => throw _privateConstructorUsedError;
-  List<T> get pending => throw _privateConstructorUsedError;
-  Map<String, D> get cargo => throw _privateConstructorUsedError;
+  List<FirestoreCollectionEntry<T, D>> get paginated =>
+      throw _privateConstructorUsedError;
+  List<FirestoreCollectionEntry<T, D>> get subscribed =>
+      throw _privateConstructorUsedError;
+  List<FirestoreCollectionEntry<T, D>> get pending =>
+      throw _privateConstructorUsedError;
   DateTime get createTime => throw _privateConstructorUsedError;
   FirestoreCollectionStatus get status => throw _privateConstructorUsedError;
   bool get ended => throw _privateConstructorUsedError;
@@ -66,10 +250,9 @@ abstract class $FirestoreCollectionValueCopyWith<T extends FirestoreModel<T>, D,
           $Res Function(FirestoreCollectionValue<T, D>) then) =
       _$FirestoreCollectionValueCopyWithImpl<T, D, $Res>;
   $Res call(
-      {List<T> paginated,
-      List<T> subscribed,
-      List<T> pending,
-      Map<String, D> cargo,
+      {List<FirestoreCollectionEntry<T, D>> paginated,
+      List<FirestoreCollectionEntry<T, D>> subscribed,
+      List<FirestoreCollectionEntry<T, D>> pending,
       DateTime createTime,
       FirestoreCollectionStatus status,
       bool ended,
@@ -90,7 +273,6 @@ class _$FirestoreCollectionValueCopyWithImpl<T extends FirestoreModel<T>, D,
     Object? paginated = freezed,
     Object? subscribed = freezed,
     Object? pending = freezed,
-    Object? cargo = freezed,
     Object? createTime = freezed,
     Object? status = freezed,
     Object? ended = freezed,
@@ -100,19 +282,15 @@ class _$FirestoreCollectionValueCopyWithImpl<T extends FirestoreModel<T>, D,
       paginated: paginated == freezed
           ? _value.paginated
           : paginated // ignore: cast_nullable_to_non_nullable
-              as List<T>,
+              as List<FirestoreCollectionEntry<T, D>>,
       subscribed: subscribed == freezed
           ? _value.subscribed
           : subscribed // ignore: cast_nullable_to_non_nullable
-              as List<T>,
+              as List<FirestoreCollectionEntry<T, D>>,
       pending: pending == freezed
           ? _value.pending
           : pending // ignore: cast_nullable_to_non_nullable
-              as List<T>,
-      cargo: cargo == freezed
-          ? _value.cargo
-          : cargo // ignore: cast_nullable_to_non_nullable
-              as Map<String, D>,
+              as List<FirestoreCollectionEntry<T, D>>,
       createTime: createTime == freezed
           ? _value.createTime
           : createTime // ignore: cast_nullable_to_non_nullable
@@ -142,10 +320,9 @@ abstract class _$FirestoreCollectionValueCopyWith<T extends FirestoreModel<T>,
       __$FirestoreCollectionValueCopyWithImpl<T, D, $Res>;
   @override
   $Res call(
-      {List<T> paginated,
-      List<T> subscribed,
-      List<T> pending,
-      Map<String, D> cargo,
+      {List<FirestoreCollectionEntry<T, D>> paginated,
+      List<FirestoreCollectionEntry<T, D>> subscribed,
+      List<FirestoreCollectionEntry<T, D>> pending,
       DateTime createTime,
       FirestoreCollectionStatus status,
       bool ended,
@@ -170,7 +347,6 @@ class __$FirestoreCollectionValueCopyWithImpl<T extends FirestoreModel<T>, D,
     Object? paginated = freezed,
     Object? subscribed = freezed,
     Object? pending = freezed,
-    Object? cargo = freezed,
     Object? createTime = freezed,
     Object? status = freezed,
     Object? ended = freezed,
@@ -180,19 +356,15 @@ class __$FirestoreCollectionValueCopyWithImpl<T extends FirestoreModel<T>, D,
       paginated: paginated == freezed
           ? _value.paginated
           : paginated // ignore: cast_nullable_to_non_nullable
-              as List<T>,
+              as List<FirestoreCollectionEntry<T, D>>,
       subscribed: subscribed == freezed
           ? _value.subscribed
           : subscribed // ignore: cast_nullable_to_non_nullable
-              as List<T>,
+              as List<FirestoreCollectionEntry<T, D>>,
       pending: pending == freezed
           ? _value.pending
           : pending // ignore: cast_nullable_to_non_nullable
-              as List<T>,
-      cargo: cargo == freezed
-          ? _value.cargo
-          : cargo // ignore: cast_nullable_to_non_nullable
-              as Map<String, D>,
+              as List<FirestoreCollectionEntry<T, D>>,
       createTime: createTime == freezed
           ? _value.createTime
           : createTime // ignore: cast_nullable_to_non_nullable
@@ -221,7 +393,6 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
       {required this.paginated,
       required this.subscribed,
       required this.pending,
-      required this.cargo,
       required this.createTime,
       this.status = FirestoreCollectionStatus.idle,
       this.ended = false,
@@ -229,13 +400,11 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
       : super._();
 
   @override
-  final List<T> paginated;
+  final List<FirestoreCollectionEntry<T, D>> paginated;
   @override
-  final List<T> subscribed;
+  final List<FirestoreCollectionEntry<T, D>> subscribed;
   @override
-  final List<T> pending;
-  @override
-  final Map<String, D> cargo;
+  final List<FirestoreCollectionEntry<T, D>> pending;
   @override
   final DateTime createTime;
   @JsonKey(defaultValue: FirestoreCollectionStatus.idle)
@@ -249,7 +418,7 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
 
   @override
   String toString() {
-    return 'FirestoreCollectionValue<$T, $D>(paginated: $paginated, subscribed: $subscribed, pending: $pending, cargo: $cargo, createTime: $createTime, status: $status, ended: $ended, widgetCoordinator: $widgetCoordinator)';
+    return 'FirestoreCollectionValue<$T, $D>(paginated: $paginated, subscribed: $subscribed, pending: $pending, createTime: $createTime, status: $status, ended: $ended, widgetCoordinator: $widgetCoordinator)';
   }
 
   @override
@@ -265,8 +434,6 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
             (identical(other.pending, pending) ||
                 const DeepCollectionEquality()
                     .equals(other.pending, pending)) &&
-            (identical(other.cargo, cargo) ||
-                const DeepCollectionEquality().equals(other.cargo, cargo)) &&
             (identical(other.createTime, createTime) ||
                 const DeepCollectionEquality()
                     .equals(other.createTime, createTime)) &&
@@ -285,7 +452,6 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
       const DeepCollectionEquality().hash(paginated) ^
       const DeepCollectionEquality().hash(subscribed) ^
       const DeepCollectionEquality().hash(pending) ^
-      const DeepCollectionEquality().hash(cargo) ^
       const DeepCollectionEquality().hash(createTime) ^
       const DeepCollectionEquality().hash(status) ^
       const DeepCollectionEquality().hash(ended) ^
@@ -301,10 +467,9 @@ class _$_FirestoreCollectionValue<T extends FirestoreModel<T>, D>
 abstract class _FirestoreCollectionValue<T extends FirestoreModel<T>, D>
     extends FirestoreCollectionValue<T, D> {
   const factory _FirestoreCollectionValue(
-          {required List<T> paginated,
-          required List<T> subscribed,
-          required List<T> pending,
-          required Map<String, D> cargo,
+          {required List<FirestoreCollectionEntry<T, D>> paginated,
+          required List<FirestoreCollectionEntry<T, D>> subscribed,
+          required List<FirestoreCollectionEntry<T, D>> pending,
           required DateTime createTime,
           FirestoreCollectionStatus status,
           bool ended,
@@ -313,13 +478,14 @@ abstract class _FirestoreCollectionValue<T extends FirestoreModel<T>, D>
   const _FirestoreCollectionValue._() : super._();
 
   @override
-  List<T> get paginated => throw _privateConstructorUsedError;
+  List<FirestoreCollectionEntry<T, D>> get paginated =>
+      throw _privateConstructorUsedError;
   @override
-  List<T> get subscribed => throw _privateConstructorUsedError;
+  List<FirestoreCollectionEntry<T, D>> get subscribed =>
+      throw _privateConstructorUsedError;
   @override
-  List<T> get pending => throw _privateConstructorUsedError;
-  @override
-  Map<String, D> get cargo => throw _privateConstructorUsedError;
+  List<FirestoreCollectionEntry<T, D>> get pending =>
+      throw _privateConstructorUsedError;
   @override
   DateTime get createTime => throw _privateConstructorUsedError;
   @override

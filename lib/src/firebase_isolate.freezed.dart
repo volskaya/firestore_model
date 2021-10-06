@@ -1,3 +1,4 @@
+// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target
 
@@ -259,7 +260,7 @@ abstract class _FirebaseIsolateSnapshotData
 }
 
 QueryOrder _$QueryOrderFromJson(Map<String, dynamic> json) {
-  switch (json['runtimeType'] as String) {
+  switch (json['runtimeType'] as String?) {
     case 'default':
       return _QueryOrder.fromJson(json);
     case 'userId':
@@ -318,6 +319,16 @@ mixin _$QueryOrder {
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult Function(@JsonKey() String name, @JsonKey() bool descending)?
+        $default, {
+    TResult Function()? userId,
+    TResult Function(
+            @JsonKey() QueryFieldPath path, @JsonKey() bool descending)?
+        fieldPath,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(@JsonKey() String name, @JsonKey() bool descending)?
         $default, {
@@ -333,6 +344,13 @@ mixin _$QueryOrder {
     TResult Function(_QueryOrder value) $default, {
     required TResult Function(_QueryOrderUserId value) userId,
     required TResult Function(_QueryOrderFieldPath value) fieldPath,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult Function(_QueryOrder value)? $default, {
+    TResult Function(_QueryOrderUserId value)? userId,
+    TResult Function(_QueryOrderFieldPath value)? fieldPath,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -456,6 +474,19 @@ class _$_QueryOrder implements _QueryOrder {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult Function(@JsonKey() String name, @JsonKey() bool descending)?
+        $default, {
+    TResult Function()? userId,
+    TResult Function(
+            @JsonKey() QueryFieldPath path, @JsonKey() bool descending)?
+        fieldPath,
+  }) {
+    return $default?.call(name, descending);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(@JsonKey() String name, @JsonKey() bool descending)?
         $default, {
@@ -479,6 +510,16 @@ class _$_QueryOrder implements _QueryOrder {
     required TResult Function(_QueryOrderFieldPath value) fieldPath,
   }) {
     return $default(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult Function(_QueryOrder value)? $default, {
+    TResult Function(_QueryOrderUserId value)? userId,
+    TResult Function(_QueryOrderFieldPath value)? fieldPath,
+  }) {
+    return $default?.call(this);
   }
 
   @override
@@ -572,6 +613,19 @@ class _$_QueryOrderUserId implements _QueryOrderUserId {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult Function(@JsonKey() String name, @JsonKey() bool descending)?
+        $default, {
+    TResult Function()? userId,
+    TResult Function(
+            @JsonKey() QueryFieldPath path, @JsonKey() bool descending)?
+        fieldPath,
+  }) {
+    return userId?.call();
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(@JsonKey() String name, @JsonKey() bool descending)?
         $default, {
@@ -595,6 +649,16 @@ class _$_QueryOrderUserId implements _QueryOrderUserId {
     required TResult Function(_QueryOrderFieldPath value) fieldPath,
   }) {
     return userId(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult Function(_QueryOrder value)? $default, {
+    TResult Function(_QueryOrderUserId value)? userId,
+    TResult Function(_QueryOrderFieldPath value)? fieldPath,
+  }) {
+    return userId?.call(this);
   }
 
   @override
@@ -720,6 +784,19 @@ class _$_QueryOrderFieldPath implements _QueryOrderFieldPath {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult Function(@JsonKey() String name, @JsonKey() bool descending)?
+        $default, {
+    TResult Function()? userId,
+    TResult Function(
+            @JsonKey() QueryFieldPath path, @JsonKey() bool descending)?
+        fieldPath,
+  }) {
+    return fieldPath?.call(path, descending);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(@JsonKey() String name, @JsonKey() bool descending)?
         $default, {
@@ -743,6 +820,16 @@ class _$_QueryOrderFieldPath implements _QueryOrderFieldPath {
     required TResult Function(_QueryOrderFieldPath value) fieldPath,
   }) {
     return fieldPath(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult Function(_QueryOrder value)? $default, {
+    TResult Function(_QueryOrderUserId value)? userId,
+    TResult Function(_QueryOrderFieldPath value)? fieldPath,
+  }) {
+    return fieldPath?.call(this);
   }
 
   @override
@@ -782,7 +869,7 @@ abstract class _QueryOrderFieldPath implements QueryOrder {
 }
 
 QueryValue _$QueryValueFromJson(Map<String, dynamic> json) {
-  switch (json['runtimeType'] as String) {
+  switch (json['runtimeType'] as String?) {
     case 'default':
       return _QueryValue.fromJson(json);
     case 'timestamp':
@@ -829,6 +916,12 @@ mixin _$QueryValue {
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult Function(@JsonKey() Object value)? $default, {
+    TResult Function(@JsonKey() @TimestampCJ() Timestamp timestamp)? timestamp,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(@JsonKey() Object value)? $default, {
     TResult Function(@JsonKey() @TimestampCJ() Timestamp timestamp)? timestamp,
@@ -839,6 +932,12 @@ mixin _$QueryValue {
   TResult map<TResult extends Object?>(
     TResult Function(_QueryValue value) $default, {
     required TResult Function(_QueryValueTimestamp value) timestamp,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult Function(_QueryValue value)? $default, {
+    TResult Function(_QueryValueTimestamp value)? timestamp,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -944,6 +1043,15 @@ class _$_QueryValue extends _QueryValue {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult Function(@JsonKey() Object value)? $default, {
+    TResult Function(@JsonKey() @TimestampCJ() Timestamp timestamp)? timestamp,
+  }) {
+    return $default?.call(value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(@JsonKey() Object value)? $default, {
     TResult Function(@JsonKey() @TimestampCJ() Timestamp timestamp)? timestamp,
@@ -962,6 +1070,15 @@ class _$_QueryValue extends _QueryValue {
     required TResult Function(_QueryValueTimestamp value) timestamp,
   }) {
     return $default(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult Function(_QueryValue value)? $default, {
+    TResult Function(_QueryValueTimestamp value)? timestamp,
+  }) {
+    return $default?.call(this);
   }
 
   @override
@@ -1078,6 +1195,15 @@ class _$_QueryValueTimestamp extends _QueryValueTimestamp {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult Function(@JsonKey() Object value)? $default, {
+    TResult Function(@JsonKey() @TimestampCJ() Timestamp timestamp)? timestamp,
+  }) {
+    return timestamp?.call(this.timestamp);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(@JsonKey() Object value)? $default, {
     TResult Function(@JsonKey() @TimestampCJ() Timestamp timestamp)? timestamp,
@@ -1096,6 +1222,15 @@ class _$_QueryValueTimestamp extends _QueryValueTimestamp {
     required TResult Function(_QueryValueTimestamp value) timestamp,
   }) {
     return timestamp(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult Function(_QueryValue value)? $default, {
+    TResult Function(_QueryValueTimestamp value)? timestamp,
+  }) {
+    return timestamp?.call(this);
   }
 
   @override
@@ -1134,7 +1269,7 @@ abstract class _QueryValueTimestamp extends QueryValue {
 }
 
 QueryValues _$QueryValuesFromJson(Map<String, dynamic> json) {
-  switch (json['runtimeType'] as String) {
+  switch (json['runtimeType'] as String?) {
     case 'startAfter':
       return _QueryValuesStartAfter.fromJson(json);
     case 'startBefore':
@@ -1186,6 +1321,13 @@ mixin _$QueryValues {
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() List<QueryValue> values)? startAfter,
+    TResult Function(@JsonKey() List<QueryValue> values)? startBefore,
+    TResult Function()? none,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() List<QueryValue> values)? startAfter,
     TResult Function(@JsonKey() List<QueryValue> values)? startBefore,
@@ -1198,6 +1340,13 @@ mixin _$QueryValues {
     required TResult Function(_QueryValuesStartAfter value) startAfter,
     required TResult Function(_QueryValuesStartBefore value) startBefore,
     required TResult Function(_QueryValuesStartNone value) none,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryValuesStartAfter value)? startAfter,
+    TResult Function(_QueryValuesStartBefore value)? startBefore,
+    TResult Function(_QueryValuesStartNone value)? none,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -1306,6 +1455,16 @@ class _$_QueryValuesStartAfter extends _QueryValuesStartAfter {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() List<QueryValue> values)? startAfter,
+    TResult Function(@JsonKey() List<QueryValue> values)? startBefore,
+    TResult Function()? none,
+  }) {
+    return startAfter?.call(values);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() List<QueryValue> values)? startAfter,
     TResult Function(@JsonKey() List<QueryValue> values)? startBefore,
@@ -1326,6 +1485,16 @@ class _$_QueryValuesStartAfter extends _QueryValuesStartAfter {
     required TResult Function(_QueryValuesStartNone value) none,
   }) {
     return startAfter(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryValuesStartAfter value)? startAfter,
+    TResult Function(_QueryValuesStartBefore value)? startBefore,
+    TResult Function(_QueryValuesStartNone value)? none,
+  }) {
+    return startAfter?.call(this);
   }
 
   @override
@@ -1443,6 +1612,16 @@ class _$_QueryValuesStartBefore extends _QueryValuesStartBefore {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() List<QueryValue> values)? startAfter,
+    TResult Function(@JsonKey() List<QueryValue> values)? startBefore,
+    TResult Function()? none,
+  }) {
+    return startBefore?.call(values);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() List<QueryValue> values)? startAfter,
     TResult Function(@JsonKey() List<QueryValue> values)? startBefore,
@@ -1463,6 +1642,16 @@ class _$_QueryValuesStartBefore extends _QueryValuesStartBefore {
     required TResult Function(_QueryValuesStartNone value) none,
   }) {
     return startBefore(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryValuesStartAfter value)? startAfter,
+    TResult Function(_QueryValuesStartBefore value)? startBefore,
+    TResult Function(_QueryValuesStartNone value)? none,
+  }) {
+    return startBefore?.call(this);
   }
 
   @override
@@ -1553,6 +1742,16 @@ class _$_QueryValuesStartNone extends _QueryValuesStartNone {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() List<QueryValue> values)? startAfter,
+    TResult Function(@JsonKey() List<QueryValue> values)? startBefore,
+    TResult Function()? none,
+  }) {
+    return none?.call();
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() List<QueryValue> values)? startAfter,
     TResult Function(@JsonKey() List<QueryValue> values)? startBefore,
@@ -1573,6 +1772,16 @@ class _$_QueryValuesStartNone extends _QueryValuesStartNone {
     required TResult Function(_QueryValuesStartNone value) none,
   }) {
     return none(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryValuesStartAfter value)? startAfter,
+    TResult Function(_QueryValuesStartBefore value)? startBefore,
+    TResult Function(_QueryValuesStartNone value)? none,
+  }) {
+    return none?.call(this);
   }
 
   @override
@@ -1604,7 +1813,7 @@ abstract class _QueryValuesStartNone extends QueryValues {
 }
 
 QueryField _$QueryFieldFromJson(Map<String, dynamic> json) {
-  switch (json['runtimeType'] as String) {
+  switch (json['runtimeType'] as String?) {
     case 'isEqualTo':
       return _QueryFieldIsEqualTo.fromJson(json);
     case 'isNotEqualTo':
@@ -1768,6 +1977,31 @@ mixin _$QueryField {
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -1809,6 +2043,22 @@ mixin _$QueryField {
     required TResult Function(_QueryFieldWhereIn value) whereIn,
     required TResult Function(_QueryFieldWhereNotIn value) whereNotIn,
     required TResult Function(_QueryFieldIsNull value) isNull,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -1976,6 +2226,34 @@ class _$_QueryFieldIsEqualTo extends _QueryFieldIsEqualTo {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return isEqualTo?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -2025,6 +2303,25 @@ class _$_QueryFieldIsEqualTo extends _QueryFieldIsEqualTo {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return isEqualTo(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return isEqualTo?.call(this);
   }
 
   @override
@@ -2189,6 +2486,34 @@ class _$_QueryFieldIsNotEqualTo extends _QueryFieldIsNotEqualTo {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return isNotEqualTo?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -2238,6 +2563,25 @@ class _$_QueryFieldIsNotEqualTo extends _QueryFieldIsNotEqualTo {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return isNotEqualTo(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return isNotEqualTo?.call(this);
   }
 
   @override
@@ -2403,6 +2747,34 @@ class _$_QueryFieldIsLessThan extends _QueryFieldIsLessThan {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return isLessThan?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -2452,6 +2824,25 @@ class _$_QueryFieldIsLessThan extends _QueryFieldIsLessThan {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return isLessThan(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return isLessThan?.call(this);
   }
 
   @override
@@ -2621,6 +3012,34 @@ class _$_QueryFieldIsLessThanOrEqualTo extends _QueryFieldIsLessThanOrEqualTo {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return isLessThanOrEqualTo?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -2670,6 +3089,25 @@ class _$_QueryFieldIsLessThanOrEqualTo extends _QueryFieldIsLessThanOrEqualTo {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return isLessThanOrEqualTo(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return isLessThanOrEqualTo?.call(this);
   }
 
   @override
@@ -2836,6 +3274,34 @@ class _$_QueryFieldIsGreaterThan extends _QueryFieldIsGreaterThan {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return isGreaterThan?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -2885,6 +3351,25 @@ class _$_QueryFieldIsGreaterThan extends _QueryFieldIsGreaterThan {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return isGreaterThan(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return isGreaterThan?.call(this);
   }
 
   @override
@@ -3056,6 +3541,34 @@ class _$_QueryFieldIsGreaterThanOrEqualTo
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return isGreaterThanOrEqualTo?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -3105,6 +3618,25 @@ class _$_QueryFieldIsGreaterThanOrEqualTo
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return isGreaterThanOrEqualTo(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return isGreaterThanOrEqualTo?.call(this);
   }
 
   @override
@@ -3271,6 +3803,34 @@ class _$_QueryFieldArrayContains extends _QueryFieldArrayContains {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return arrayContains?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -3320,6 +3880,25 @@ class _$_QueryFieldArrayContains extends _QueryFieldArrayContains {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return arrayContains(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return arrayContains?.call(this);
   }
 
   @override
@@ -3491,6 +4070,34 @@ class _$_QueryFieldArrayContainsAny extends _QueryFieldArrayContainsAny {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return arrayContainsAny?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -3540,6 +4147,25 @@ class _$_QueryFieldArrayContainsAny extends _QueryFieldArrayContainsAny {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return arrayContainsAny(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return arrayContainsAny?.call(this);
   }
 
   @override
@@ -3707,6 +4333,34 @@ class _$_QueryFieldWhereIn extends _QueryFieldWhereIn {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return whereIn?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -3756,6 +4410,25 @@ class _$_QueryFieldWhereIn extends _QueryFieldWhereIn {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return whereIn(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return whereIn?.call(this);
   }
 
   @override
@@ -3923,6 +4596,34 @@ class _$_QueryFieldWhereNotIn extends _QueryFieldWhereNotIn {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return whereNotIn?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -3972,6 +4673,25 @@ class _$_QueryFieldWhereNotIn extends _QueryFieldWhereNotIn {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return whereNotIn(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return whereNotIn?.call(this);
   }
 
   @override
@@ -4138,6 +4858,34 @@ class _$_QueryFieldIsNull extends _QueryFieldIsNull {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isNotEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isLessThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThan,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
+        arrayContains,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        arrayContainsAny,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereIn,
+    TResult Function(@JsonKey() String field, @JsonKey() List<Object?>? value)?
+        whereNotIn,
+    TResult Function(@JsonKey() String field, @JsonKey() bool value)? isNull,
+  }) {
+    return isNull?.call(field, value);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String field, @JsonKey() Object? value)?
         isEqualTo,
@@ -4187,6 +4935,25 @@ class _$_QueryFieldIsNull extends _QueryFieldIsNull {
     required TResult Function(_QueryFieldIsNull value) isNull,
   }) {
     return isNull(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_QueryFieldIsEqualTo value)? isEqualTo,
+    TResult Function(_QueryFieldIsNotEqualTo value)? isNotEqualTo,
+    TResult Function(_QueryFieldIsLessThan value)? isLessThan,
+    TResult Function(_QueryFieldIsLessThanOrEqualTo value)? isLessThanOrEqualTo,
+    TResult Function(_QueryFieldIsGreaterThan value)? isGreaterThan,
+    TResult Function(_QueryFieldIsGreaterThanOrEqualTo value)?
+        isGreaterThanOrEqualTo,
+    TResult Function(_QueryFieldArrayContains value)? arrayContains,
+    TResult Function(_QueryFieldArrayContainsAny value)? arrayContainsAny,
+    TResult Function(_QueryFieldWhereIn value)? whereIn,
+    TResult Function(_QueryFieldWhereNotIn value)? whereNotIn,
+    TResult Function(_QueryFieldIsNull value)? isNull,
+  }) {
+    return isNull?.call(this);
   }
 
   @override
@@ -4693,7 +5460,7 @@ abstract class _FirebaseIsolateQuery extends FirebaseIsolateQuery {
 
 FirebaseIsolateRequest _$FirebaseIsolateRequestFromJson(
     Map<String, dynamic> json) {
-  switch (json['runtimeType'] as String) {
+  switch (json['runtimeType'] as String?) {
     case 'get':
       return _FirebaseIsolateRequestGet.fromJson(json);
     case 'query':
@@ -4749,6 +5516,14 @@ mixin _$FirebaseIsolateRequest {
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String path)? get,
+    TResult Function(
+            @JsonKey() String path, @JsonKey() FirebaseIsolateQuery query)?
+        query,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String path)? get,
     TResult Function(
@@ -4761,6 +5536,12 @@ mixin _$FirebaseIsolateRequest {
   TResult map<TResult extends Object?>({
     required TResult Function(_FirebaseIsolateRequestGet value) get,
     required TResult Function(_FirebaseIsolateRequestQuery value) query,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_FirebaseIsolateRequestGet value)? get,
+    TResult Function(_FirebaseIsolateRequestQuery value)? query,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -4890,6 +5671,17 @@ class _$_FirebaseIsolateRequestGet extends _FirebaseIsolateRequestGet {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String path)? get,
+    TResult Function(
+            @JsonKey() String path, @JsonKey() FirebaseIsolateQuery query)?
+        query,
+  }) {
+    return get?.call(path);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String path)? get,
     TResult Function(
@@ -4910,6 +5702,15 @@ class _$_FirebaseIsolateRequestGet extends _FirebaseIsolateRequestGet {
     required TResult Function(_FirebaseIsolateRequestQuery value) query,
   }) {
     return get(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_FirebaseIsolateRequestGet value)? get,
+    TResult Function(_FirebaseIsolateRequestQuery value)? query,
+  }) {
+    return get?.call(this);
   }
 
   @override
@@ -5056,6 +5857,17 @@ class _$_FirebaseIsolateRequestQuery extends _FirebaseIsolateRequestQuery {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String path)? get,
+    TResult Function(
+            @JsonKey() String path, @JsonKey() FirebaseIsolateQuery query)?
+        query,
+  }) {
+    return query?.call(path, this.query);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String path)? get,
     TResult Function(
@@ -5076,6 +5888,15 @@ class _$_FirebaseIsolateRequestQuery extends _FirebaseIsolateRequestQuery {
     required TResult Function(_FirebaseIsolateRequestQuery value) query,
   }) {
     return query(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_FirebaseIsolateRequestGet value)? get,
+    TResult Function(_FirebaseIsolateRequestQuery value)? query,
+  }) {
+    return query?.call(this);
   }
 
   @override
@@ -5121,7 +5942,7 @@ abstract class _FirebaseIsolateRequestQuery extends FirebaseIsolateRequest {
 
 FirebaseIsolateResponse _$FirebaseIsolateResponseFromJson(
     Map<String, dynamic> json) {
-  switch (json['runtimeType'] as String) {
+  switch (json['runtimeType'] as String?) {
     case 'get':
       return _FirebaseIsolateResponseGet.fromJson(json);
     case 'query':
@@ -5182,6 +6003,16 @@ mixin _$FirebaseIsolateResponse {
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String key,
+            @JsonKey() FirebaseIsolateSnapshotData snapshot)?
+        get,
+    TResult Function(@JsonKey() String key,
+            @JsonKey() List<FirebaseIsolateSnapshotData> snapshots)?
+        query,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String key,
             @JsonKey() FirebaseIsolateSnapshotData snapshot)?
@@ -5196,6 +6027,12 @@ mixin _$FirebaseIsolateResponse {
   TResult map<TResult extends Object?>({
     required TResult Function(_FirebaseIsolateResponseGet value) get,
     required TResult Function(_FirebaseIsolateResponseQuery value) query,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_FirebaseIsolateResponseGet value)? get,
+    TResult Function(_FirebaseIsolateResponseQuery value)? query,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -5352,6 +6189,19 @@ class _$_FirebaseIsolateResponseGet extends _FirebaseIsolateResponseGet {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String key,
+            @JsonKey() FirebaseIsolateSnapshotData snapshot)?
+        get,
+    TResult Function(@JsonKey() String key,
+            @JsonKey() List<FirebaseIsolateSnapshotData> snapshots)?
+        query,
+  }) {
+    return get?.call(key, snapshot);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String key,
             @JsonKey() FirebaseIsolateSnapshotData snapshot)?
@@ -5374,6 +6224,15 @@ class _$_FirebaseIsolateResponseGet extends _FirebaseIsolateResponseGet {
     required TResult Function(_FirebaseIsolateResponseQuery value) query,
   }) {
     return get(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_FirebaseIsolateResponseGet value)? get,
+    TResult Function(_FirebaseIsolateResponseQuery value)? query,
+  }) {
+    return get?.call(this);
   }
 
   @override
@@ -5521,6 +6380,19 @@ class _$_FirebaseIsolateResponseQuery extends _FirebaseIsolateResponseQuery {
 
   @override
   @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function(@JsonKey() String key,
+            @JsonKey() FirebaseIsolateSnapshotData snapshot)?
+        get,
+    TResult Function(@JsonKey() String key,
+            @JsonKey() List<FirebaseIsolateSnapshotData> snapshots)?
+        query,
+  }) {
+    return query?.call(key, snapshots);
+  }
+
+  @override
+  @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey() String key,
             @JsonKey() FirebaseIsolateSnapshotData snapshot)?
@@ -5543,6 +6415,15 @@ class _$_FirebaseIsolateResponseQuery extends _FirebaseIsolateResponseQuery {
     required TResult Function(_FirebaseIsolateResponseQuery value) query,
   }) {
     return query(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_FirebaseIsolateResponseGet value)? get,
+    TResult Function(_FirebaseIsolateResponseQuery value)? query,
+  }) {
+    return query?.call(this);
   }
 
   @override

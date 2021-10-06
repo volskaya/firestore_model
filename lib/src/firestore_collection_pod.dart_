@@ -1,3 +1,4 @@
+
 import 'dart:async';
 import 'dart:collection';
 
@@ -202,22 +203,23 @@ class FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends _FirestoreC
       initialValue: usePreviousState ? previousState : null,
     );
 
-    void listener() {
-      final value = FirestoreCollectionValue(
-        paginated: collection.paginated,
-        subscribed: collection.subscribed,
-        pending: collection.pending,
-        createTime: collection.createTime,
-        status: collection.status,
-        ended: collection.ended,
-        widgetCoordinator: collection._widgetCoordinator,
-      );
+    // void listener() {
+    //   final value = FirestoreCollectionValue(
+    //     paginated: collection.paginated,
+    //     subscribed: collection.subscribed,
+    //     pending: collection.pending,
+    //     cargo: collection.cargo,
+    //     createTime: collection.createTime,
+    //     status: collection.status,
+    //     ended: collection.ended,
+    //     widgetCoordinator: collection._widgetCoordinator,
+    //   );
 
-      storage.add(props.bucket, value, refresh);
-    }
+    //   storage.add(props.bucket, value, refresh);
+    // }
 
-    collection.addListener(listener);
-    ref.onDispose(() => collection.removeListener(listener));
+    // collection.addListener(listener);
+    // ref.onDispose(() => collection.removeListener(listener));
 
     return collection;
   }
@@ -232,13 +234,30 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
   })  : ended = initialValue?.ended ?? false,
         status = initialValue?.status ?? FirestoreCollectionStatus.idle,
         createTime = initialValue?.createTime ?? DateTime.now(),
-        paginated = initialValue != null
-            ? [
-                ...initialValue.pending.reversed,
-                ...initialValue.subscribed.reversed,
-                ...initialValue.paginated,
-              ]
-            : <FirestoreCollectionEntry<T, D>>[] {
+        cargo = initialValue?.cargo ?? HashMap<String, D>(),
+        paginated = CollectionList<FirestoreCollectionEntry<T, D>>(initialLength: 1000)
+          ..addAll(
+            (initialValue != null
+                    ? [
+                        ...initialValue.pending.reversed,
+                        ...initialValue.subscribed.reversed,
+                        ...initialValue.paginated,
+                      ]
+                    : <T>[])
+                .map(
+              (v) => FirestoreCollectionEntry<T, D>(
+                item: v,
+                cargo: initialValue?.cargo[v.id],
+              ),
+            ),
+          ) {
+    // paginated = initialValue != null
+    //     ? [
+    //         ...initialValue.pending.reversed,
+    //         ...initialValue.subscribed.reversed,
+    //         ...initialValue.paginated,
+    //       ]
+    //     : <T>[] {
     _widgetCoordinator = initialValue?.widgetCoordinator ??
         (props.widgets != null
             ? GenerativeWidgetCoordinator(builders: props.widgets!(this as FirestoreCollectionPod<T, D>))
@@ -260,9 +279,12 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
 
   final _seenItems = HashSet<String>(); // Seen document IDs to filter redundant items.
 
-  @o List<FirestoreCollectionEntry<T, D>> paginated = <FirestoreCollectionEntry<T, D>>[];
-  @o List<FirestoreCollectionEntry<T, D>> subscribed = <FirestoreCollectionEntry<T, D>>[];
-  @o List<FirestoreCollectionEntry<T, D>> pending = <FirestoreCollectionEntry<T, D>>[];
+  // @o List<T> paginated = <T>[];
+  @o CollectionList<FirestoreCollectionEntry<T, D>> paginated =
+      CollectionList<FirestoreCollectionEntry<T, D>>(initialLength: 1000);
+  @o List<T> subscribed = <T>[];
+  @o List<T> pending = <T>[];
+  @o HashMap<String, D> cargo = HashMap<String, D>();
   @o FirestoreCollectionStatus status = FirestoreCollectionStatus.idle;
   @o bool ended = false;
   @o int page = 0;
@@ -272,33 +294,103 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
   bool get isSubscribed => _streamSubscription != null;
   bool get isScrolled => Utils.isScrolled(scrollController);
 
-  Future<FirestoreCollectionEntry<T, D>> _getModelAndCargo(DocumentSnapshot doc, int position) async {
+  Future<FirestoreCollectionEntry<T, D>> _getModelAndCargo(DocumentSnapshot doc) async {
     final model = await FirestoreModel.withReference<T>(doc.reference, doc);
     final cargo = await props.cargoBuilder?.call(model);
     return FirestoreCollectionEntry<T, D>(item: model, cargo: cargo);
   }
 
+  // Future<MapEntry<T, D?>> _getIsolateModelAndCargo(FirebaseIsolateSnapshotData doc) async {
+  //   final ref = FirebaseModel.store.doc(doc.path);
+  //   final model = await FirestoreModel.referenceWithBuilder<T>(
+  //     ref,
+  //     () => FirebaseModel.builder<T>(doc.data)
+  //       ..path = doc.path
+  //       ..id = doc.id
+  //       ..exists = true,
+  //   );
+  //   final cargo = await props.cargoBuilder?.call(model);
+  //   return MapEntry(model, cargo);
+  // }
+
+  void _maybePrepareWidget(int position, T item, D? cargo, bool subscribed) {
+    assert(_widgetCoordinator != null);
+    try {
+      _widgetCoordinator?.preparePaginatedWidget(position);
+    } catch (e, t) {
+      _log.w('Failed to cache a widget for ${item.id}', e, t);
+    }
+  }
+
   Future<List<FirestoreCollectionEntry<T, D>>> _deserializeQuerySnapshot(
     Iterable<DocumentSnapshot> docs, {
     bool subscribed = false,
-  }) async =>
-      Future.wait(
-        docs.where((doc) {
-          if (_seenItems.contains(doc.id)) return false;
-          if (!subscribed && (props.shouldSkip?.call(doc) ?? false)) {
-            _seenItems.add(doc.id); // Skipped manually due to `shouldSkip`.
-            return false;
-          }
-          return true;
-        }).mapIndexed((i, doc) {
-          _seenItems.add(doc.id);
-          return _getModelAndCargo(doc, paginated.length + i);
-        }),
-        cleanUp: (e) {
-          e.item.dispose();
-          (e.cargo as dynamic)?.dispose();
-        },
-      );
+  }) async {
+    // final entries = <MapEntry<T, D?>>[];
+    // final validDocuments = docs.where((doc) {
+    //   if (_seenItems.contains(doc.id)) return false;
+    //   if (!subscribed && (props.shouldSkip?.call(doc) ?? false)) {
+    //     _seenItems.add(doc.id); // Skipped manually due to `shouldSkip`.
+    //     return false;
+    //   }
+    //   return true;
+    // });
+
+    // try {
+    //   for (final doc in validDocuments) {
+    //     _seenItems.add(doc.id);
+    //     await Utils.awaitPostframe();
+    //     entries.add(await _getModelAndCargo(doc));
+    //   }
+    // } catch (_) {
+    //   for (final e in entries) {
+    //     e.key.dispose();
+    //     (e.value as dynamic)?.dispose();
+    //   }
+    // }
+
+    // return entries;
+
+    return Future.wait(
+      docs.where((doc) {
+        if (_seenItems.contains(doc.id)) return false;
+        if (!subscribed && (props.shouldSkip?.call(doc) ?? false)) {
+          _seenItems.add(doc.id); // Skipped manually due to `shouldSkip`.
+          return false;
+        }
+        return true;
+      }).mapIndexed((i, doc) {
+        _seenItems.add(doc.id);
+        return _getModelAndCargo(doc);
+      }),
+      cleanUp: (e) {
+        e.item.dispose();
+        (e.cargo as dynamic)?.dispose();
+      },
+    );
+  }
+
+  // Future<List<MapEntry<T, D?>>> _deserializeIsolateSnapshot(
+  //   Iterable<FirebaseIsolateSnapshotData> docs, {
+  //   bool subscribed = false,
+  // }) =>
+  //     Future.wait(
+  //       docs.where((doc) {
+  //         if (_seenItems.contains(doc.id)) return false;
+  //         // if (!subscribed && (props.shouldSkip?.call(doc) ?? false)) {
+  //         //   _seenItems.add(doc.id); // Skipped manually due to `shouldSkip`.
+  //         //   return false;
+  //         // }
+  //         return true;
+  //       }).mapIndexed((i, doc) {
+  //         _seenItems.add(doc.id);
+  //         return _getIsolateModelAndCargo(doc);
+  //       }),
+  //       cleanUp: (e) {
+  //         e.key.dispose();
+  //         (e.value as dynamic)?.dispose();
+  //       },
+  //     );
 
   Query? get _pageQuery {
     if (props.pageQuery != null) {
@@ -313,6 +405,10 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     }
   }
 
+  // FirebaseIsolateQuery? get _isolatePageQuery {
+  //   return props.query?.call(this as FirestoreCollectionPod<T, D>);
+  // }
+
   Query get _subscriptionQuery {
     assert(props.subscribe);
 
@@ -322,14 +418,14 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
       final query = props.collection.orderBy(props.timestampField, descending: false);
       final cursor = pending.reversed
           .followedBy(subscribed.reversed)
-          .followedBy(paginated)
-          .firstWhereOrNull((x) => x.item.exists == true);
+          // .followedBy(paginated)
+          .firstWhereOrNull((x) => x.exists == true);
 
       /// A snapshot could already be deleted, by the time it's used to subscribe.
       /// Iterate over pending -> subscribed -> paginated items to find the newest existing snapshot.
       ///
       /// Pending and subscribed items are reversed, since they're ordered ascending.
-      return cursor != null ? query.startAfter([...props.orderValues(cursor.item), cursor.item.id]) : query;
+      return cursor != null ? query.startAfter([...props.orderValues(cursor), cursor.id]) : query;
     }
   }
 
@@ -351,10 +447,6 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     }
   }
 
-  void rebuild() {
-    notifyListeners();
-  }
-
   @action
   Future<void> fetchPage(int page) async {
     if (page <= this.page || ended || !mounted) {
@@ -368,7 +460,7 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     if (status == FirestoreCollectionStatus.idle) {
       // This is assumed to be the first pagination.
       status = FirestoreCollectionStatus.loading;
-      notifyListeners();
+      // notifyListeners();
     }
 
     final loader = LoaderCoordinator.instance.touch();
@@ -430,6 +522,17 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
             : props.initialPageSize ?? props.itemsPerPage
         : props.itemsPerPage;
 
+    // final isolateQuery = _isolatePageQuery?.copyWith(limit: itemCount);
+    // final query = isolateQuery?.build();
+    // final firedartDocs = await query?.get();
+
+    // final isolateDocs = false && isolateQuery != null
+    //     ? await FirebaseIsolate.instance.query(
+    //         path: isolateQuery.base.collectionPath,
+    //         query: isolateQuery,
+    //       )
+    //     : null;
+
     final snapshots = await _pageQuery?.limit(itemCount).get();
 
     if (!mounted) {
@@ -441,7 +544,6 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
       notifyListeners();
       return;
     }
-
     //  else if (isFirstPage) {
     //   final now = DateTime.now();
     //   final delay = props.delay > Duration.zero
@@ -459,14 +561,71 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     //   if (!mounted) return;
     // }
 
+    // List<MapEntry<T, D?>> items = <MapEntry<T, D?>>[];
+
+    // if (firedartDocs != null) {
+    //   print('Got ${firedartDocs.length} firedart docs');
+    //   Future<List<MapEntry<T, D?>>> deserialize(Iterable<Document> docs) => Future.wait(
+    //         docs.where((doc) {
+    //           // if (_seenItems.contains(doc.id)) {
+    //           //   // print('Already seen ${doc.path.substring(1)}');
+    //           //   return false;
+    //           // }
+    //           return true;
+    //         }).mapIndexed((i, doc) {
+    //           _seenItems.add(doc.id);
+    //           return () async {
+    //             final ref = FirebaseModel.store.doc(doc.path);
+    //             final model = FirebaseModel.builder<T>(doc.map)
+    //               ..path = doc.path.substring(1)
+    //               ..id = doc.id
+    //               ..exists = true;
+    //             // final model = await FirestoreModel.referenceWithBuilder<T>(
+    //             //   ref,
+    //             //   () {
+    //             //     final data = doc.map;
+    //             //     // print(doc.path.substring(1));
+    //             //     // print(data);
+    //             //     return FirebaseModel.builder<T>(data)
+    //             //       ..path = doc.path.substring(1)
+    //             //       ..id = doc.id
+    //             //       ..exists = true;
+    //             //   },
+    //             // );
+    //             final cargo = await props.cargoBuilder?.call(model);
+    //             return MapEntry(model, cargo);
+    //           }();
+    //         }),
+    //         cleanUp: (e) {
+    //           e.key.dispose();
+    //           (e.value as dynamic)?.dispose();
+    //         },
+    //       );
+
+    //   items = await deserialize(firedartDocs);
+    // } else if (isolateDocs != null) {
+    //   items = await _deserializeIsolateSnapshot(isolateDocs);
+    // } else if (snapshots != null) {
+    //   items = await _deserializeQuerySnapshot(snapshots.docs);
+    // }
+
     final items = await _deserializeQuerySnapshot(snapshots.docs);
 
     if (mounted) {
       if (items.length < itemCount) ended = true;
-      paginated.addAll(items);
+      items.forEach(paginated.add);
+
+      // for (final entry in items) {
+      //   paginated.add(entry.key);
+      //   if (entry.value != null) cargo[entry.key.id] = entry.value!;
+      //   if (_widgetCoordinator != null) {
+      //     _maybePrepareWidget(paginated.length - 1, entry.key, entry.value, false);
+      //   }
+      // }
 
       // HACK: Make sure the observables notify an update.
       paginated = paginated;
+      cargo = cargo;
 
       this.page = prepareSecondPage ? page + 1 : page;
       _checkStatus();
@@ -544,9 +703,12 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
       if (mounted) {
         if (documents.isNotEmpty) {
           if (isScrolled) {
-            pending = pending..addAll(items);
+            pending = pending..addAll(items.map((v) => v.item));
+            cargo = cargo..addEntries(items.where((x) => x.cargo != null).map((x) => MapEntry(x.item.id, x.cargo!)));
+            notifyListeners();
           } else {
-            subscribed = subscribed..addAll(items);
+            subscribed = subscribed..addAll(items.map((v) => v.item));
+            cargo = cargo..addEntries(items.where((x) => x.cargo != null).map((x) => MapEntry(x.item.id, x.cargo!)));
           }
           notifyListeners();
           _checkStatus();
@@ -604,13 +766,6 @@ class FirestoreCollectionEntry<T extends FirestoreModel<T>, D> with _$FirestoreC
     D? cargo,
     Widget? widget,
   }) = _FirestoreCollectionEntry;
-
-  const FirestoreCollectionEntry._();
-
-  void dispose() {
-    item.dispose();
-    (cargo as dynamic)?.dispose(); // FIXME: Unsafe.
-  }
 }
 
 @freezed
@@ -618,9 +773,10 @@ class FirestoreCollectionValue<T extends FirestoreModel<T>, D>
     with _$FirestoreCollectionValue<T, D>
     implements RefreshStorageItem {
   const factory FirestoreCollectionValue({
-    required List<FirestoreCollectionEntry<T, D>> paginated,
-    required List<FirestoreCollectionEntry<T, D>> subscribed,
-    required List<FirestoreCollectionEntry<T, D>> pending,
+    required List<T> paginated,
+    required List<T> subscribed,
+    required List<T> pending,
+    required HashMap<String, D> cargo,
     required DateTime createTime,
     @Default(FirestoreCollectionStatus.idle) FirestoreCollectionStatus status,
     @Default(false) bool ended,
@@ -632,12 +788,15 @@ class FirestoreCollectionValue<T extends FirestoreModel<T>, D>
   @override
   void dispose([dynamic _]) {
     for (final item in pending.followedBy(subscribed).followedBy(paginated)) item.dispose();
+    for (final value in cargo.values) (value as dynamic)?.dispose?.call();
   }
+
+  D? cargoOf(T item) => cargo[item.id];
 
   FirestoreCollectionValue<T, D> clean() => copyWith(
         paginated: paginated..insertAll(0, pending.reversed.followedBy(subscribed.reversed)),
-        pending: <FirestoreCollectionEntry<T, D>>[],
-        subscribed: <FirestoreCollectionEntry<T, D>>[],
+        pending: <T>[],
+        subscribed: <T>[],
         widgetCoordinator: widgetCoordinator?..moveSubscribedWidgetsToPaginated(),
       );
 }
