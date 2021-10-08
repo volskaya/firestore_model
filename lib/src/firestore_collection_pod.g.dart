@@ -78,6 +78,23 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
     }
   }
 
+  final _$pageStatusAtom = Atom(name: '_FirestoreCollectionPod.pageStatus');
+
+  @override
+  FirestoreCollectionPageStatus get pageStatus {
+    _$pageStatusAtom.reportRead();
+    return super.pageStatus;
+  }
+
+  @override
+  set pageStatus(FirestoreCollectionPageStatus value) {
+    if (super.pageStatus != value) {
+      _$pageStatusAtom.reportWrite(value, super.pageStatus, () {
+        super.pageStatus = value;
+      });
+    }
+  }
+
   final _$endedAtom = Atom(name: '_FirestoreCollectionPod.ended');
 
   @override
@@ -124,8 +141,8 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
       AsyncAction('_FirestoreCollectionPod._paginate');
 
   @override
-  Future<void> _paginate(int page) {
-    return _$_paginateAsyncAction.run(() => super._paginate(page));
+  Future<void> _paginate(int targetPage) {
+    return _$_paginateAsyncAction.run(() => super._paginate(targetPage));
   }
 
   final _$_handleQuerySubscriptionAsyncAction =
@@ -169,6 +186,7 @@ paginated: ${paginated},
 subscribed: ${subscribed},
 pending: ${pending},
 status: ${status},
+pageStatus: ${pageStatus},
 ended: ${ended},
 page: ${page}
     ''';

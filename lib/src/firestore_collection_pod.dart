@@ -22,7 +22,7 @@ import 'package:utils/utils.dart';
 part 'firestore_collection_pod.freezed.dart';
 part 'firestore_collection_pod.g.dart';
 
-/// Status of the [FirestoreCollectionBuilderState].
+/// Status of the [FirestoreCollectionPod].
 enum FirestoreCollectionStatus {
   /// Collection hasn't started the initial pagination yet.
   idle,
@@ -35,6 +35,18 @@ enum FirestoreCollectionStatus {
 
   /// Collection has items.
   ready,
+}
+
+/// Paginatoin status of the [FirestoreCollectionPod].
+enum FirestoreCollectionPageStatus {
+  /// Collection hasn't started the initial pagination yet.
+  idle,
+
+  /// Collection is fetching additional documents,
+  paginating,
+
+  /// Collection has paginated and is not fetching additional documents.
+  paginated,
 }
 
 /// Either a subscription or pagination query builder.
@@ -79,6 +91,7 @@ class FirestoreCollectionProps<T extends FirestoreModel<T>, D> {
     this.delayedFuture,
     this.ads = false,
     this.widgets,
+    this.scrollController,
   });
 
   /// Bucket identifier of [RefreshStorage] used by [FirestoreCollectionBuilder].
@@ -155,14 +168,20 @@ class FirestoreCollectionProps<T extends FirestoreModel<T>, D> {
   /// Widget builders for the [GenerativeWidgetCoordinator].
   final GenerativeWidgetCoordinatorBuilders Function(FirestoreCollectionPod<T, D> collection)? widgets;
 
+  /// [ScrollController] override for [FirestoreCollectionPod].
+  final ScrollController? scrollController;
+
   // Prop equality is tied only to the bucket.
   @override
   bool operator ==(dynamic other) =>
       identical(other, this) ||
-      (other is FirestoreCollectionProps && other.bucket == bucket && other.timestampField == timestampField);
+      (other is FirestoreCollectionProps &&
+          other.bucket == bucket &&
+          other.timestampField == timestampField &&
+          other.scrollController == scrollController);
 
   @override
-  int get hashCode => runtimeType.hashCode ^ bucket.hashCode ^ timestampField.hashCode;
+  int get hashCode => runtimeType.hashCode ^ bucket.hashCode ^ timestampField.hashCode ^ scrollController.hashCode;
 }
 
 class FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends _FirestoreCollectionPod<T, D>
@@ -229,7 +248,8 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     required this.props,
     required this.refresh,
     FirestoreCollectionValue<T, D>? initialValue,
-  })  : ended = initialValue?.ended ?? false,
+  })  : scrollController = props.scrollController ?? ScrollController(),
+        ended = initialValue?.ended ?? false,
         status = initialValue?.status ?? FirestoreCollectionStatus.idle,
         createTime = initialValue?.createTime ?? DateTime.now(),
         paginated = initialValue != null
@@ -252,7 +272,7 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
   final int refresh;
   final FirestoreCollectionProps<T, D> props;
   final DateTime createTime;
-  final ScrollController scrollController = ScrollController();
+  final ScrollController scrollController;
 
   late final GenerativeWidgetCoordinator? _widgetCoordinator;
   int get paginatedWidgetLength => _widgetCoordinator?.paginatedWidgets.length ?? 0;
@@ -264,6 +284,7 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
   @o List<FirestoreCollectionEntry<T, D>> subscribed = <FirestoreCollectionEntry<T, D>>[];
   @o List<FirestoreCollectionEntry<T, D>> pending = <FirestoreCollectionEntry<T, D>>[];
   @o FirestoreCollectionStatus status = FirestoreCollectionStatus.idle;
+  @o FirestoreCollectionPageStatus pageStatus = FirestoreCollectionPageStatus.idle;
   @o bool ended = false;
   @o int page = 0;
 
@@ -362,16 +383,21 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
       return;
     }
 
-    if (_paginating) return;
-    _paginating = true;
-
-    if (status == FirestoreCollectionStatus.idle) {
-      // This is assumed to be the first pagination.
-      status = FirestoreCollectionStatus.loading;
-      notifyListeners();
+    switch (pageStatus) {
+      case FirestoreCollectionPageStatus.paginating:
+        return; // Return early, avoid multiple paginations at the same time.
+      case FirestoreCollectionPageStatus.idle:
+        assert(status == FirestoreCollectionStatus.idle); // This is assumed to be the first pagination.
+        status = FirestoreCollectionStatus.loading;
+        continue paginated;
+      paginated:
+      case FirestoreCollectionPageStatus.paginated:
+        pageStatus = FirestoreCollectionPageStatus.paginating;
+        notifyListeners();
+        break;
     }
 
-    final loader = LoaderCoordinator.instance.touch();
+    final loader = LoaderCoordinator.instance.touch(instant: true);
 
     try {
       await Utils.awaitPostframe();
@@ -380,8 +406,9 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
       // NOTE: Initial pagination could have fetched 2 pages.
       assert(!mounted || (page == 1 ? (page == this.page || page + 1 == this.page) : page == this.page));
     } finally {
+      pageStatus = FirestoreCollectionPageStatus.paginated;
       loader.dispose();
-      _paginating = false;
+      if (mounted) notifyListeners();
     }
   }
 
@@ -396,10 +423,10 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
   }
 
   @action
-  Future<void> _paginate(int page) async {
-    assert(page > this.page);
+  Future<void> _paginate(int targetPage) async {
+    assert(targetPage > page);
 
-    final isFirstPage = page == 1;
+    final isFirstPage = targetPage == 1;
 
     if (!mounted) {
       return;
@@ -437,27 +464,9 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     } else if (snapshots == null) {
       _checkStatus();
       ended = true;
-      this.page = prepareSecondPage ? page + 1 : page;
-      notifyListeners();
+      page = prepareSecondPage ? targetPage + 1 : targetPage;
       return;
     }
-
-    //  else if (isFirstPage) {
-    //   final now = DateTime.now();
-    //   final delay = props.delay > Duration.zero
-    //       ? Duration(microseconds: props.delay.inMicroseconds * timeDilation.toInt())
-    //       : null;
-
-    //   final awaitDelay = delay != null && now.isBefore(createTime.add(delay));
-    //   final awaitDelayedFuture = props.delayedFuture != null;
-
-    //   await Future.wait([
-    //     if (awaitDelayedFuture) props.delayedFuture!(),
-    //     if (awaitDelay) Future<void>.delayed(delay!),
-    //   ]);
-
-    //   if (!mounted) return;
-    // }
 
     final items = await _deserializeQuerySnapshot(snapshots.docs);
 
@@ -468,9 +477,8 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
       // HACK: Make sure the observables notify an update.
       paginated = paginated;
 
-      this.page = prepareSecondPage ? page + 1 : page;
+      page = prepareSecondPage ? targetPage + 1 : targetPage;
       _checkStatus();
-      notifyListeners();
     } else {
       for (final item in items) {
         item.item.dispose();
@@ -592,7 +600,8 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
 
   @override
   void dispose() {
-    scrollController.dispose();
+    // Only dispose the scroll controller if it was built by [FirestoreCollectionPod].
+    if (props.scrollController == null) scrollController.dispose();
     super.dispose();
   }
 }
