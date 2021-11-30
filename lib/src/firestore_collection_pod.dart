@@ -3,10 +3,9 @@ import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
-import 'package:firedart/firestore/firestore_gateway.dart';
 import 'package:firestore_model/firestore_model.dart';
 import 'package:firestore_model/src/firestore_model.dart';
-import 'package:firestore_model/src/utils/collection_list.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -50,21 +49,21 @@ enum FirestoreCollectionPageStatus {
 }
 
 /// Either a subscription or pagination query builder.
-typedef FirestoreCollectionPodQueryBuilder<T extends FirestoreModel<T>, D> = Query
-    Function(FirestoreCollectionPod<T, D> collection, Query base);
+typedef FirestoreCollectionPodQueryBuilder<T extends FirestoreModel<T>, D> = Query Function(
+    FirestoreCollectionPod<T, D> collection, Query base);
 
 /// If this callback returns true, the paginated item will be skipped.
 typedef FirestoreCollectionPodShouldSkipCallback = bool Function(DocumentSnapshot value);
 
 /// Event callback of [FirestoreCollection].
-typedef FirestoreCollectionPodEvent<T extends FirestoreModel<T>, D> = void
-    Function(FirestoreCollectionPod<T, D> collection);
+typedef FirestoreCollectionPodEvent<T extends FirestoreModel<T>, D> = void Function(
+    FirestoreCollectionPod<T, D> collection);
 
 /// Cargo builder for items in [FirestoreCollection].
 typedef FirestoreCollectionPodCargoBuilder<T extends FirestoreModel<T>, D> = FutureOr<D> Function(T item);
 
-typedef FirestoreCollectionPodWidgetBuilder<T extends FirestoreModel<T>, D> = Widget
-    Function(int index, FirestoreCollectionPod<T, D> collection, T item, D? cargo, bool subscribed);
+typedef FirestoreCollectionPodWidgetBuilder<T extends FirestoreModel<T>, D> = Widget Function(
+    int index, FirestoreCollectionPod<T, D> collection, T item, D? cargo, bool subscribed);
 
 /// [FirestoreCollectionProps] targets the [bucket] & [timestampField] as family values.
 ///
@@ -74,7 +73,7 @@ class FirestoreCollectionProps<T extends FirestoreModel<T>, D> {
     required this.bucket,
     required this.collection,
     required this.orderValues,
-    this.query,
+    // this.query,
     this.timestampField = 'createTime',
     this.prepareSecondPage = false,
     this.initialPageSize,
@@ -101,7 +100,7 @@ class FirestoreCollectionProps<T extends FirestoreModel<T>, D> {
   final Query collection;
 
   /// Isolate compatable query.
-  final FirebaseIsolateQuery Function(FirestoreCollectionPod<T, D> collection)? query;
+  // final FirebaseIsolateQuery Function(FirestoreCollectionPod<T, D> collection)? query;
 
   /// Default field name of the create timestamp within the collection documents,
   final String timestampField;
@@ -280,16 +279,22 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
 
   final _seenItems = HashSet<String>(); // Seen document IDs to filter redundant items.
 
-  @o List<FirestoreCollectionEntry<T, D>> paginated = <FirestoreCollectionEntry<T, D>>[];
-  @o List<FirestoreCollectionEntry<T, D>> subscribed = <FirestoreCollectionEntry<T, D>>[];
-  @o List<FirestoreCollectionEntry<T, D>> pending = <FirestoreCollectionEntry<T, D>>[];
-  @o FirestoreCollectionStatus status = FirestoreCollectionStatus.idle;
-  @o FirestoreCollectionPageStatus pageStatus = FirestoreCollectionPageStatus.idle;
-  @o bool ended = false;
-  @o int page = 0;
+  @o
+  List<FirestoreCollectionEntry<T, D>> paginated = <FirestoreCollectionEntry<T, D>>[];
+  @o
+  List<FirestoreCollectionEntry<T, D>> subscribed = <FirestoreCollectionEntry<T, D>>[];
+  @o
+  List<FirestoreCollectionEntry<T, D>> pending = <FirestoreCollectionEntry<T, D>>[];
+  @o
+  FirestoreCollectionStatus status = FirestoreCollectionStatus.idle;
+  @o
+  FirestoreCollectionPageStatus pageStatus = FirestoreCollectionPageStatus.idle;
+  @o
+  bool ended = false;
+  @o
+  int page = 0;
 
   StreamSubscription<QuerySnapshot>? _streamSubscription;
-  bool _paginating = false;
   bool get isSubscribed => _streamSubscription != null;
   bool get isScrolled => Utils.isScrolled(scrollController);
 
@@ -321,7 +326,7 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
         },
       );
 
-  Query? get _pageQuery {
+  Query get _pageQuery {
     if (props.pageQuery != null) {
       return props.pageQuery!(this as FirestoreCollectionPod<T, D>, props.collection);
     } else {
@@ -370,10 +375,6 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
       pending = pending..clear();
       notifyListeners();
     }
-  }
-
-  void rebuild() {
-    notifyListeners();
   }
 
   @action
@@ -457,26 +458,15 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
             : props.initialPageSize ?? props.itemsPerPage
         : props.itemsPerPage;
 
-    final snapshots = await _pageQuery?.limit(itemCount).get();
-
-    if (!mounted) {
-      return;
-    } else if (snapshots == null) {
-      _checkStatus();
-      ended = true;
-      page = prepareSecondPage ? targetPage + 1 : targetPage;
-      return;
-    }
+    final snapshots = await _pageQuery.limit(itemCount).get();
+    if (!mounted) return;
 
     final items = await _deserializeQuerySnapshot(snapshots.docs);
 
     if (mounted) {
       if (items.length < itemCount) ended = true;
       paginated.addAll(items);
-
-      // HACK: Make sure the observables notify an update.
-      paginated = paginated;
-
+      paginated = paginated; // HACK: Makes sure the observables notify an update.
       page = prepareSecondPage ? targetPage + 1 : targetPage;
       _checkStatus();
     } else {

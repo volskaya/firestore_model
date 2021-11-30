@@ -1,7 +1,6 @@
 library firestore_model;
 
 export 'src/converters.dart';
-export 'src/firebase_isolate.dart';
 export 'src/firebase_model.dart';
 export 'src/firebase_model_builder.dart';
 export 'src/firebase_model_hook.dart';

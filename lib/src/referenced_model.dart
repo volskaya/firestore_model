@@ -185,7 +185,7 @@ mixin ReferencedModel {
     required covariant FirebaseModel model,
     required VoidCallback onInvalidated,
     VoidCallback? onDecremented,
-    bool forceInvalidate = false,
+    bool forceInvalidate = false, // DEPRECATED
   }) {
     try {
       assert(model.path.isNotEmpty);
