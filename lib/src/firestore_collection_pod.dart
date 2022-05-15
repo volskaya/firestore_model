@@ -4,7 +4,6 @@ import 'dart:collection';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:firestore_model/firestore_model.dart';
-import 'package:firestore_model/src/firestore_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -15,7 +14,6 @@ import 'package:loader_coordinator/loader_coordinator.dart';
 import 'package:log/log.dart';
 import 'package:mobx/mobx.dart';
 import 'package:refresh_storage/refresh_storage.dart';
-import 'package:riverpod/riverpod.dart';
 import 'package:utils/utils.dart';
 
 part 'firestore_collection_pod.freezed.dart';
@@ -36,7 +34,7 @@ enum FirestoreCollectionStatus {
   ready,
 }
 
-/// Paginatoin status of the [FirestoreCollectionPod].
+/// Pagination status of the [FirestoreCollectionPod].
 enum FirestoreCollectionPageStatus {
   /// Collection hasn't started the initial pagination yet.
   idle,
@@ -200,13 +198,13 @@ class FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends _FirestoreC
 
   static ChangeNotifierProviderFamily<FirestoreCollectionPod<T, D>, FirestoreCollectionProps<T, D>>
       getChangeProviderFamily<T extends FirestoreModel<T>, D>() =>
-          ChangeNotifierProvider.family(_buildPod, name: 'FirestoreCollection');
+          ChangeNotifierProvider.family((ref, arg) => _buildPod<T, D>(ref, arg), name: 'FirestoreCollection');
 
   static ProviderFamily<FirestoreCollectionPod<T, D>, FirestoreCollectionProps<T, D>>
       getProviderFamily<T extends FirestoreModel<T>, D>() => Provider.family(_buildPod, name: 'FirestoreCollection');
 
   static FirestoreCollectionPod<T, D> _buildPod<T extends FirestoreModel<T>, D>(
-    ProviderRefBase ref,
+    Ref ref,
     FirestoreCollectionProps<T, D> props,
   ) {
     final refresh = ref.read(RefreshCounterPod.provider);
@@ -279,20 +277,13 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
 
   final _seenItems = HashSet<String>(); // Seen document IDs to filter redundant items.
 
-  @o
-  List<FirestoreCollectionEntry<T, D>> paginated = <FirestoreCollectionEntry<T, D>>[];
-  @o
-  List<FirestoreCollectionEntry<T, D>> subscribed = <FirestoreCollectionEntry<T, D>>[];
-  @o
-  List<FirestoreCollectionEntry<T, D>> pending = <FirestoreCollectionEntry<T, D>>[];
-  @o
-  FirestoreCollectionStatus status = FirestoreCollectionStatus.idle;
-  @o
-  FirestoreCollectionPageStatus pageStatus = FirestoreCollectionPageStatus.idle;
-  @o
-  bool ended = false;
-  @o
-  int page = 0;
+  @o List<FirestoreCollectionEntry<T, D>> paginated = <FirestoreCollectionEntry<T, D>>[];
+  @o List<FirestoreCollectionEntry<T, D>> subscribed = <FirestoreCollectionEntry<T, D>>[];
+  @o List<FirestoreCollectionEntry<T, D>> pending = <FirestoreCollectionEntry<T, D>>[];
+  @o FirestoreCollectionStatus status = FirestoreCollectionStatus.idle;
+  @o FirestoreCollectionPageStatus pageStatus = FirestoreCollectionPageStatus.idle;
+  @o bool ended = false;
+  @o int page = 0;
 
   StreamSubscription<QuerySnapshot>? _streamSubscription;
   bool get isSubscribed => _streamSubscription != null;
@@ -442,7 +433,7 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
 
       await Future.wait([
         if (awaitDelayedFuture) props.delayedFuture!(),
-        if (awaitDelay) Future<void>.delayed(delay!),
+        if (awaitDelay) Future<void>.delayed(delay),
       ]);
 
       if (!mounted) return;
@@ -477,7 +468,7 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
     }
 
     if (isFirstPage && mounted && props.onFirstPagePaginated != null) {
-      WidgetsBinding.instance!.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) props.onFirstPagePaginated?.call(this as FirestoreCollectionPod<T, D>);
       });
     }
@@ -496,7 +487,7 @@ abstract class _FirestoreCollectionPod<T extends FirestoreModel<T>, D> extends C
             .listen(_handleQuerySubscription);
       } on PlatformException catch (e, t) {
         _log.e('Couldn\'t attach a listener to ${props.bucket}', e, t);
-        WidgetsBinding.instance!.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (props.subscribe && mounted && !isSubscribed) startSubscription(); // Attempt to resubscribe.
         });
       }

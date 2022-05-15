@@ -12,7 +12,7 @@ import 'package:log/log.dart';
 Future<T> scheduleFuture<T>(FutureOr<T> Function() callback, [Priority priority = Priority.touch]) {
   final completer = Completer<T>();
 
-  SchedulerBinding.instance!.scheduleTask(
+  SchedulerBinding.instance.scheduleTask(
     () async {
       try {
         final value = await callback();
@@ -141,7 +141,7 @@ class FutureItem<D extends FirebaseModel<D>> {
 
   static void _defer(DisposableHookContext scrollAware, VoidCallback callback) {
     if (scrollAware.context != null && Scrollable.recommendDeferredLoadingForContext(scrollAware.context!)) {
-      SchedulerBinding.instance!.scheduleFrameCallback((_) => _defer(scrollAware, callback));
+      SchedulerBinding.instance.scheduleFrameCallback((_) => _defer(scrollAware, callback));
     } else {
       callback();
     }

@@ -9,7 +9,8 @@ part of 'realtime_variable.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
 
 mixin _$RealtimeVariable on _RealtimeVariable, Store {
-  final _$valueAtom = Atom(name: '_RealtimeVariable.value');
+  late final _$valueAtom =
+      Atom(name: '_RealtimeVariable.value', context: context);
 
   @override
   dynamic get value {
@@ -26,8 +27,8 @@ mixin _$RealtimeVariable on _RealtimeVariable, Store {
     }
   }
 
-  final _$_RealtimeVariableActionController =
-      ActionController(name: '_RealtimeVariable');
+  late final _$_RealtimeVariableActionController =
+      ActionController(name: '_RealtimeVariable', context: context);
 
   @override
   void onSnapshot(RealtimeVariable x) {

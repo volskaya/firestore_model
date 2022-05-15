@@ -16,7 +16,8 @@ mixin _$RealtimeModel<T> on _RealtimeModel<T>, Store {
           Computed<bool?>(() => super.exists, name: '_RealtimeModel.exists'))
       .value;
 
-  final _$snapshotAtom = Atom(name: '_RealtimeModel.snapshot');
+  late final _$snapshotAtom =
+      Atom(name: '_RealtimeModel.snapshot', context: context);
 
   @override
   DataSnapshot? get snapshot {
@@ -33,8 +34,8 @@ mixin _$RealtimeModel<T> on _RealtimeModel<T>, Store {
     }
   }
 
-  final _$_RealtimeModelActionController =
-      ActionController(name: '_RealtimeModel');
+  late final _$_RealtimeModelActionController =
+      ActionController(name: '_RealtimeModel', context: context);
 
   @override
   void handleSnapshot(T model) {

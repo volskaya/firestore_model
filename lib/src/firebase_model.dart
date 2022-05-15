@@ -8,7 +8,6 @@ import 'package:firestore_model/src/models/toggle.dart';
 import 'package:firestore_model/src/realtime_model.dart';
 import 'package:firestore_model/src/referenced_model.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:log/log.dart';
 
 /// The delay before the [FirebaseModel] attempts to resubscribe, when a subscription

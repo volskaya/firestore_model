@@ -10,8 +10,9 @@ part of 'firestore_collection_builder.dart';
 
 mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
     on _FirestoreCollectionStorageStore<T, D>, Store {
-  final _$paginatedItemsAtom =
-      Atom(name: '_FirestoreCollectionStorageStore.paginatedItems');
+  late final _$paginatedItemsAtom = Atom(
+      name: '_FirestoreCollectionStorageStore.paginatedItems',
+      context: context);
 
   @override
   IList<T> get paginatedItems {
@@ -28,8 +29,9 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$subscribedItemsAtom =
-      Atom(name: '_FirestoreCollectionStorageStore.subscribedItems');
+  late final _$subscribedItemsAtom = Atom(
+      name: '_FirestoreCollectionStorageStore.subscribedItems',
+      context: context);
 
   @override
   IList<T> get subscribedItems {
@@ -46,8 +48,8 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$pendingItemsAtom =
-      Atom(name: '_FirestoreCollectionStorageStore.pendingItems');
+  late final _$pendingItemsAtom = Atom(
+      name: '_FirestoreCollectionStorageStore.pendingItems', context: context);
 
   @override
   IList<T> get pendingItems {
@@ -64,8 +66,8 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$listStatusAtom =
-      Atom(name: '_FirestoreCollectionStorageStore.listStatus');
+  late final _$listStatusAtom = Atom(
+      name: '_FirestoreCollectionStorageStore.listStatus', context: context);
 
   @override
   FirestoreCollectionStatus get listStatus {
@@ -82,8 +84,8 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$isEndReachedAtom =
-      Atom(name: '_FirestoreCollectionStorageStore.isEndReached');
+  late final _$isEndReachedAtom = Atom(
+      name: '_FirestoreCollectionStorageStore.isEndReached', context: context);
 
   @override
   bool get isEndReached {
@@ -100,24 +102,27 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$fetchPageAsyncAction =
-      AsyncAction('_FirestoreCollectionStorageStore.fetchPage');
+  late final _$fetchPageAsyncAction = AsyncAction(
+      '_FirestoreCollectionStorageStore.fetchPage',
+      context: context);
 
   @override
   Future<void> fetchPage(int page) {
     return _$fetchPageAsyncAction.run(() => super.fetchPage(page));
   }
 
-  final _$_paginateAsyncAction =
-      AsyncAction('_FirestoreCollectionStorageStore._paginate');
+  late final _$_paginateAsyncAction = AsyncAction(
+      '_FirestoreCollectionStorageStore._paginate',
+      context: context);
 
   @override
   Future<void> _paginate(int page) {
     return _$_paginateAsyncAction.run(() => super._paginate(page));
   }
 
-  final _$_handleQuerySubscriptionAsyncAction =
-      AsyncAction('_FirestoreCollectionStorageStore._handleQuerySubscription');
+  late final _$_handleQuerySubscriptionAsyncAction = AsyncAction(
+      '_FirestoreCollectionStorageStore._handleQuerySubscription',
+      context: context);
 
   @override
   Future<void> _handleQuerySubscription(QuerySnapshot<Object?> snapshot) {
@@ -125,8 +130,9 @@ mixin _$_FirestoreCollectionStorage<T extends FirestoreModel<T>, D>
         .run(() => super._handleQuerySubscription(snapshot));
   }
 
-  final _$_FirestoreCollectionStorageStoreActionController =
-      ActionController(name: '_FirestoreCollectionStorageStore');
+  late final _$_FirestoreCollectionStorageStoreActionController =
+      ActionController(
+          name: '_FirestoreCollectionStorageStore', context: context);
 
   @override
   void _checkStatus() {

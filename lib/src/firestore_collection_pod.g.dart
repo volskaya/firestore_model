@@ -10,7 +10,8 @@ part of 'firestore_collection_pod.dart';
 
 mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
     on _FirestoreCollectionPod<T, D>, Store {
-  final _$paginatedAtom = Atom(name: '_FirestoreCollectionPod.paginated');
+  late final _$paginatedAtom =
+      Atom(name: '_FirestoreCollectionPod.paginated', context: context);
 
   @override
   List<FirestoreCollectionEntry<T, D>> get paginated {
@@ -27,7 +28,8 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$subscribedAtom = Atom(name: '_FirestoreCollectionPod.subscribed');
+  late final _$subscribedAtom =
+      Atom(name: '_FirestoreCollectionPod.subscribed', context: context);
 
   @override
   List<FirestoreCollectionEntry<T, D>> get subscribed {
@@ -44,7 +46,8 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$pendingAtom = Atom(name: '_FirestoreCollectionPod.pending');
+  late final _$pendingAtom =
+      Atom(name: '_FirestoreCollectionPod.pending', context: context);
 
   @override
   List<FirestoreCollectionEntry<T, D>> get pending {
@@ -61,7 +64,8 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$statusAtom = Atom(name: '_FirestoreCollectionPod.status');
+  late final _$statusAtom =
+      Atom(name: '_FirestoreCollectionPod.status', context: context);
 
   @override
   FirestoreCollectionStatus get status {
@@ -78,7 +82,8 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$pageStatusAtom = Atom(name: '_FirestoreCollectionPod.pageStatus');
+  late final _$pageStatusAtom =
+      Atom(name: '_FirestoreCollectionPod.pageStatus', context: context);
 
   @override
   FirestoreCollectionPageStatus get pageStatus {
@@ -95,7 +100,8 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$endedAtom = Atom(name: '_FirestoreCollectionPod.ended');
+  late final _$endedAtom =
+      Atom(name: '_FirestoreCollectionPod.ended', context: context);
 
   @override
   bool get ended {
@@ -112,7 +118,8 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$pageAtom = Atom(name: '_FirestoreCollectionPod.page');
+  late final _$pageAtom =
+      Atom(name: '_FirestoreCollectionPod.page', context: context);
 
   @override
   int get page {
@@ -129,24 +136,25 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
     }
   }
 
-  final _$fetchPageAsyncAction =
-      AsyncAction('_FirestoreCollectionPod.fetchPage');
+  late final _$fetchPageAsyncAction =
+      AsyncAction('_FirestoreCollectionPod.fetchPage', context: context);
 
   @override
   Future<void> fetchPage(int page) {
     return _$fetchPageAsyncAction.run(() => super.fetchPage(page));
   }
 
-  final _$_paginateAsyncAction =
-      AsyncAction('_FirestoreCollectionPod._paginate');
+  late final _$_paginateAsyncAction =
+      AsyncAction('_FirestoreCollectionPod._paginate', context: context);
 
   @override
   Future<void> _paginate(int targetPage) {
     return _$_paginateAsyncAction.run(() => super._paginate(targetPage));
   }
 
-  final _$_handleQuerySubscriptionAsyncAction =
-      AsyncAction('_FirestoreCollectionPod._handleQuerySubscription');
+  late final _$_handleQuerySubscriptionAsyncAction = AsyncAction(
+      '_FirestoreCollectionPod._handleQuerySubscription',
+      context: context);
 
   @override
   Future<void> _handleQuerySubscription(QuerySnapshot<Object?> snapshot) {
@@ -154,8 +162,8 @@ mixin _$FirestoreCollectionPod<T extends FirestoreModel<T>, D>
         .run(() => super._handleQuerySubscription(snapshot));
   }
 
-  final _$_FirestoreCollectionPodActionController =
-      ActionController(name: '_FirestoreCollectionPod');
+  late final _$_FirestoreCollectionPodActionController =
+      ActionController(name: '_FirestoreCollectionPod', context: context);
 
   @override
   void _checkStatus() {

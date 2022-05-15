@@ -7,7 +7,6 @@ import 'package:firestore_model/src/utils/memoized_map_cache.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:log/log.dart';
-import 'package:meta/meta.dart';
 
 /// Reference counting for my firestore models, to prevent redundant
 /// subscriptions and fetches
@@ -102,7 +101,7 @@ mixin ReferencedModel {
     if (hasReference) {
       return ReferencedModel.reference<T>(type, path)
         ..then((object) => scheduleTasks
-            ? SchedulerBinding.instance!.scheduleTask(() => object.feedData(newObject()), Priority.touch)
+            ? SchedulerBinding.instance.scheduleTask(() => object.feedData(newObject()), Priority.touch)
             : object.feedData(newObject()));
     } else {
       assert(!cache.containsKey(path));
@@ -110,7 +109,7 @@ mixin ReferencedModel {
 
       if (scheduleTasks) {
         return cache
-            .get(path, ifAbsent: (_) => SchedulerBinding.instance!.scheduleTask(newObject, Priority.touch))
+            .get(path, ifAbsent: (_) => SchedulerBinding.instance.scheduleTask(newObject, Priority.touch))
             .then((value) => value! as T);
       } else {
         final object = newObject();

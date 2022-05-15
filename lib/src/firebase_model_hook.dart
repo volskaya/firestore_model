@@ -166,7 +166,7 @@ class _FirebaseModelHookState<T extends FirebaseModel<T>> extends HookState<T?, 
       // If an empty synchronous item is instantiated with subscription off,
       // it may never get data, so always request 1 update.
       if (hook.update && !hook.subscribe) {
-        WidgetsBinding.instance!.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_mounted) _storage.value?.object?.item?.update();
         });
       }

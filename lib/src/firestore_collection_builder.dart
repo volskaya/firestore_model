@@ -219,7 +219,7 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
     }
 
     if (isFirstPage && _state?.mounted == true && _state!.widget.onFirstPagePaginated != null) {
-      WidgetsBinding.instance!.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_state?.mounted == true) _state!.widget.onFirstPagePaginated?.call(_state!);
       });
     }
@@ -238,7 +238,7 @@ abstract class _FirestoreCollectionStorageStore<T extends FirestoreModel<T>, D> 
             .listen(_handleQuerySubscription);
       } on PlatformException catch (e, t) {
         _log.e('Couldn\'t attach a listener to $identifier', e, t);
-        WidgetsBinding.instance!.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_state?.widget.subscribe == true) startSubscription(); // Attempt to resubscribe.
         });
       }
@@ -529,7 +529,7 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>, D> extends St
 
   @override
   void initState() {
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     final storageIdentifier = '${identifier}_firestore_collection_builder';
     _storage = widget.bucket != null
         ? RefreshStorage.write<_FirestoreCollectionStorage<T, D>>(
@@ -560,7 +560,7 @@ class FirestoreCollectionBuilderState<T extends FirestoreModel<T>, D> extends St
 
   @override
   void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     widget.scrollController?.removeListener(_handleScroll);
     _storage.value?.stopSubscription();
     _pendingItemsReactionDisposer();
